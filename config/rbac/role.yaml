@@ -1,0 +1,41 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - web.chillyroom.com
+  resources:
+  - locations
+  - openresties
+  - serverblocks
+  - upstreams
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - web.chillyroom.com
+  resources:
+  - locations/finalizers
+  - openresties/finalizers
+  - serverblocks/finalizers
+  - upstreams/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - web.chillyroom.com
+  resources:
+  - locations/status
+  - openresties/status
+  - serverblocks/status
+  - upstreams/status
+  verbs:
+  - get
+  - patch
+  - update

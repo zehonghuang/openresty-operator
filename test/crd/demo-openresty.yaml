@@ -1,0 +1,20 @@
+apiVersion: web.chillyroom.com/v1alpha1
+kind: OpenRestyApp
+metadata:
+  name: demo-openresty
+spec:
+  http:
+    include:
+      - mime.types
+    logFormat: |
+      main '$remote_addr - $remote_user [$time_local] "$request" ...';
+    accessLog: /var/log/nginx/access.log
+    errorLog: /var/log/nginx/error.log warn
+    clientMaxBodySize: 16m
+    gzip: true
+    extra:
+      - sendfile on;
+      - tcp_nopush on;
+    serverRefs:
+      - user-api
+      - admin-api

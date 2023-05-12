@@ -1,0 +1,9 @@
+apiVersion: web.chillyroom.com/v1alpha1
+kind: Upstream
+metadata:
+  name: demo-upstream
+spec:
+  servers:
+    - example.com:80
+    - www.baidu.com:443
+    - invalid.domain.local:8080

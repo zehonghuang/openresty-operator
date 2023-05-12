@@ -1,0 +1,9 @@
+apiVersion: web.chillyroom.com/v1alpha1
+kind: ServerBlock
+metadata:
+  name: user-api
+  namespace: default
+spec:
+  listen: "80"
+  locationRefs:
+    - location-api

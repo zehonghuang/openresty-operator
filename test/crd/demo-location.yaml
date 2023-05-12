@@ -1,0 +1,40 @@
+apiVersion: web.chillyroom.com/v1alpha1
+kind: Location
+metadata:
+  name: location-api
+spec:
+  entries:
+    - path: /api/
+      proxyPass: http://backend
+      headers:
+        - key: Host
+          value: $host
+        - key: X-Real-IP
+          value: $remote_addr
+        - key: X-Forwarded-For
+          value: $proxy_add_x_forwarded_for
+        - key: X-Forwarded-Proto
+          value: $scheme
+        - key: X-Content-Type-Options
+          value: nosniff
+        - key: Access-Control-Allow-Origin
+          value: "*"
+      timeout:
+        connect: 5s
+        send: 10s
+        read: 10s
+      accessLog: false
+      limitReq: zone=api burst=10 nodelay
+      gzip:
+        enable: true
+        types:
+          - text/plain
+          - application/json
+      cache:
+        zone: my_cache
+        valid: "200 1m"
+      lua:
+        access: |
+          if not ngx.var.arg_token then
+              return ngx.exit(401)
+          end

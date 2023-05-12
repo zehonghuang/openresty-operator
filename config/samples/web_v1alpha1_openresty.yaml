@@ -1,0 +1,9 @@
+apiVersion: web.chillyroom.com/v1alpha1
+kind: OpenResty
+metadata:
+  labels:
+    app.kubernetes.io/name: openresty-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: openresty-sample
+spec:
+  # TODO(user): Add fields here

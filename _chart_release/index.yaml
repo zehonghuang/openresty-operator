@@ -1,0 +1,24 @@
+apiVersion: v1
+entries:
+  openresty-operator:
+  - apiVersion: v2
+    appVersion: v0.1.0
+    created: "2025-04-19T00:00:16.212018+08:00"
+    description: A Kubernetes Operator to declaratively manage OpenResty and its configurations
+    digest: b42be40bda82d89e69334ac437d02458a9ff641d749bb300e1253824b91dcd31
+    keywords:
+    - openresty
+    - operator
+    - kubernetes
+    - crd
+    - nginx
+    - metrics
+    maintainers:
+    - email: your@email.com
+      name: your-name
+    name: openresty-operator
+    type: application
+    urls:
+    - https://zehonghuang.github.io/openresty-operator/charts/openresty-operator-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-04-19T00:00:16.211259+08:00"

@@ -112,7 +112,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		replicas = *app.Spec.Replicas
 	}
 
-	image := "openresty/openresty:latest"
+	image := "gintonic1glass/openresty:with-prometheus"
 	if app.Spec.Image != "" {
 		image = app.Spec.Image
 	}

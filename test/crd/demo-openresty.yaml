@@ -3,6 +3,7 @@ kind: OpenRestyApp
 metadata:
   name: demo-openresty
 spec:
+  image: gintonic1glass/openresty:with-prometheus
   http:
     include:
       - mime.types

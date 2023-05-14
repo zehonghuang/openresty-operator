@@ -1,11 +1,10 @@
 FROM openresty/openresty:alpine
 
-LABEL maintainer="your-name <you@example.com>"
+LABEL maintainer="zehong.huang <zehong.hongframe.huang@gmail.com>"
 LABEL description="OpenResty with Prometheus metrics support"
 
-# 安装 prometheus 模块 + curl + bash
-RUN opm get knyar/nginx-lua-prometheus && \
-    apk add --no-cache curl bash
+RUN apk add --no-cache curl bash perl && \
+    opm get knyar/nginx-lua-prometheus
 
 # 可选：暴露 Nginx 默认端口
 EXPOSE 80

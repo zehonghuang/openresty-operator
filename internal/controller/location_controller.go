@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/retry"
 	"openresty-operator/internal/utils"
 	"strings"
 	"time"
@@ -101,7 +100,7 @@ func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		log.Error(nil, "Path validation failed", "details", msg)
 		r.Recorder.Eventf(&location, corev1.EventTypeWarning, "InvalidPath", msg)
 
-		_ = r.updateLocationStatus(ctx, req, false, msg)
+		r.updateLocationStatus(ctx, location, false, msg, log)
 
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
@@ -112,7 +111,7 @@ func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	_ = r.updateLocationStatus(ctx, req, true, "")
+	r.updateLocationStatus(ctx, location, true, "", log)
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 
@@ -230,18 +229,24 @@ func indentLua(code, prefix string) string {
 	return strings.Join(lines, "\n") + "\n"
 }
 
-func (r *LocationReconciler) updateLocationStatus(ctx context.Context, req ctrl.Request, ready bool, reason string) error {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		var latest webv1alpha1.Location
-		if err := r.Get(ctx, req.NamespacedName, &latest); err != nil {
-			return err
+func (r *LocationReconciler) updateLocationStatus(
+	ctx context.Context,
+	current webv1alpha1.Location,
+	ready bool,
+	reason string,
+	log logr.Logger,
+) {
+	current.Status.Ready = ready
+	current.Status.Version = fmt.Sprintf("%d", current.Generation)
+	current.Status.Reason = reason
+
+	if err := r.Status().Update(ctx, &current); err != nil {
+		if errors.IsConflict(err) {
+			log.Info("Location status conflict, skipping update")
+		} else {
+			log.Error(err, "Failed to update Location status")
 		}
-		latest = *latest.DeepCopy()
-		latest.Status.Ready = ready
-		latest.Status.Version = fmt.Sprintf("%d", latest.Generation)
-		latest.Status.Reason = reason
-		return r.Status().Update(ctx, &latest)
-	})
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -31,6 +31,7 @@ import (
 	"openresty-operator/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
+	"sync"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -71,45 +72,67 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	var configLines []string
-	var statusList []webv1alpha1.UpstreamServerStatus
+	const maxConcurrentChecks = 10
+
+	type result struct {
+		Address string
+		Config  string
+		Alive   bool
+	}
+
+	var (
+		wg      sync.WaitGroup
+		sem     = make(chan struct{}, maxConcurrentChecks)
+		results = make(chan result, len(upstream.Spec.Servers))
+	)
 
 	for _, addr := range upstream.Spec.Servers {
-		host, port, err := splitHostPort(addr)
-		if err != nil {
-			log.Error(err, "Invalid format", "server", addr)
-			configLines = append(configLines, fmt.Sprintf("# server %s;  // invalid format", addr))
-			statusList = append(statusList, webv1alpha1.UpstreamServerStatus{
-				Address: addr,
-				Alive:   false,
-			})
-			continue
-		}
+		wg.Add(1)
+		sem <- struct{}{}
 
-		if _, err := net.LookupHost(host); err != nil {
-			configLines = append(configLines, fmt.Sprintf("# server %s;  // DNS error", addr))
-			statusList = append(statusList, webv1alpha1.UpstreamServerStatus{
-				Address: addr,
-				Alive:   false,
-			})
-			r.Recorder.Eventf(&upstream, corev1.EventTypeWarning, "DNSError", "Failed to resolve host %s: %v", host, err)
-			continue
-		}
+		go func(addr string) {
+			defer wg.Done()
+			defer func() { <-sem }()
 
-		alive, err := testTCP(host, port)
-		if alive {
-			configLines = append(configLines, fmt.Sprintf("server %s;", addr))
-		} else {
-			reason := "dead"
+			host, port, err := splitHostPort(addr)
 			if err != nil {
-				reason = err.Error()
+				log.Error(err, "Invalid format", "server", addr)
+				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // invalid format", addr)}
+				return
 			}
-			configLines = append(configLines, fmt.Sprintf("# server %s;  // %s", addr, reason))
-		}
 
+			if _, err := net.LookupHost(host); err != nil {
+				r.Recorder.Eventf(&upstream, corev1.EventTypeWarning, "DNSError", "Failed to resolve host %s: %v", host, err)
+				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // DNS error", addr)}
+				return
+			}
+
+			alive, err := testTCP(host, port)
+			if alive {
+				results <- result{Address: addr, Alive: true, Config: fmt.Sprintf("server %s;", addr)}
+			} else {
+				reason := "dead"
+				if err != nil {
+					reason = err.Error()
+				}
+				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // %s", addr, reason)}
+			}
+		}(addr)
+	}
+
+	wg.Wait()
+	close(results)
+
+	var (
+		configLines []string
+		statusList  []webv1alpha1.UpstreamServerStatus
+	)
+
+	for r := range results {
+		configLines = append(configLines, r.Config)
 		statusList = append(statusList, webv1alpha1.UpstreamServerStatus{
-			Address: addr,
-			Alive:   alive,
+			Address: r.Address,
+			Alive:   r.Alive,
 		})
 	}
 

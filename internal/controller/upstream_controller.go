@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/retry"
 	"net"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/utils"
@@ -149,29 +148,11 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	// 更新 Status
-	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		var latest webv1alpha1.Upstream
-		if err := r.Get(ctx, req.NamespacedName, &latest); err != nil {
-			return err
-		}
-		latest = *latest.DeepCopy()
-		latest.Status.NginxConfig = nginxConfig
-		latest.Status.Servers = statusList
-		latest.Status.Version = fmt.Sprintf("%d", latest.Generation)
+	if allDown {
+		r.updateLocationStatus(ctx, upstream, false, nginxConfig, statusList, "All servers unavailable or DNS failed", log)
 
-		latest.Status.Ready = !allDown
-		if allDown {
-			latest.Status.Reason = "All servers unavailable or DNS failed"
-		} else {
-			latest.Status.Reason = ""
-		}
-
-		return r.Status().Update(ctx, &latest)
-	})
-
-	if err != nil {
-		log.Error(err, "Failed to update status")
-		return ctrl.Result{}, err
+	} else {
+		r.updateLocationStatus(ctx, upstream, true, nginxConfig, statusList, "", log)
 	}
 
 	return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
@@ -247,6 +228,30 @@ func testTCP(ip, port string) (bool, error) {
 	}
 	conn.Close()
 	return true, nil
+}
+
+func (r *UpstreamReconciler) updateLocationStatus(
+	ctx context.Context,
+	current webv1alpha1.Upstream,
+	ready bool,
+	nginxConfig string,
+	statusList []webv1alpha1.UpstreamServerStatus,
+	reason string,
+	log logr.Logger,
+) {
+	current.Status.Ready = ready
+	current.Status.NginxConfig = nginxConfig
+	current.Status.Servers = statusList
+	current.Status.Version = fmt.Sprintf("%d", current.Generation)
+	current.Status.Reason = reason
+
+	if err := r.Status().Update(ctx, &current); err != nil {
+		if errors.IsConflict(err) {
+			log.Info("Location status conflict, skipping update")
+		} else {
+			log.Error(err, "Failed to update Location status")
+		}
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

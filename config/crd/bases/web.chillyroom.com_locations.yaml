@@ -53,6 +53,8 @@ spec:
                         zone:
                           type: string
                       type: object
+                    enableUpstreamMetrics:
+                      type: boolean
                     extra:
                       items:
                         type: string

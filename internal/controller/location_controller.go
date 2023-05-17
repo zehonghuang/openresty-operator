@@ -215,6 +215,16 @@ func renderLocationEntries(entries []webv1alpha1.LocationEntry) string {
 			b.WriteString(fmt.Sprintf("    %s\n", extra))
 		}
 
+		if e.EnableUpstreamMetrics {
+			b.WriteString("    log_by_lua_block {\n")
+			b.WriteString("        local addr = (ngx.var.upstream_addr or \"unknown\"):match(\"^[^,]+\")\n")
+			b.WriteString("        local status = ngx.var.status\n")
+			b.WriteString("        local latency = tonumber(ngx.var.upstream_response_time) or 0\n")
+			b.WriteString("        metric_upstream_latency:observe(latency, {addr})\n")
+			b.WriteString("        metric_upstream_total:inc(1, {addr, status})\n")
+			b.WriteString("    }\n")
+		}
+
 		b.WriteString("}\n\n")
 	}
 

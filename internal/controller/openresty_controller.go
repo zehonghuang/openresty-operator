@@ -73,6 +73,24 @@ func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
 	b.WriteString("events { worker_connections 1024; }\n")
 	b.WriteString("http {\n")
 
+	// Prometheus 指标共享内存
+	b.WriteString("    lua_shared_dict prometheus_metrics 10M;\n\n")
+
+	// Prometheus init_by_lua_block
+	b.WriteString("    init_by_lua_block {\n")
+	b.WriteString("        prometheus = require(\"prometheus\").init(\"prometheus_metrics\")\n")
+	b.WriteString("        metric_upstream_latency = prometheus:histogram(\n")
+	b.WriteString("            \"upstream_latency_seconds\",\n")
+	b.WriteString("            \"Upstream response time in seconds\",\n")
+	b.WriteString("            {\"upstream\"}\n")
+	b.WriteString("        )\n")
+	b.WriteString("        metric_upstream_total = prometheus:counter(\n")
+	b.WriteString("            \"upstream_requests_total\",\n")
+	b.WriteString("            \"Total upstream requests\",\n")
+	b.WriteString("            {\"upstream\", \"status\"}\n")
+	b.WriteString("        )\n")
+	b.WriteString("    }\n\n")
+
 	for _, inc := range http.Include {
 		b.WriteString(fmt.Sprintf("    include %s;\n", inc))
 	}

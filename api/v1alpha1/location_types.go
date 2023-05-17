@@ -37,13 +37,14 @@ type LocationEntry struct {
 
 	ProxyPass string `json:"proxyPass,omitempty"`
 
-	Headers   []NginxKV  `json:"headers,omitempty"` // proxy_set_header / add_header
-	Timeout   *Timeouts  `json:"timeout,omitempty"`
-	AccessLog *bool      `json:"accessLog,omitempty"` // true/false
-	LimitReq  *string    `json:"limitReq,omitempty"`  // zone=api burst=10 nodelay
-	Gzip      *GzipConf  `json:"gzip,omitempty"`
-	Cache     *CacheConf `json:"cache,omitempty"`
-	Lua       *LuaBlock  `json:"lua,omitempty"`
+	Headers               []NginxKV  `json:"headers,omitempty"` // proxy_set_header / add_header
+	Timeout               *Timeouts  `json:"timeout,omitempty"`
+	AccessLog             *bool      `json:"accessLog,omitempty"` // true/false
+	LimitReq              *string    `json:"limitReq,omitempty"`  // zone=api burst=10 nodelay
+	Gzip                  *GzipConf  `json:"gzip,omitempty"`
+	Cache                 *CacheConf `json:"cache,omitempty"`
+	Lua                   *LuaBlock  `json:"lua,omitempty"`
+	EnableUpstreamMetrics bool       `json:"enableUpstreamMetrics,omitempty"`
 
 	Extra []string `json:"extra,omitempty"` // 自定义指令
 }

@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/template"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -67,6 +68,22 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
+const defaultInitLua = `
+    prometheus = require("prometheus").init("prometheus_metrics")
+
+    metric_upstream_latency = prometheus:histogram(
+        "upstream_latency_seconds",
+        "Upstream response time in seconds",
+        {"upstream"}
+    )
+
+    metric_upstream_total = prometheus:counter(
+        "upstream_requests_total",
+        "Total upstream requests",
+        {"upstream", "status"}
+    )
+`
+
 func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
 	var b strings.Builder
 	b.WriteString("worker_processes auto;\n")
@@ -78,17 +95,7 @@ func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
 
 	// Prometheus init_by_lua_block
 	b.WriteString("    init_by_lua_block {\n")
-	b.WriteString("        prometheus = require(\"prometheus\").init(\"prometheus_metrics\")\n")
-	b.WriteString("        metric_upstream_latency = prometheus:histogram(\n")
-	b.WriteString("            \"upstream_latency_seconds\",\n")
-	b.WriteString("            \"Upstream response time in seconds\",\n")
-	b.WriteString("            {\"upstream\"}\n")
-	b.WriteString("        )\n")
-	b.WriteString("        metric_upstream_total = prometheus:counter(\n")
-	b.WriteString("            \"upstream_requests_total\",\n")
-	b.WriteString("            \"Total upstream requests\",\n")
-	b.WriteString("            {\"upstream\", \"status\"}\n")
-	b.WriteString("        )\n")
+	b.WriteString(indentLua(template.DefaultInitLua, "        "))
 	b.WriteString("    }\n\n")
 
 	for _, inc := range http.Include {

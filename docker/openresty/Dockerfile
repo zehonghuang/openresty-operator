@@ -4,7 +4,7 @@ LABEL maintainer="zehong.huang <zehong.hongframe.huang@gmail.com>"
 LABEL description="OpenResty with Prometheus metrics support"
 
 RUN apk add --no-cache curl bash perl && \
-    opm get knyar/nginx-lua-prometheus
+    opm get knyar/nginx-template-prometheus
 
 # 可选：暴露 Nginx 默认端口
 EXPOSE 80

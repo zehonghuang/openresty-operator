@@ -36,7 +36,7 @@ if [ -z "$last_ts" ]; then
 else
   if [ "$same_day" = true ]; then
     # 同一天加 30~45 分钟
-    rand_min=$((30 + RANDOM % 16))  # 30-45 分钟
+    rand_min=$((70 + RANDOM % 16))  # 30-45 分钟
     base_ts=$((last_ts + rand_min * 60))
   else
     # 随机 +1 or +2 天

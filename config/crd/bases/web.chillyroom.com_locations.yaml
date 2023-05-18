@@ -84,17 +84,17 @@ spec:
                       type: array
                     limitReq:
                       type: string
-                    lua:
+                    path:
+                      type: string
+                    proxyPass:
+                      type: string
+                    template:
                       properties:
                         access:
                           type: string
                         content:
                           type: string
                       type: object
-                    path:
-                      type: string
-                    proxyPass:
-                      type: string
                     timeout:
                       properties:
                         connect:

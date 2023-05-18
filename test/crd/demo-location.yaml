@@ -6,6 +6,7 @@ spec:
   entries:
     - path: /api/
       proxyPass: http://backend
+      enableUpstreamMetrics: true
       headers:
         - key: Host
           value: $host

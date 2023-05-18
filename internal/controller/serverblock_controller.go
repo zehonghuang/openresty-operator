@@ -69,8 +69,8 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	missing := []string{}
-	notReady := []string{}
+	var missing []string
+	var notReady []string
 	for _, ref := range server.Spec.LocationRefs {
 		var loc webv1alpha1.Location
 		err := r.Get(ctx, types.NamespacedName{Name: ref, Namespace: server.Namespace}, &loc)
@@ -88,15 +88,8 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if len(missing)+len(notReady) > 0 {
 		msg := fmt.Sprintf("Missing/NotReady Locations: %v %v", missing, notReady)
 		r.Recorder.Eventf(&server, corev1.EventTypeWarning, "InvalidRefs", msg)
-		_ = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-			var latest webv1alpha1.ServerBlock
-			if err := r.Get(ctx, req.NamespacedName, &latest); err != nil {
-				return err
-			}
-			latest.Status.Ready = false
-			latest.Status.Reason = msg
-			return r.Status().Update(ctx, &latest)
-		})
+
+		_ = r.updateServerStatus(ctx, req.NamespacedName, false, msg)
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
@@ -105,17 +98,24 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	_ = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+	log.Info("ServerBlock config updated successfully", "name", server.Name)
+	r.Recorder.Eventf(&server, corev1.EventTypeNormal, "ConfigUpdated", "ConfigMap rendered and updated")
+
+	_ = r.updateServerStatus(ctx, req.NamespacedName, true, "")
+	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+}
+
+func (r *ServerBlockReconciler) updateServerStatus(ctx context.Context, name types.NamespacedName, ready bool, reason string) error {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		var latest webv1alpha1.ServerBlock
-		if err := r.Get(ctx, req.NamespacedName, &latest); err != nil {
+		if err := r.Get(ctx, name, &latest); err != nil {
 			return err
 		}
-		latest.Status.Ready = true
-		latest.Status.Reason = ""
+		latest = *latest.DeepCopy()
+		latest.Status.Ready = ready
+		latest.Status.Reason = reason
 		return r.Status().Update(ctx, &latest)
 	})
-
-	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
 func renderServerBlock(s *webv1alpha1.ServerBlock) string {

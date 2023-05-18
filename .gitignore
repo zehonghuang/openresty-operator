@@ -25,4 +25,4 @@ go.work
 *.swp
 *.swo
 *~
-./commit-generator.sh
+commit-generator.sh

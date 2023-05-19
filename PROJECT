@@ -56,4 +56,13 @@ resources:
   kind: ServerBlock
   path: openresty-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: chillyroom.com
+  group: web
+  kind: RateLimitPolicy
+  path: openresty-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

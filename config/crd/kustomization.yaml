@@ -6,6 +6,7 @@ resources:
 - bases/web.chillyroom.com_upstreams.yaml
 - bases/web.chillyroom.com_locations.yaml
 - bases/web.chillyroom.com_serverblocks.yaml
+- bases/web.chillyroom.com_ratelimitpolicies.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -19,6 +20,7 @@ patches:
 #- path: patches/cainjection_in_upstreams.yaml
 #- path: patches/cainjection_in_locations.yaml
 #- path: patches/cainjection_in_serverblocks.yaml
+#- path: patches/cainjection_in_ratelimitpolicies.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhookserver, uncomment the following section

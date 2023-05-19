@@ -9,6 +9,7 @@ rules:
   resources:
   - locations
   - openresties
+  - ratelimitpolicies
   - serverblocks
   - upstreams
   verbs:
@@ -24,6 +25,7 @@ rules:
   resources:
   - locations/finalizers
   - openresties/finalizers
+  - ratelimitpolicies/finalizers
   - serverblocks/finalizers
   - upstreams/finalizers
   verbs:
@@ -33,6 +35,7 @@ rules:
   resources:
   - locations/status
   - openresties/status
+  - ratelimitpolicies/status
   - serverblocks/status
   - upstreams/status
   verbs:

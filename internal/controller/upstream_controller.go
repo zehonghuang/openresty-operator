@@ -29,6 +29,7 @@ import (
 	"net"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/utils"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
 	"sync"
@@ -266,7 +267,7 @@ func (r *UpstreamReconciler) updateLocationStatus(
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	prometheus.MustRegister(upstreamServerAlive)
+	metrics.Registry.MustRegister(upstreamServerAlive)
 	return ctrl.NewControllerManagedBy(mgr).
 		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
 		For(&webv1alpha1.Upstream{}).

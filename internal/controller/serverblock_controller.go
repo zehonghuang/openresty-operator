@@ -71,6 +71,10 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	var missing []string
 	var notReady []string
+
+	pathSeen := map[string]string{}
+	var duplicatedPaths []string
+
 	for _, ref := range server.Spec.LocationRefs {
 		var loc webv1alpha1.Location
 		err := r.Get(ctx, types.NamespacedName{Name: ref, Namespace: server.Namespace}, &loc)
@@ -83,12 +87,27 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		} else if !loc.Status.Ready {
 			notReady = append(notReady, ref)
 		}
+
+		for _, entry := range loc.Spec.Entries {
+			if otherRef, exists := pathSeen[entry.Path]; exists && otherRef != ref {
+				duplicatedPaths = append(duplicatedPaths, entry.Path)
+			} else {
+				pathSeen[entry.Path] = ref
+			}
+		}
 	}
 
 	if len(missing)+len(notReady) > 0 {
 		msg := fmt.Sprintf("Missing/NotReady Locations: %v %v", missing, notReady)
 		r.Recorder.Eventf(&server, corev1.EventTypeWarning, "InvalidRefs", msg)
 
+		_ = r.updateServerStatus(ctx, req.NamespacedName, false, msg)
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+
+	if len(duplicatedPaths) > 0 {
+		msg := fmt.Sprintf("Duplicated paths found: %v", duplicatedPaths)
+		r.Recorder.Eventf(&server, corev1.EventTypeWarning, "DuplicatePaths", msg)
 		_ = r.updateServerStatus(ctx, req.NamespacedName, false, msg)
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}

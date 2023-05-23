@@ -1,9 +1,0 @@
-apiVersion: web.chillyroom.com/v1alpha1
-kind: HttpBlock
-metadata:
-  labels:
-    app.kubernetes.io/name: openresty-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: httpblock-sample
-spec:
-  # TODO(user): Add fields here

@@ -6,4 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: serverblock-sample
 spec:
-  # TODO(user): Add fields here
+  listen: "80"
+  locationRefs:
+    - location-sample-01
+    - location-sample-02

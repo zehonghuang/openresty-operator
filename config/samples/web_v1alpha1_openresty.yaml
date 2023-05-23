@@ -6,4 +6,18 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: openresty-sample
 spec:
-  # TODO(user): Add fields here
+  image: gintonic1glass/openresty:with-prometheus
+  http:
+    include:
+      - mime.types
+    logFormat: |
+      main '$remote_addr - $remote_user [$time_local] "$request" ...';
+    accessLog: /var/log/nginx/access.log
+    errorLog: /var/log/nginx/error.log warn
+    clientMaxBodySize: 16m
+    gzip: true
+    extra:
+      - sendfile on;
+      - tcp_nopush on;
+    serverRefs:
+      - serverblock-sample

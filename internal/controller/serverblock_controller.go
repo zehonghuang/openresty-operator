@@ -117,11 +117,8 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	log.Info("ServerBlock config updated successfully", "name", server.Name)
-	r.Recorder.Eventf(&server, corev1.EventTypeNormal, "ConfigUpdated", "ConfigMap rendered and updated")
-
 	_ = r.updateServerStatus(ctx, req.NamespacedName, true, "")
-	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	return ctrl.Result{RequeueAfter: 60 * time.Second}, nil
 }
 
 func (r *ServerBlockReconciler) updateServerStatus(ctx context.Context, name types.NamespacedName, ready bool, reason string) error {

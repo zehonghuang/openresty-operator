@@ -43,7 +43,7 @@ type LocationEntry struct {
 	LimitReq              *string    `json:"limitReq,omitempty"`  // zone=api burst=10 nodelay
 	Gzip                  *GzipConf  `json:"gzip,omitempty"`
 	Cache                 *CacheConf `json:"cache,omitempty"`
-	Lua                   *LuaBlock  `json:"template,omitempty"`
+	Lua                   *LuaBlock  `json:"lua,omitempty"`
 	EnableUpstreamMetrics bool       `json:"enableUpstreamMetrics,omitempty"`
 
 	Extra []string `json:"extra,omitempty"` // 自定义指令

@@ -43,11 +43,15 @@ type HttpBlock struct {
 	Gzip              bool     `json:"gzip,omitempty"`              // gzip on/off
 	Extra             []string `json:"extra,omitempty"`             // 其他 http 层自定义指令
 	ServerRefs        []string `json:"serverRefs"`                  // 引用 ServerBlock 名称
+	UpstreamRefs      []string `json:"upstreamRefs,omitempty"`      // 引用 Upstream 名称
+
 }
 
 // OpenRestyStatus defines the observed state of OpenResty
 type OpenRestyStatus struct {
-	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
+	AvailableReplicas int32  `json:"availableReplicas,omitempty"`
+	Ready             bool   `json:"ready"`
+	Reason            string `json:"reason,omitempty"`
 }
 
 // +kubebuilder:object:root=true

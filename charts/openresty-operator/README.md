@@ -27,19 +27,19 @@ helm install openresty-operator openresty-operator/openresty-operator
 
 ## Values
 
-| Key                         | Default                                        | Description                           |
-|----------------------------|------------------------------------------------|---------------------------------------|
-| `replicaCount`             | `1`                                            | Number of Operator pods               |
-| `image.repository`         | `ghcr.io/yourname/openresty-operator`         | Operator image repository             |
-| `image.tag`                | `latest`                                      | Image tag                             |
-| `image.pullPolicy`         | `IfNotPresent`                                | Image pull policy                     |
-| `serviceAccount.create`    | `true`                                        | Whether to create a ServiceAccount    |
-| `serviceAccount.name`      | `""`                                          | Name override for ServiceAccount      |
-| `rbac.create`              | `true`                                        | Whether to create RBAC resources      |
-| `resources`                | `{}`                                          | Pod resource requests/limits          |
-| `nodeSelector`             | `{}`                                          | Node selector                         |
-| `tolerations`              | `[]`                                          | Tolerations                           |
-| `affinity`                 | `{}`                                          | Affinity rules                        |
+| Key                         | Default                         | Description                           |
+|----------------------------|---------------------------------|---------------------------------------|
+| `replicaCount`             | `1`                             | Number of Operator pods               |
+| `image.repository`         | `gintonic1glass/openresty`      | Operator image repository             |
+| `image.tag`                | `with-prometheus`               | Image tag                             |
+| `image.pullPolicy`         | `IfNotPresent`                  | Image pull policy                     |
+| `serviceAccount.create`    | `true`                          | Whether to create a ServiceAccount    |
+| `serviceAccount.name`      | `""`                            | Name override for ServiceAccount      |
+| `rbac.create`              | `true`                          | Whether to create RBAC resources      |
+| `resources`                | `{}`                            | Pod resource requests/limits          |
+| `nodeSelector`             | `{}`                            | Node selector                         |
+| `tolerations`              | `[]`                            | Tolerations                           |
+| `affinity`                 | `{}`                            | Affinity rules                        |
 
 ## Example Usage
 

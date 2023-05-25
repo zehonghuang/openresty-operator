@@ -25,21 +25,23 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/template"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
+	"time"
 )
 
 // OpenRestyReconciler reconciles a OpenResty object
 type OpenRestyReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
-
-const openRestyFinalizer = "openresty.finalizers.chillyroom.com"
 
 // +kubebuilder:rbac:groups=web.chillyroom.com,resources=openresties,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=web.chillyroom.com,resources=openresties/status,verbs=get;update;patch
@@ -65,24 +67,82 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 		return ctrl.Result{}, err
 	}
+
+	var missingServers, notReadyServers, missingServerCMs []string
+	for _, name := range app.Spec.Http.ServerRefs {
+		var srv webv1alpha1.ServerBlock
+		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: app.Namespace}, &srv); err != nil {
+			if errors.IsNotFound(err) {
+				missingServers = append(missingServers, name)
+				continue
+			}
+			return ctrl.Result{}, err
+		}
+		if !srv.Status.Ready {
+			notReadyServers = append(notReadyServers, name)
+			continue
+		}
+		// 检查对应 ConfigMap
+		cmName := "server-" + name
+		var cm corev1.ConfigMap
+		if err := r.Get(ctx, types.NamespacedName{Name: cmName, Namespace: app.Namespace}, &cm); err != nil {
+			if errors.IsNotFound(err) {
+				missingServerCMs = append(missingServerCMs, cmName)
+				continue
+			}
+			return ctrl.Result{}, err
+		}
+	}
+
+	var missingUpstreams, notReadyUpstreams, missingUpstreamCMs []string
+	for _, name := range app.Spec.Http.UpstreamRefs {
+		var ups webv1alpha1.Upstream
+		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: app.Namespace}, &ups); err != nil {
+			if errors.IsNotFound(err) {
+				missingUpstreams = append(missingUpstreams, name)
+				continue
+			}
+			return ctrl.Result{}, err
+		}
+		if !ups.Status.Ready {
+			notReadyUpstreams = append(notReadyUpstreams, name)
+			continue
+		}
+		cmName := "upstream-" + name
+		var cm corev1.ConfigMap
+		if err := r.Get(ctx, types.NamespacedName{Name: cmName, Namespace: app.Namespace}, &cm); err != nil {
+			if errors.IsNotFound(err) {
+				missingUpstreamCMs = append(missingUpstreamCMs, cmName)
+				continue
+			}
+			return ctrl.Result{}, err
+		}
+	}
+
+	if len(missingServers)+len(notReadyServers)+len(missingServerCMs)+
+		len(missingUpstreams)+len(notReadyUpstreams)+len(missingUpstreamCMs) > 0 {
+		msg := fmt.Sprintf("ServerRefs missing=%v notReady=%v noCM=%v; UpstreamRefs missing=%v notReady=%v noCM=%v",
+			missingServers, notReadyServers, missingServerCMs,
+			missingUpstreams, notReadyUpstreams, missingUpstreamCMs)
+
+		log.Info("Dependency check failed", "details", msg)
+		r.Recorder.Eventf(&app, corev1.EventTypeWarning, "InvalidRefs", msg)
+
+		app.Status.Ready = false
+		app.Status.Reason = msg
+		if err := r.Status().Update(ctx, &app); err != nil {
+			if errors.IsConflict(err) {
+				log.Info("OpenResty status conflict, skipping update")
+			} else {
+				log.Error(err, "Failed to update OpenResty status")
+			}
+		}
+
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+
 	return ctrl.Result{}, nil
 }
-
-const defaultInitLua = `
-    prometheus = require("prometheus").init("prometheus_metrics")
-
-    metric_upstream_latency = prometheus:histogram(
-        "upstream_latency_seconds",
-        "Upstream response time in seconds",
-        {"upstream"}
-    )
-
-    metric_upstream_total = prometheus:counter(
-        "upstream_requests_total",
-        "Total upstream requests",
-        {"upstream", "status"}
-    )
-`
 
 func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
 	var b strings.Builder

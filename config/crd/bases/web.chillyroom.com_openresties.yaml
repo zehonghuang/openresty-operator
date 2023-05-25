@@ -64,6 +64,10 @@ spec:
                     items:
                       type: string
                     type: array
+                  upstreamRefs:
+                    items:
+                      type: string
+                    type: array
                 required:
                 - serverRefs
                 type: object
@@ -83,6 +87,12 @@ spec:
               availableReplicas:
                 format: int32
                 type: integer
+              ready:
+                type: boolean
+              reason:
+                type: string
+            required:
+            - ready
             type: object
         type: object
     served: true

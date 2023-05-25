@@ -1,0 +1,23 @@
+replicaCount: 1
+
+image:
+  repository: your-dockerhub/openresty-operator
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: true
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

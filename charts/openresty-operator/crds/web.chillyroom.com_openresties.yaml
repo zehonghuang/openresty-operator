@@ -1,0 +1,91 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.1
+  name: openresties.web.chillyroom.com
+spec:
+  group: web.chillyroom.com
+  names:
+    kind: OpenResty
+    listKind: OpenRestyList
+    plural: openresties
+    singular: openresty
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: OpenResty is the Schema for the openresties API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: OpenRestySpec defines the desired state of OpenResty
+            properties:
+              http:
+                description: Service 的端口
+                properties:
+                  accessLog:
+                    type: string
+                  clientMaxBodySize:
+                    type: string
+                  errorLog:
+                    type: string
+                  extra:
+                    items:
+                      type: string
+                    type: array
+                  gzip:
+                    type: boolean
+                  include:
+                    items:
+                      type: string
+                    type: array
+                  logFormat:
+                    type: string
+                  serverRefs:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - serverRefs
+                type: object
+              image:
+                description: 镜像地址
+                type: string
+              replicas:
+                description: 副本数量
+                format: int32
+                type: integer
+            required:
+            - http
+            type: object
+          status:
+            description: OpenRestyStatus defines the observed state of OpenResty
+            properties:
+              availableReplicas:
+                format: int32
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

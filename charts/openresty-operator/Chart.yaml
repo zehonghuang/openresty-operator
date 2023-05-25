@@ -1,0 +1,23 @@
+apiVersion: v2
+name: openresty-operator
+description: A Kubernetes Operator to declaratively manage OpenResty and its configurations
+
+# Helm chart version
+version: 0.1.0
+
+# App (controller) version
+appVersion: "v0.1.0"
+
+type: application
+
+keywords:
+  - openresty
+  - operator
+  - kubernetes
+  - crd
+  - nginx
+  - metrics
+
+maintainers:
+  - name: your-name
+    email: your@email.com

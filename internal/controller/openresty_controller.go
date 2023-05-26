@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/template"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -141,7 +142,64 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
+	var includeLines []string
+	for _, name := range app.Spec.Http.ServerRefs {
+		includeLines = append(includeLines,
+			fmt.Sprintf("include /etc/nginx/conf.d/server/%s.conf;", name))
+	}
+	for _, name := range app.Spec.Http.UpstreamRefs {
+		includeLines = append(includeLines,
+			fmt.Sprintf("include /etc/nginx/conf.d/upstream/%s.conf;", name))
+	}
+
+	nginxConf := renderNginxConf(app.Spec.Http, includeLines)
+
+	cm := buildMainNginxConfConfigMap(&app, nginxConf)
+
+	if err := createOrUpdateConfigMap(ctx, r.Client, r.Scheme, &app, cm, log); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func buildMainNginxConfConfigMap(app *webv1alpha1.OpenResty, nginxConf string) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "openresty-" + app.Name + "-main",
+			Namespace: app.Namespace,
+			Labels: map[string]string{
+				"app": app.Name,
+			},
+		},
+		Data: map[string]string{
+			"nginx.conf": nginxConf,
+		},
+	}
+}
+
+func createOrUpdateConfigMap(ctx context.Context, c client.Client, scheme *runtime.Scheme, owner client.Object, cm *corev1.ConfigMap, log logr.Logger) error {
+	if err := ctrl.SetControllerReference(owner, cm, scheme); err != nil {
+		return err
+	}
+
+	var existing corev1.ConfigMap
+	err := c.Get(ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Creating ConfigMap", "name", cm.Name)
+			return c.Create(ctx, cm)
+		}
+		return err
+	}
+
+	if !reflect.DeepEqual(existing.Data, cm.Data) {
+		log.Info("Updating ConfigMap", "name", cm.Name)
+		existing.Data = cm.Data
+		return c.Update(ctx, &existing)
+	}
+
+	return nil
 }
 
 func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
@@ -207,15 +265,46 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		Name: "main-config",
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: "openresty-" + app.Name},
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: "openresty-" + app.Name + "-main",
+				},
 			},
 		},
 	})
 	mounts = append(mounts, corev1.VolumeMount{
 		Name:      "main-config",
-		MountPath: "/etc/nginx/nginx.conf",
-		SubPath:   "nginx.conf",
+		MountPath: "/etc/nginx/",
 	})
+
+	for _, serverName := range app.Spec.Http.ServerRefs {
+		volumes = append(volumes, corev1.Volume{
+			Name: "server-" + serverName,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "server-" + serverName},
+				},
+			},
+		})
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      "server-" + serverName,
+			MountPath: "/etc/nginx/conf.d/server/",
+		})
+	}
+
+	for _, upstreamName := range app.Spec.Http.UpstreamRefs {
+		volumes = append(volumes, corev1.Volume{
+			Name: "upstream-" + upstreamName,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "upstream-" + upstreamName},
+				},
+			},
+		})
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      "upstream-" + upstreamName,
+			MountPath: "/etc/nginx/conf.d/upstream/",
+		})
+	}
 
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -245,8 +334,23 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		},
 	}
 
-	// 可扩展为 patch/update
-	return r.Create(ctx, dep)
+	if err := ctrl.SetControllerReference(app, dep, r.Scheme); err != nil {
+		return err
+	}
+
+	var existing appsv1.Deployment
+	err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: app.Namespace}, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Creating Deployment", "name", name)
+			return r.Create(ctx, dep)
+		}
+		return err
+	}
+
+	log.Info("Updating Deployment", "name", name)
+	dep.ResourceVersion = existing.ResourceVersion
+	return r.Update(ctx, dep)
 }
 
 // SetupWithManager sets up the controller with the Manager.

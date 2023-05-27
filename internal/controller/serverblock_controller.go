@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
+	"openresty-operator/internal/utils"
 	"strings"
 	"time"
 
@@ -144,7 +145,7 @@ func renderServerBlock(s *webv1alpha1.ServerBlock) string {
 	b.WriteString(fmt.Sprintf("    server_name %s;\n", serverName))
 
 	for _, ref := range s.Spec.LocationRefs {
-		includePath := fmt.Sprintf("/etc/nginx/locations/%s.conf", ref)
+		includePath := fmt.Sprintf(utils.NginxLocationConfigDir+"/%s/%s.conf", ref, ref)
 		b.WriteString(fmt.Sprintf("    include %s;\n", includePath))
 	}
 

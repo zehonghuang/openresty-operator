@@ -26,9 +26,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/template"
+	"openresty-operator/internal/utils"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -84,7 +87,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			continue
 		}
 		// 检查对应 ConfigMap
-		cmName := "server-" + name
+		cmName := "serverblock-" + name
 		var cm corev1.ConfigMap
 		if err := r.Get(ctx, types.NamespacedName{Name: cmName, Namespace: app.Namespace}, &cm); err != nil {
 			if errors.IsNotFound(err) {
@@ -145,11 +148,11 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	var includeLines []string
 	for _, name := range app.Spec.Http.ServerRefs {
 		includeLines = append(includeLines,
-			fmt.Sprintf("include /etc/nginx/conf.d/server/%s.conf;", name))
+			fmt.Sprintf("include %s/%s/%s.conf;", utils.NginxServerConfigDir, name, name))
 	}
 	for _, name := range app.Spec.Http.UpstreamRefs {
 		includeLines = append(includeLines,
-			fmt.Sprintf("include /etc/nginx/conf.d/upstream/%s.conf;", name))
+			fmt.Sprintf("include %s/%s/%s.conf;", utils.NginxUpstreamConfigDir, name, name))
 	}
 
 	nginxConf := renderNginxConf(app.Spec.Http, includeLines)
@@ -158,6 +161,22 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	if err := createOrUpdateConfigMap(ctx, r.Client, r.Scheme, &app, cm, log); err != nil {
 		return ctrl.Result{}, err
+	}
+
+	if err := r.deployOpenResty(ctx, &app, []corev1.Volume{}, []corev1.VolumeMount{}, log); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	for _, name := range app.Spec.Http.ServerRefs {
+		var server webv1alpha1.ServerBlock
+		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: app.Namespace}, &server); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		svc := generateServiceForServer(&app, &server)
+		if err := r.createOrUpdateService(ctx, &app, svc, log); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	return ctrl.Result{}, nil
@@ -220,7 +239,7 @@ func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
 		b.WriteString(fmt.Sprintf("    include %s;\n", inc))
 	}
 	if http.LogFormat != "" {
-		b.WriteString(fmt.Sprintf("    log_format main '%s';\n", strings.ReplaceAll(http.LogFormat, "\n", "'\n    '")))
+		b.WriteString(fmt.Sprintf("    log_format main '%s';\n", utils.SanitizeLogFormat(http.LogFormat)))
 	}
 	if http.AccessLog != "" {
 		b.WriteString(fmt.Sprintf("    access_log %s;\n", http.AccessLog))
@@ -273,22 +292,50 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 	})
 	mounts = append(mounts, corev1.VolumeMount{
 		Name:      "main-config",
-		MountPath: "/etc/nginx/",
+		MountPath: utils.NginxConfPath,
+		SubPath:   "nginx.conf",
 	})
+
+	locationSeen := map[string]bool{}
 
 	for _, serverName := range app.Spec.Http.ServerRefs {
 		volumes = append(volumes, corev1.Volume{
-			Name: "server-" + serverName,
+			Name: "serverblock-" + serverName,
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{Name: "server-" + serverName},
+					LocalObjectReference: corev1.LocalObjectReference{Name: "serverblock-" + serverName},
 				},
 			},
 		})
 		mounts = append(mounts, corev1.VolumeMount{
-			Name:      "server-" + serverName,
-			MountPath: "/etc/nginx/conf.d/server/",
+			Name:      "serverblock-" + serverName,
+			MountPath: utils.NginxServerConfigDir + "/" + serverName,
 		})
+
+		var server webv1alpha1.ServerBlock
+		if err := r.Get(ctx, types.NamespacedName{Name: serverName, Namespace: app.Namespace}, &server); err != nil {
+			return err
+		}
+
+		for _, locName := range server.Spec.LocationRefs {
+			if locationSeen[locName] {
+				continue
+			}
+			locationSeen[locName] = true
+
+			volumes = append(volumes, corev1.Volume{
+				Name: "location-" + locName,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "location-" + locName},
+					},
+				},
+			})
+			mounts = append(mounts, corev1.VolumeMount{
+				Name:      "location-" + locName,
+				MountPath: utils.NginxLocationConfigDir + "/" + locName,
+			})
+		}
 	}
 
 	for _, upstreamName := range app.Spec.Http.UpstreamRefs {
@@ -302,7 +349,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		})
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      "upstream-" + upstreamName,
-			MountPath: "/etc/nginx/conf.d/upstream/",
+			MountPath: utils.NginxUpstreamConfigDir + "/" + upstreamName,
 		})
 	}
 
@@ -310,6 +357,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: app.Namespace,
+			Labels:    map[string]string{"app": name},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
@@ -321,14 +369,33 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 					Labels: map[string]string{"app": name},
 				},
 				Spec: corev1.PodSpec{
+					ShareProcessNamespace: ptr.To(true),
+					Volumes:               volumes,
 					Containers: []corev1.Container{
 						{
-							Name:         "openresty",
-							Image:        image,
+							Name:  "openresty",
+							Image: image,
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "http",
+									ContainerPort: 80,
+									Protocol:      corev1.ProtocolTCP,
+								},
+							},
+							VolumeMounts: mounts,
+						},
+						{
+							Name:  "reload-agent",
+							Image: "gintonic1glass/reload-agent:latest", // 替换成你最终镜像名
+							Env: []corev1.EnvVar{
+								{
+									Name:  "WATCH_PATHS",
+									Value: utils.NginxConfPath + " " + utils.NginxConfDir,
+								},
+							},
 							VolumeMounts: mounts,
 						},
 					},
-					Volumes: volumes,
 				},
 			},
 		},
@@ -351,6 +418,51 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 	log.Info("Updating Deployment", "name", name)
 	dep.ResourceVersion = existing.ResourceVersion
 	return r.Update(ctx, dep)
+}
+
+func generateServiceForServer(app *webv1alpha1.OpenResty, server *webv1alpha1.ServerBlock) *corev1.Service {
+	port := utils.ParseListenPort(server.Spec.Listen)
+
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      server.Name,
+			Namespace: app.Namespace,
+			Labels: map[string]string{
+				"app":  "openresty-" + app.Name,
+				"type": "server-service",
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"app": "openresty-" + app.Name,
+			},
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       port,
+					TargetPort: intstr.FromInt32(int32(port)),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+		},
+	}
+}
+
+func (r *OpenRestyReconciler) createOrUpdateService(ctx context.Context, app *webv1alpha1.OpenResty, svc *corev1.Service, log logr.Logger) error {
+	if err := ctrl.SetControllerReference(app, svc, r.Scheme); err != nil {
+		return err
+	}
+	var existing corev1.Service
+	err := r.Get(ctx, types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Creating Service", "name", svc.Name)
+			return r.Create(ctx, svc)
+		}
+		return err
+	}
+	svc.ResourceVersion = existing.ResourceVersion
+	return r.Update(ctx, svc)
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -7,8 +7,8 @@ metadata:
   name: location-sample-01
 spec:
   entries:
-    - path: /api/
-      proxyPass: http://backend
+    - path: /api-01/
+      proxyPass: http://upstream-sample
       enableUpstreamMetrics: true
       headers:
         - key: Host
@@ -28,15 +28,11 @@ spec:
         send: 10s
         read: 10s
       accessLog: false
-      limitReq: zone=api burst=10 nodelay
       gzip:
         enable: true
         types:
           - text/plain
           - application/json
-      cache:
-        zone: my_cache
-        valid: "200 1m"
       lua:
         access: |
           if not ngx.var.arg_token then
@@ -52,8 +48,8 @@ metadata:
   name: location-sample-02
 spec:
   entries:
-    - path: /api/
-      proxyPass: http://backend
+    - path: /api-02-3/
+      proxyPass: http://upstream-sample
       enableUpstreamMetrics: true
       headers:
         - key: Host
@@ -73,15 +69,11 @@ spec:
         send: 10s
         read: 10s
       accessLog: false
-      limitReq: zone=api burst=10 nodelay
       gzip:
         enable: true
         types:
           - text/plain
           - application/json
-      cache:
-        zone: my_cache
-        valid: "200 1m"
       lua:
         access: |
           if not ngx.var.arg_token then

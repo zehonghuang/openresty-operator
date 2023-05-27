@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:3.19
+FROM --platform=linux/amd64 alpine:3.19
 
 # 安装 inotify 工具用于监听文件系统变化
 RUN apk add --no-cache inotify-tools openresty

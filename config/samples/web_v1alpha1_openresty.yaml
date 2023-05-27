@@ -11,9 +11,7 @@ spec:
     include:
       - mime.types
     logFormat: |
-      main '$remote_addr - $remote_user [$time_local] "$request" ...';
-    accessLog: /var/log/nginx/access.log
-    errorLog: /var/log/nginx/error.log warn
+      $remote_addr - $remote_user [$time_local] "$request" ...
     clientMaxBodySize: 16m
     gzip: true
     extra:
@@ -21,3 +19,5 @@ spec:
       - tcp_nopush on;
     serverRefs:
       - serverblock-sample
+    upstreamRefs:
+      - upstream-sample

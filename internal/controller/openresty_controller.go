@@ -390,10 +390,10 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 							Env: []corev1.EnvVar{
 								{
 									Name:  "WATCH_PATHS",
-									Value: utils.NginxConfPath + " " + utils.NginxConfDir,
+									Value: utils.NginxConfDir,
 								},
 							},
-							VolumeMounts: mounts,
+							VolumeMounts: mounts[1:],
 						},
 					},
 				},

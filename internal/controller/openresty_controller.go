@@ -179,6 +179,9 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
+	app.Status.Ready = true
+	app.Status.Reason = ""
+
 	return ctrl.Result{}, nil
 }
 
@@ -415,9 +418,15 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		return err
 	}
 
-	log.Info("Updating Deployment", "name", name)
-	dep.ResourceVersion = existing.ResourceVersion
-	return r.Update(ctx, dep)
+	patch := client.MergeFrom(existing.DeepCopy())
+	app.ResourceVersion = existing.ResourceVersion
+
+	if err := r.Patch(ctx, app, patch); err != nil {
+		log.Error(err, "Failed to Patch Deployment")
+		return err
+	}
+	log.Info("Deployment patched successfully", "name", app.Name)
+	return nil
 }
 
 func generateServiceForServer(app *webv1alpha1.OpenResty, server *webv1alpha1.ServerBlock) *corev1.Service {

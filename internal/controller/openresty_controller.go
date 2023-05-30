@@ -155,7 +155,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			fmt.Sprintf("include %s/%s/%s.conf;", utils.NginxUpstreamConfigDir, name, name))
 	}
 
-	nginxConf := renderNginxConf(app.Spec.Http, includeLines)
+	nginxConf := renderNginxConf(app.Spec.Http, app.Spec.MetricsServer, includeLines)
 
 	cm := buildMainNginxConfConfigMap(&app, nginxConf)
 
@@ -224,7 +224,7 @@ func createOrUpdateConfigMap(ctx context.Context, c client.Client, scheme *runti
 	return nil
 }
 
-func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
+func renderNginxConf(http *webv1alpha1.HttpBlock, metrics *webv1alpha1.MetricsServer, includes []string) string {
 	var b strings.Builder
 	b.WriteString("worker_processes auto;\n")
 	b.WriteString("events { worker_connections 1024; }\n")
@@ -234,9 +234,13 @@ func renderNginxConf(http *webv1alpha1.HttpBlock, includes []string) string {
 	b.WriteString("    lua_shared_dict prometheus_metrics 10M;\n\n")
 
 	// Prometheus init_by_lua_block
-	b.WriteString("    init_by_lua_block {\n")
+	b.WriteString("    init_worker_by_lua_block {\n")
 	b.WriteString(indentLua(template.DefaultInitLua, "        "))
 	b.WriteString("    }\n\n")
+
+	if metrics != nil && metrics.Enable {
+		b.WriteString(renderMetricsServerBlock(metrics))
+	}
 
 	for _, inc := range http.Include {
 		b.WriteString(fmt.Sprintf("    include %s;\n", inc))
@@ -356,6 +360,17 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		})
 	}
 
+	var metricsPort corev1.ContainerPort
+	if app.Spec.MetricsServer != nil && app.Spec.MetricsServer.Enable {
+		port := "8080"
+		if app.Spec.MetricsServer.Listen != "" {
+			port = app.Spec.MetricsServer.Listen
+		}
+		metricsPort.ContainerPort = utils.ParseListenPort(port)
+		metricsPort.Name = "metrics"
+		metricsPort.Protocol = corev1.ProtocolTCP
+	}
+
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -384,6 +399,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 									ContainerPort: 80,
 									Protocol:      corev1.ProtocolTCP,
 								},
+								metricsPort,
 							},
 							VolumeMounts: mounts,
 						},
@@ -472,6 +488,30 @@ func (r *OpenRestyReconciler) createOrUpdateService(ctx context.Context, app *we
 	}
 	svc.ResourceVersion = existing.ResourceVersion
 	return r.Update(ctx, svc)
+}
+
+func renderMetricsServerBlock(metrics *webv1alpha1.MetricsServer) string {
+	if metrics == nil || !metrics.Enable {
+		return ""
+	}
+	port := "8080"
+	if metrics.Listen != "" {
+		port = metrics.Listen
+	}
+	path := "/metrics"
+	if metrics.Path != "" {
+		path = metrics.Path
+	}
+
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("server {\n    listen %s;\n", port))
+	b.WriteString(fmt.Sprintf("    location %s {\n", path))
+	b.WriteString("        content_by_lua_block {\n")
+	b.WriteString("            prometheus:collect()\n")
+	b.WriteString("        }\n")
+	b.WriteString("    }\n")
+	b.WriteString("}\n")
+	return b.String()
 }
 
 // SetupWithManager sets up the controller with the Manager.

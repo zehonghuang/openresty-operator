@@ -1,0 +1,15 @@
+apiVersion: web.chillyroom.com/v1alpha1
+kind: OpenResty
+metadata:
+  name: {{ .Values.openresty.name }}
+spec:
+  image: {{ .Values.openresty.image }}
+  replicas: {{ .Values.openresty.replicas }}
+  http:
+    accessLog: {{ .Values.openresty.http.accessLog | quote }}
+    errorLog: {{ .Values.openresty.http.errorLog | quote }}
+    gzip: {{ .Values.openresty.http.gzip }}
+    serverRefs:
+{{ toYaml .Values.openresty.http.serverRefs | indent 6 }}
+    upstreamRefs:
+{{ toYaml .Values.openresty.http.upstreamRefs | indent 6 }}

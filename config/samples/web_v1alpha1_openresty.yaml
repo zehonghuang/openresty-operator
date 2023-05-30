@@ -21,3 +21,7 @@ spec:
       - serverblock-sample
     upstreamRefs:
       - upstream-sample
+  metrics:
+    enable: true
+    listen: "8080"
+    path: "/metrics"

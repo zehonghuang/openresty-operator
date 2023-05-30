@@ -31,6 +31,8 @@ type OpenRestySpec struct {
 	Image string `json:"image,omitempty"`
 	// Service 的端口
 	Http *HttpBlock `json:"http"` // http 配置 + serverRefs
+
+	MetricsServer *MetricsServer `json:"metrics,omitempty"`
 }
 
 // http 层配置
@@ -44,7 +46,12 @@ type HttpBlock struct {
 	Extra             []string `json:"extra,omitempty"`             // 其他 http 层自定义指令
 	ServerRefs        []string `json:"serverRefs"`                  // 引用 ServerBlock 名称
 	UpstreamRefs      []string `json:"upstreamRefs,omitempty"`      // 引用 Upstream 名称
+}
 
+type MetricsServer struct {
+	Enable bool   `json:"enable,omitempty"`
+	Listen string `json:"listen,omitempty"` // 默认: "8080"
+	Path   string `json:"path,omitempty"`   // 默认: "/metrics"
 }
 
 // OpenRestyStatus defines the observed state of OpenResty

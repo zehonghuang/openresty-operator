@@ -406,6 +406,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		MatchLabels: map[string]string{"app": name},
 	}
 	dep.Spec.Template.ObjectMeta.Labels = map[string]string{"app": name}
+	dep.Spec.Template.Annotations = buildPrometheusAnnotations(app.Spec.MetricsServer)
 	dep.Spec.Template.Spec.ShareProcessNamespace = ptr.To(true)
 	dep.Spec.Template.Spec.Volumes = volumes
 	dep.Spec.Template.Spec.Containers = []corev1.Container{
@@ -452,6 +453,20 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 	})
 
 	return err
+}
+
+func buildPrometheusAnnotations(metrics *webv1alpha1.MetricsServer) map[string]string {
+	if metrics == nil || !metrics.Enable {
+		return nil
+	}
+	port := defaultOr(metrics.Listen, "9091")
+	path := defaultOr(metrics.Path, "/metrics")
+
+	return map[string]string{
+		"prometheus.io/scrape": "true",
+		"prometheus.io/port":   port,
+		"prometheus.io/path":   path,
+	}
 }
 
 func generateServiceForServer(app *webv1alpha1.OpenResty, server *webv1alpha1.ServerBlock) *corev1.Service {

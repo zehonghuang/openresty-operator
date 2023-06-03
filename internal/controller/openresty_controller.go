@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -35,6 +36,7 @@ import (
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
 	"time"
@@ -371,78 +373,72 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		metricsPort.Protocol = corev1.ProtocolTCP
 	}
 
+	// 1. 获取 Deployment 的默认值模板
+	defaulted := &appsv1.Deployment{}
+	r.Scheme.Default(defaulted)
+
+	// 2. 构造你的业务 Deployment（注意不要提前写 defaulted 字段）
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: app.Namespace,
 			Labels:    map[string]string{"app": name},
 		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": name},
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": name},
+		Spec: defaulted.Spec, // 复制默认值
+	}
+
+	// 3. 设置你的业务逻辑字段
+	dep.Spec.Replicas = &replicas
+	dep.Spec.Selector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{"app": name},
+	}
+	dep.Spec.Template.ObjectMeta.Labels = map[string]string{"app": name}
+	dep.Spec.Template.Spec.ShareProcessNamespace = ptr.To(true)
+	dep.Spec.Template.Spec.Volumes = volumes
+	dep.Spec.Template.Spec.Containers = []corev1.Container{
+		{
+			Name:  "openresty",
+			Image: image,
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          "http",
+					ContainerPort: 80,
+					Protocol:      corev1.ProtocolTCP,
 				},
-				Spec: corev1.PodSpec{
-					ShareProcessNamespace: ptr.To(true),
-					Volumes:               volumes,
-					Containers: []corev1.Container{
-						{
-							Name:  "openresty",
-							Image: image,
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "http",
-									ContainerPort: 80,
-									Protocol:      corev1.ProtocolTCP,
-								},
-								metricsPort,
-							},
-							VolumeMounts: mounts,
-						},
-						{
-							Name:  "reload-agent",
-							Image: "gintonic1glass/reload-agent:latest", // 替换成你最终镜像名
-							Env: []corev1.EnvVar{
-								{
-									Name:  "WATCH_PATHS",
-									Value: utils.NginxConfDir,
-								},
-							},
-							VolumeMounts: mounts[1:],
-						},
-					},
+				metricsPort,
+			},
+			VolumeMounts: mounts,
+		},
+		{
+			Name:  "reload-agent",
+			Image: "gintonic1glass/reload-agent:latest",
+			Env: []corev1.EnvVar{
+				{
+					Name:  "WATCH_PATHS",
+					Value: utils.NginxConfDir,
 				},
 			},
+			VolumeMounts: mounts[1:], // 不挂主配置
 		},
 	}
 
-	if err := ctrl.SetControllerReference(app, dep, r.Scheme); err != nil {
-		return err
+	existing := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      dep.Name,
+			Namespace: dep.Namespace,
+		},
 	}
 
-	var existing appsv1.Deployment
-	err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: app.Namespace}, &existing)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("Creating Deployment", "name", name)
-			return r.Create(ctx, dep)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, existing, func() error {
+		if !reflect.DeepEqual(existing.Spec, dep.Spec) {
+			diff := cmp.Diff(existing.Spec, dep.Spec)
+			log.Info("Deployment spec has changed", "diff", diff)
+			existing.Spec = dep.Spec
 		}
-		return err
-	}
+		return ctrl.SetControllerReference(app, existing, r.Scheme)
+	})
 
-	patch := client.MergeFrom(existing.DeepCopy())
-	app.ResourceVersion = existing.ResourceVersion
-
-	if err := r.Patch(ctx, app, patch); err != nil {
-		log.Error(err, "Failed to Patch Deployment")
-		return err
-	}
-	log.Info("Deployment patched successfully", "name", app.Name)
-	return nil
+	return err
 }
 
 func generateServiceForServer(app *webv1alpha1.OpenResty, server *webv1alpha1.ServerBlock) *corev1.Service {

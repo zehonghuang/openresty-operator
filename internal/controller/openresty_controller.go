@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
@@ -40,6 +41,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
 	"time"
+
+	_template "text/template"
 )
 
 // OpenRestyReconciler reconciles a OpenResty object
@@ -226,52 +229,62 @@ func createOrUpdateConfigMap(ctx context.Context, c client.Client, scheme *runti
 	return nil
 }
 
+type nginxConfData struct {
+	InitLua           string
+	EnableMetrics     bool
+	MetricsPort       string
+	MetricsPath       string
+	Includes          []string
+	LogFormat         string
+	AccessLog         string
+	ErrorLog          string
+	ClientMaxBodySize string
+	Gzip              bool
+	Extra             []string
+	IncludeSnippets   []string
+}
+
+func defaultOr(s, fallback string) string {
+	if s == "" {
+		return fallback
+	}
+	return s
+}
+
 func renderNginxConf(http *webv1alpha1.HttpBlock, metrics *webv1alpha1.MetricsServer, includes []string) string {
-	var b strings.Builder
-	b.WriteString("worker_processes auto;\n")
-	b.WriteString("events { worker_connections 1024; }\n")
-	b.WriteString("http {\n")
 
-	// Prometheus 指标共享内存
-	b.WriteString("    lua_shared_dict prometheus_metrics 10M;\n\n")
-
-	// Prometheus init_by_lua_block
-	b.WriteString("    init_worker_by_lua_block {\n")
-	b.WriteString(indentLua(template.DefaultInitLua, "        "))
-	b.WriteString("    }\n\n")
-
-	if metrics != nil && metrics.Enable {
-		b.WriteString(renderMetricsServerBlock(metrics))
-	}
-
-	for _, inc := range http.Include {
-		b.WriteString(fmt.Sprintf("    include %s;\n", inc))
-	}
-	if http.LogFormat != "" {
-		b.WriteString(fmt.Sprintf("    log_format main '%s';\n", utils.SanitizeLogFormat(http.LogFormat)))
-	}
-	if http.AccessLog != "" {
-		b.WriteString(fmt.Sprintf("    access_log %s;\n", http.AccessLog))
-	}
-	if http.ErrorLog != "" {
-		b.WriteString(fmt.Sprintf("    error_log %s;\n", http.ErrorLog))
-	}
-	if http.ClientMaxBodySize != "" {
-		b.WriteString(fmt.Sprintf("    client_max_body_size %s;\n", http.ClientMaxBodySize))
-	}
-	if http.Gzip {
-		b.WriteString("    gzip on;\n")
-	}
-	for _, line := range http.Extra {
-		b.WriteString("    " + line + "\n")
+	data := nginxConfData{
+		InitLua:           template.DefaultInitLua,
+		EnableMetrics:     metrics != nil && metrics.Enable,
+		MetricsPort:       defaultOr(metrics.Listen, "9091"),
+		MetricsPath:       defaultOr(metrics.Path, "/metrics"),
+		Includes:          http.Include,
+		LogFormat:         utils.SanitizeLogFormat(http.LogFormat),
+		AccessLog:         http.AccessLog,
+		ErrorLog:          http.ErrorLog,
+		ClientMaxBodySize: http.ClientMaxBodySize,
+		Gzip:              http.Gzip,
+		Extra:             http.Extra,
+		IncludeSnippets:   includes,
 	}
 
-	for _, inc := range includes {
-		b.WriteString(inc + "\n")
+	tmpl := _template.Must(_template.New("nginx").Funcs(_template.FuncMap{
+		"indent": func(s string, spaces int) string {
+			pad := strings.Repeat(" ", spaces)
+			lines := strings.Split(s, "\n")
+			for i := range lines {
+				lines[i] = pad + lines[i]
+			}
+			return strings.Join(lines, "\n")
+		},
+	}).Parse(utils.NginxTemplate))
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return fmt.Sprintf("# failed to render: %v", err)
 	}
 
-	b.WriteString("}\n")
-	return b.String()
+	return buf.String()
 }
 
 func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alpha1.OpenResty,
@@ -432,7 +445,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, existing, func() error {
 		if !reflect.DeepEqual(existing.Spec, dep.Spec) {
 			diff := cmp.Diff(existing.Spec, dep.Spec)
-			log.Info("Deployment spec has changed", "diff", diff)
+			log.V(4).Info("Deployment spec has changed", "diff", diff)
 			existing.Spec = dep.Spec
 		}
 		return ctrl.SetControllerReference(app, existing, r.Scheme)
@@ -484,30 +497,6 @@ func (r *OpenRestyReconciler) createOrUpdateService(ctx context.Context, app *we
 	}
 	svc.ResourceVersion = existing.ResourceVersion
 	return r.Update(ctx, svc)
-}
-
-func renderMetricsServerBlock(metrics *webv1alpha1.MetricsServer) string {
-	if metrics == nil || !metrics.Enable {
-		return ""
-	}
-	port := "8080"
-	if metrics.Listen != "" {
-		port = metrics.Listen
-	}
-	path := "/metrics"
-	if metrics.Path != "" {
-		path = metrics.Path
-	}
-
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("server {\n    listen %s;\n", port))
-	b.WriteString(fmt.Sprintf("    location %s {\n", path))
-	b.WriteString("        content_by_lua_block {\n")
-	b.WriteString("            prometheus:collect()\n")
-	b.WriteString("        }\n")
-	b.WriteString("    }\n")
-	b.WriteString("}\n")
-	return b.String()
 }
 
 // SetupWithManager sets up the controller with the Manager.

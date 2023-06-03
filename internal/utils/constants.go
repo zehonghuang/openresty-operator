@@ -8,4 +8,38 @@ const (
 	NginxServerConfigDir   = NginxConfDir + "/servers"
 	NginxLocationConfigDir = NginxConfDir + "/locations"
 	NginxUpstreamConfigDir = NginxConfDir + "/upstreams"
+	NginxTemplate          = `
+worker_processes auto;
+events { worker_connections 1024; }
+http {
+    lua_shared_dict prometheus_metrics 10M;
+    init_worker_by_lua_block {
+{{ indent .InitLua 8 }}
+    }
+{{- if .EnableMetrics }}
+    server {
+        listen {{ .MetricsPort }};
+        location {{ .MetricsPath }} {
+            content_by_lua_block {
+                prometheus:collect()
+            }
+        }
+    }
+{{- end }}
+{{- range .Includes }}
+    include {{ . }};
+{{- end }}
+{{- if .LogFormat }}log_format main '{{ .LogFormat }}';{{ end }}
+{{- if .AccessLog }}access_log {{ .AccessLog }};{{ end }}
+{{- if .ErrorLog }}error_log {{ .ErrorLog }};{{ end }}
+{{- if .ClientMaxBodySize }}client_max_body_size {{ .ClientMaxBodySize }};{{ end }}
+{{- if .Gzip }}gzip on;{{ end }}
+{{- range .Extra }}
+    {{ . }}
+{{- end }}
+{{- range .IncludeSnippets }}
+    {{ . }}
+{{- end }}
+}
+`
 )

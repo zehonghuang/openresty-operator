@@ -29,7 +29,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # chillyroom.com/openresty-operator-bundle:$VERSION and chillyroom.com/openresty-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= chillyroom.com/openresty-operator
+IMAGE_TAG_BASE ?= gintonic1glass/openresty-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)

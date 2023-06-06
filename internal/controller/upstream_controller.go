@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
-	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,8 +27,8 @@ import (
 	"k8s.io/client-go/tools/record"
 	"net"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
 	"sync"
@@ -47,14 +46,6 @@ type UpstreamReconciler struct {
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }
-
-var upstreamServerAlive = prometheus.NewGaugeVec(
-	prometheus.GaugeOpts{
-		Name: "openresty_upstream_server_alive",
-		Help: "Indicates if a given upstream server is alive (1) or dead (0)",
-	},
-	[]string{"upstream", "address"},
-)
 
 // +kubebuilder:rbac:groups=web.chillyroom.com,resources=upstreams,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=web.chillyroom.com,resources=upstreams/status,verbs=get;update;patch
@@ -143,7 +134,7 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			Address: r.Address,
 			Alive:   r.Alive,
 		})
-		upstreamServerAlive.WithLabelValues(upstream.Name, r.Address).Set(utils.BoolToFloat64(r.Alive))
+		metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, r.Address, r.Alive)
 	}
 
 	// 写入 ConfigMap
@@ -267,7 +258,6 @@ func (r *UpstreamReconciler) updateLocationStatus(
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	metrics.Registry.MustRegister(upstreamServerAlive)
 	return ctrl.NewControllerManagedBy(mgr).
 		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
 		For(&webv1alpha1.Upstream{}).

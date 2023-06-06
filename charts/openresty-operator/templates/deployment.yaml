@@ -18,6 +18,10 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "openresty-operator.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: {{ include "openresty-operator.serviceAccountName" . }}
       containers:

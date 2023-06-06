@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: your-dockerhub/openresty-operator
-  tag: latest
+  repository: gintonic1glass/openresty-operator
+  tag: v0.1.0
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

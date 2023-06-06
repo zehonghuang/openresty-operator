@@ -74,6 +74,15 @@ spec:
               image:
                 description: 镜像地址
                 type: string
+              metrics:
+                properties:
+                  enable:
+                    type: boolean
+                  listen:
+                    type: string
+                  path:
+                    type: string
+                type: object
               replicas:
                 description: 副本数量
                 format: int32
@@ -87,6 +96,12 @@ spec:
               availableReplicas:
                 format: int32
                 type: integer
+              ready:
+                type: boolean
+              reason:
+                type: string
+            required:
+            - ready
             type: object
         type: object
     served: true

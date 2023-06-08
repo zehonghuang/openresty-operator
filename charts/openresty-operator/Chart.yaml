@@ -3,7 +3,7 @@ name: openresty-operator
 description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenResty, Server, Location, Upstream, RateLimitPolicy)
 
 # Helm chart version
-version: 0.1.0
+version: 0.2.0
 
 # App (controller) version
 appVersion: "v0.1.0"

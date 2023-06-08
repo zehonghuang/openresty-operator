@@ -1,0 +1,27 @@
+{{- range .Values.servers }}
+apiVersion: web.chillyroom.com/v1alpha1
+kind: ServerBlock
+metadata:
+  name: {{ .name }}
+spec:
+  listen: {{ .listen | quote }}
+  {{- if .accessLog }}
+  accessLog: {{ .accessLog | quote }}
+  {{- end }}
+  {{- if .errorLog }}
+  errorLog: {{ .errorLog | quote }}
+  {{- end }}
+  {{- if .headers }}
+  headers:
+    {{- toYaml .headers | nindent 4 }}
+  {{- end }}
+  {{- if .locationRefs }}
+  locationRefs:
+    {{- toYaml .locationRefs | nindent 4 }}
+  {{- end }}
+  {{- if .extra }}
+  extra:
+    {{- toYaml .extra | nindent 4 }}
+  {{- end }}
+---
+{{- end }}

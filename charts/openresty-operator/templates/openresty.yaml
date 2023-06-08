@@ -13,3 +13,7 @@ spec:
 {{ toYaml .Values.openresty.http.serverRefs | indent 6 }}
     upstreamRefs:
 {{ toYaml .Values.openresty.http.upstreamRefs | indent 6 }}
+  metrics:
+    enable: {{ .Values.openresty.metrics.enable }}
+    listen: {{ .Values.openresty.metrics.listen | quote }}
+    path: {{ .Values.openresty.metrics.path | quote }}

@@ -23,33 +23,32 @@ tolerations: []
 affinity: {}
 
 openresty:
-  enabled: true
-  name: openresty-sample
+  name: openresty-app
   image: gintonic1glass/openresty:with-prometheus
   replicas: 1
-
   http:
     accessLog: /var/log/nginx/access.log
     errorLog: /var/log/nginx/error.log
-    clientMaxBodySize: 16m
     gzip: true
-
     serverRefs:
       - serverblock-sample
     upstreamRefs:
       - upstream-sample
+  metrics:
+    enable: true
+    listen: "9090"
+    path: /metrics
+
 
 upstreams:
   - name: upstream-sample
     servers:
-      - backend1:8080
-      - backend2:8080
+      - http://10.0.0.1:8080
+      - http://10.0.0.2:8080
 
-serverBlocks:
+servers:
   - name: serverblock-sample
     listen: "80"
-    serverName:
-      - example.com
     locationRefs:
       - location-sample-01
       - location-sample-02

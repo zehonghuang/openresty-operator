@@ -1,0 +1,10 @@
+{{- range .Values.locations }}
+apiVersion: web.chillyroom.com/v1alpha1
+kind: Location
+metadata:
+  name: {{ .name }}
+spec:
+  entries:
+{{ toYaml .entries | indent 4 }}
+---
+{{- end }}

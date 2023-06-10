@@ -1,0 +1,148 @@
+---
+# Source: openresty-operator/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openresty-operator
+  labels:
+    app.kubernetes.io/name: openresty-operator
+    app.kubernetes.io/instance: release-name
+---
+# Source: openresty-operator/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openresty-operator
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - events
+      - configmaps
+    verbs: ["*"]
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs: ["*"]
+  - apiGroups:
+      - web.chillyroom.com
+    resources:
+      - "*"
+    verbs: ["*"]
+---
+# Source: openresty-operator/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openresty-operator
+subjects:
+  - kind: ServiceAccount
+    name: openresty-operator
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: openresty-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: openresty-operator/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openresty-operator
+  labels:
+    app.kubernetes.io/name: openresty-operator
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: v0.1.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openresty-operator
+      app.kubernetes.io/instance: release-name
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openresty-operator
+        app.kubernetes.io/instance: release-name
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: openresty-operator
+      containers:
+        - name: manager
+          image: "gintonic1glass/openresty-operator:v0.1.0"
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/manager"
+          args:
+            - "--metrics-bind-address=0.0.0.0:8080"
+            - "--health-probe-bind-address=0.0.0.0:8081"
+          ports:
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+            - name: probes
+              containerPort: 8081
+              protocol: TCP
+          resources:
+            {}
+---
+# Source: openresty-operator/templates/location.yaml
+apiVersion: web.chillyroom.com/v1alpha1
+kind: Location
+metadata:
+  name: api-01
+spec:
+  entries:
+    - accessLog: false
+      path: /api-1/
+      proxyPass: http://etherscan-api
+---
+# Source: openresty-operator/templates/location.yaml
+apiVersion: web.chillyroom.com/v1alpha1
+kind: Location
+metadata:
+  name: api-02
+spec:
+  entries:
+    - accessLog: false
+      path: /api-2/
+      proxyPass: http://etherscan-api
+---
+# Source: openresty-operator/templates/openresty.yaml
+apiVersion: web.chillyroom.com/v1alpha1
+kind: OpenResty
+metadata:
+  name: openresty-app
+spec:
+  image: gintonic1glass/openresty:with-prometheus
+  replicas: 1
+  http:
+    accessLog: "/var/log/nginx/access.log"
+    errorLog: "/var/log/nginx/error.log"
+    gzip: true
+    serverRefs:
+      - serverblock-sample
+    upstreamRefs:
+      - etherscan-api
+  metrics:
+    enable: true
+    listen: "9090"
+    path: "/metrics"
+---
+# Source: openresty-operator/templates/server.yaml
+apiVersion: web.chillyroom.com/v1alpha1
+kind: ServerBlock
+metadata:
+  name: api-server
+spec:
+  listen: "80"
+  locationRefs:
+    - api-01
+    - api-02

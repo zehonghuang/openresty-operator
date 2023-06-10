@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: gintonic1glass/openresty-operator
-  tag: v0.1.0
+  tag: v0.2.1
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -31,9 +31,9 @@ openresty:
     errorLog: /var/log/nginx/error.log
     gzip: true
     serverRefs:
-      - serverblock-sample
+      - api-server
     upstreamRefs:
-      - upstream-sample
+      - etherscan-api
   metrics:
     enable: true
     listen: "9090"
@@ -41,26 +41,28 @@ openresty:
 
 
 upstreams:
-  - name: upstream-sample
+  - name: etherscan-api
     servers:
-      - http://10.0.0.1:8080
-      - http://10.0.0.2:8080
+      - api.etherscan.io:80
+      - api.bscscan.com:80
+      - api.polygonscan.com:80
+      - api.ftmscan1.com:80
 
 servers:
-  - name: serverblock-sample
+  - name: api-server
     listen: "80"
     locationRefs:
-      - location-sample-01
-      - location-sample-02
+      - api-01
+      - api-02
 
 locations:
-  - name: location-sample-01
+  - name: api-01
     entries:
       - path: /api-1/
-        proxyPass: http://upstream-sample
+        proxyPass: http://etherscan-api
         accessLog: false
-  - name: location-sample-02
+  - name: api-02
     entries:
       - path: /api-2/
-        proxyPass: http://upstream-sample
+        proxyPass: http://etherscan-api
         accessLog: false

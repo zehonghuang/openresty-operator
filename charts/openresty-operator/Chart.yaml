@@ -6,7 +6,7 @@ description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenRe
 version: 0.2.0
 
 # App (controller) version
-appVersion: "v0.1.0"
+appVersion: "v0.2.1"
 
 type: application
 

@@ -1,0 +1,10 @@
+{{- range .Values.upstreams }}
+apiVersion: web.chillyroom.com/v1alpha1
+kind: Upstream
+metadata:
+  name: {{ .name }}
+spec:
+  servers:
+{{ toYaml .servers | indent 4 }}
+---
+{{- end }}

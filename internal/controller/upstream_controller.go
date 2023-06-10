@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"net"
+	"net/url"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
@@ -216,11 +217,37 @@ func renderNginxUpstreamBlock(name string, lines []string) string {
 }
 
 func splitHostPort(input string) (string, string, error) {
-	parts := strings.Split(input, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid server format: %s", input)
+	// 处理带 http/https schema 的 URL
+	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
+		u, err := url.Parse(input)
+		if err != nil {
+			return "", "", fmt.Errorf("invalid URL: %v", err)
+		}
+
+		host := u.Hostname()
+		port := u.Port()
+		if port == "" {
+			if u.Scheme == "http" {
+				port = "80"
+			} else if u.Scheme == "https" {
+				port = "443"
+			}
+		}
+		return host, port, nil
 	}
-	return parts[0], parts[1], nil
+
+	// 处理 host:port 的格式
+	if strings.Contains(input, ":") {
+		host, port, err := net.SplitHostPort(input)
+		if err == nil {
+			return host, port, nil
+		}
+		// 可能是域名中带冒号但格式不合法，比如 IPv6 缺 []
+		return "", "", fmt.Errorf("invalid host:port format: %v", err)
+	}
+
+	// fallback，只有 host 没有端口
+	return input, "80", nil
 }
 
 func testTCP(ip, port string) (bool, error) {

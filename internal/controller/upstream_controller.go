@@ -30,6 +30,8 @@ import (
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
 	"sync"
@@ -289,5 +291,34 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
 		For(&webv1alpha1.Upstream{}).
 		Owns(&corev1.ConfigMap{}).
+		WithEventFilter(predicate.Funcs{
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				if obj, ok := e.Object.(*webv1alpha1.Upstream); ok {
+					for _, server := range obj.Spec.Servers {
+						host, _, _ := splitHostPort(server)
+						metrics.UpstreamDNSResolvable.DeleteLabelValues(obj.Namespace, obj.Name, host)
+					}
+				}
+				return false
+			},
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				oldObj, ok1 := e.ObjectOld.(*webv1alpha1.Upstream)
+				newObj, ok2 := e.ObjectNew.(*webv1alpha1.Upstream)
+				if !ok1 || !ok2 {
+					return true
+				}
+
+				oldSet := setFrom(oldObj.Spec.Servers)
+				newSet := setFrom(newObj.Spec.Servers)
+
+				for server := range oldSet {
+					if _, stillPresent := newSet[server]; !stillPresent {
+						host, _, _ := splitHostPort(server)
+						metrics.UpstreamDNSResolvable.DeleteLabelValues(oldObj.Namespace, oldObj.Name, host)
+					}
+				}
+				return true // 可以进入 Reconcile 继续做 patch/update 等操作
+			},
+		}).
 		Complete(r)
 }

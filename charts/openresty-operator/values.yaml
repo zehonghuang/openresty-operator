@@ -27,8 +27,8 @@ openresty:
   image: gintonic1glass/openresty:with-prometheus
   replicas: 1
   http:
-    accessLog: /var/log/nginx/access.log
-    errorLog: /var/log/nginx/error.log
+    accessLog: /dev/stdout
+    errorLog: /dev/stderr
     gzip: true
     serverRefs:
       - api-server

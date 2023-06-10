@@ -27,19 +27,34 @@ helm install openresty-operator openresty-operator/openresty-operator
 
 ## Values
 
-| Key                         | Default                         | Description                           |
-|----------------------------|---------------------------------|---------------------------------------|
-| `replicaCount`             | `1`                             | Number of Operator pods               |
-| `image.repository`         | `gintonic1glass/openresty`      | Operator image repository             |
-| `image.tag`                | `with-prometheus`               | Image tag                             |
-| `image.pullPolicy`         | `IfNotPresent`                  | Image pull policy                     |
-| `serviceAccount.create`    | `true`                          | Whether to create a ServiceAccount    |
-| `serviceAccount.name`      | `""`                            | Name override for ServiceAccount      |
-| `rbac.create`              | `true`                          | Whether to create RBAC resources      |
-| `resources`                | `{}`                            | Pod resource requests/limits          |
-| `nodeSelector`             | `{}`                            | Node selector                         |
-| `tolerations`              | `[]`                            | Tolerations                           |
-| `affinity`                 | `{}`                            | Affinity rules                        |
+| Key                                | Default                                    | Description                        |
+|------------------------------------|--------------------------------------------|------------------------------------|
+| `replicaCount`                     | `1`                                        | Number of Operator pods            |
+| `image.repository`                 | `gintonic1glass/openresty`                 | Operator image repository          |
+| `image.tag`                        | `with-prometheus`                          | Image tag                          |
+| `image.pullPolicy`                 | `IfNotPresent`                             | Image pull policy                  |
+| `serviceAccount.create`            | `true`                                     | Whether to create a ServiceAccount |
+| `serviceAccount.name`              | `""`                                       | Name override for ServiceAccount   |
+| `rbac.create`                      | `true`                                     | Whether to create RBAC resources   |
+| `resources`                        | `{}`                                       | Pod resource requests/limits       |
+| `nodeSelector`                     | `{}`                                       | Node selector                      |
+| `tolerations`                      | `[]`                                       | Tolerations                        |
+| `affinity`                         | `{}`                                       | Affinity rules                     |
+| `openresty.name`                   | "openresty-sample"                         | Name of OpenResty custom resource  |
+| `openresty.replicas`               | 1                                          | Number of OpenResty replicas       |
+| `openresty.image`                  | "gintonic1glass/openresty:with-prometheus" | OpenResty image to deploy          |
+| `openresty.http.include`           | []                                         | Additional include directives      |
+| `openresty.http.logFormat`         | ""                                         | Log format string                  |
+| `openresty.http.accessLog`         | "/dev/stdout"                              | Access log path                    |
+| `openresty.http.errorLog`          | "/dev/stderr"                              | Error log path                     |
+| `openresty.http.clientMaxBodySize` | "16m"                                      | Maximum client body size           |
+| `openresty.http.gzip`              | true                                       | Enable gzip                        |
+| `openresty.http.extra`             | []                                         | Additional raw nginx directives    |
+| `openresty.http.serverRefs`        | []                                         | Referenced ServerBlock names       |
+| `openresty.http.upstreamRefs`      | []                                         | Referenced Upstream names          |
+| `openresty.metrics.enable`         | true                                       | Enable Prometheus metrics server   |
+| `openresty.metrics.listen`         | "9090"                                     | Metrics server listen port         |
+| `openresty.metrics.path`           | "/metrics"                                 | Path to expose metrics             |
 
 ## Example Usage
 
@@ -69,4 +84,4 @@ This chart installs the following CRDs:
 
 ## License
 
-MIT © 2025 YourName
+MIT © 2025 huangzehong

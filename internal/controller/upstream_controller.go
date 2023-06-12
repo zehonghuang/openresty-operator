@@ -317,8 +317,16 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 						metrics.UpstreamDNSResolvable.DeleteLabelValues(oldObj.Namespace, oldObj.Name, host)
 					}
 				}
-				return true // 可以进入 Reconcile 继续做 patch/update 等操作
+				return true
 			},
 		}).
 		Complete(r)
+}
+
+func setFrom(servers []string) map[string]struct{} {
+	result := make(map[string]struct{}, len(servers))
+	for _, s := range servers {
+		result[s] = struct{}{}
+	}
+	return result
 }

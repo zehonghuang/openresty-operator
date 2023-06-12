@@ -1,114 +1,91 @@
-# openresty-operator
-// TODO(user): Add simple overview of use/purpose
+# OpenResty Operator
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+[![License](https://img.shields.io/github/license/zehonghuang/openresty-operator)](LICENSE)
 
-## Getting Started
+**OpenResty Operator** 是一个 Kubernetes 原生的 Operator，用于声明式管理 OpenResty 实例和配置。通过 CRD 资源将复杂的 Nginx/OpenResty 配置模块化，支持热重载、Prometheus metrics 暴露与可观测性增强，适用于多项目多服务部署场景。
 
-### Prerequisites
-- go version v1.22.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+---
 
-### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
+## ✨ Features
 
-```sh
-make docker-build docker-push IMG=<some-registry>/openresty-operator:tag
+- 🧩 **模块化配置管理**：支持 Http、ServerBlock、Location、Upstream 多 CRD 管理
+- 🔁 **配置热更新**：支持通过 Sidecar 监听 ConfigMap 实现自动热重载
+- 📊 **内置 Metrics**：内建 Prometheus Lua 支持，可选 metrics server 暴露
+- 🔎 **状态可观测性**：展示 CRD 引用健康状态，结合 Grafana 轻松可视化
+- 🧵 **轻量部署**：支持通过 Helm 安装，资源开销小、无侵入性
+
+---
+
+## 📦 CRD 概览
+
+| Kind            | 描述                    |
+|-----------------|-----------------------|
+| `OpenResty`     | 声明一个完整 OpenResty 应用   |
+| `ServerBlock`   | 配置 server 区块          |
+| `Location`      | 配置 location 区块        |
+| `Upstream`      | 配置 upstream 服务器组      |
+
+---
+
+## 🚀 快速开始
+
+### 1. 安装 CRD 与 Operator
+
+```bash
+helm repo add openresty-operator https://zehonghuang.github.io/openresty-operator/charts
+helm install openresty-operator openresty-operator/openresty-operator
 ```
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
+> 若你正在本地开发，可使用：
+> ```bash
+> helm install openresty-operator ./charts/openresty-operator
+> ```
 
-**Install the CRDs into the cluster:**
+### 2. 创建 OpenResty 应用
 
-```sh
+```yaml
+apiVersion: web.chillyroom.com/v1alpha1
+kind: OpenResty
+metadata:
+  name: openresty-sample
+spec:
+  replicas: 1
+  image: gintonic1glass/openresty:with-prometheus
+  metrics:
+    enable: true
+    listen: "9090"
+  http:
+    accessLog: /var/log/nginx/access.log
+    errorLog: /var/log/nginx/error.log
+    gzip: true
+    serverRefs:
+      - serverblock-sample
+    upstreamRefs:
+      - upstream-sample
+```
+
+---
+
+## 📈 可观测性
+
+支持以下 Prometheus 指标：
+
+- `openresty_crd_ref_status`
+- `openresty_upstream_dns_resolvable`
+- `openresty_upstream_server_alive_total`
+
+推荐结合 Grafana Dashboard 使用，见 `/deploy/grafana/`。
+
+---
+
+## 🧪 开发 & 贡献
+
+```bash
 make install
+make run
 ```
+---
 
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
+## 📄 License
 
-```sh
-make deploy IMG=<some-registry>/openresty-operator:tag
-```
-
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
-
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
-
-```sh
-kubectl apply -k config/samples/
-```
-
->**NOTE**: Ensure that the samples has default values to test it out.
-
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
-
-```sh
-kubectl delete -k config/samples/
-```
-
-**Delete the APIs(CRDs) from the cluster:**
-
-```sh
-make uninstall
-```
-
-**UnDeploy the controller from the cluster:**
-
-```sh
-make undeploy
-```
-
-## Project Distribution
-
-Following are the steps to build the installer and distribute this project to users.
-
-1. Build the installer for the image built and published in the registry:
-
-```sh
-make build-installer IMG=<some-registry>/openresty-operator:tag
-```
-
-NOTE: The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without
-its dependencies.
-
-2. Using the installer
-
-Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
-
-```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/openresty-operator/<tag or branch>/dist/install.yaml
-```
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-**NOTE:** Run `make help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
-
-## License
-
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+[MIT](./LICENSE)

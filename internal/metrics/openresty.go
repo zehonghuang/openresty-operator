@@ -12,16 +12,16 @@ var (
 			Name: "openresty_crd_ref_status",
 			Help: "Tracks the readiness of CRDs referenced by OpenRestyApp",
 		},
-		[]string{"openresty", "namespace", "crd_kind", "crd_name"},
+		[]string{"namespace", "openresty", "crd_kind", "crd_name"},
 	)
 )
 
-func SetCRDRefStatus(openrestyName, namespace, kind, refName string, ready bool) {
+func SetCRDRefStatus(namespace, openrestyName, kind, refName string, ready bool) {
 	val := float64(0)
 	if ready {
 		val = 1
 	}
-	OpenRestyCRDRefStatus.WithLabelValues(openrestyName, namespace, kind, refName).Set(val)
+	OpenRestyCRDRefStatus.WithLabelValues(namespace, openrestyName, kind, refName).Set(val)
 }
 
 // SetServerBlockRefStatus 设置 ServerBlock 引用的 Location 状态

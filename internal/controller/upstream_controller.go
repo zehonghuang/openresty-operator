@@ -313,8 +313,7 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 				for server := range oldSet {
 					if _, stillPresent := newSet[server]; !stillPresent {
-						host, _, _ := splitHostPort(server)
-						metrics.UpstreamDNSResolvable.DeleteLabelValues(oldObj.Namespace, oldObj.Name, host)
+						metrics.UpstreamDNSResolvable.DeleteLabelValues(oldObj.Namespace, oldObj.Name, server)
 					}
 				}
 				return true

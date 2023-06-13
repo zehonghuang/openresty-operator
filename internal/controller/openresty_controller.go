@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/template"
 	"openresty-operator/internal/utils"
 	"reflect"
@@ -87,6 +88,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 			return ctrl.Result{}, err
 		}
+		metrics.SetCRDRefStatus(app.Namespace, app.Name, srv.Kind, srv.Name, srv.Status.Ready)
 		if !srv.Status.Ready {
 			notReadyServers = append(notReadyServers, name)
 			continue

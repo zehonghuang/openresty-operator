@@ -38,3 +38,11 @@ func SanitizeLogFormat(format string) string {
 	format = strings.ReplaceAll(format, "\r", " ")
 	return strings.TrimSpace(format)
 }
+
+func SetFrom[T comparable](items []T) map[T]struct{} {
+	result := make(map[T]struct{}, len(items))
+	for _, item := range items {
+		result[item] = struct{}{}
+	}
+	return result
+}

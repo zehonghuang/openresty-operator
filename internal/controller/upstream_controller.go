@@ -308,8 +308,8 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 					return true
 				}
 
-				oldSet := setFrom(oldObj.Spec.Servers)
-				newSet := setFrom(newObj.Spec.Servers)
+				oldSet := utils.SetFrom(oldObj.Spec.Servers)
+				newSet := utils.SetFrom(newObj.Spec.Servers)
 
 				for server := range oldSet {
 					if _, stillPresent := newSet[server]; !stillPresent {
@@ -320,12 +320,4 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			},
 		}).
 		Complete(r)
-}
-
-func setFrom(servers []string) map[string]struct{} {
-	result := make(map[string]struct{}, len(servers))
-	for _, s := range servers {
-		result[s] = struct{}{}
-	}
-	return result
 }

@@ -39,7 +39,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"strings"
 	"time"
 
@@ -523,5 +525,32 @@ func (r *OpenRestyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{}).
+		WithEventFilter(predicate.Funcs{
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				if obj, ok := e.Object.(*webv1alpha1.OpenResty); ok {
+					for _, serverRef := range obj.Spec.Http.ServerRefs {
+						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(obj.Namespace, obj.Name, serverRef)
+					}
+				}
+				return false
+			},
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				oldObj, ok1 := e.ObjectOld.(*webv1alpha1.OpenResty)
+				newObj, ok2 := e.ObjectNew.(*webv1alpha1.OpenResty)
+				if !ok1 || !ok2 {
+					return true
+				}
+
+				oldSet := utils.SetFrom(oldObj.Spec.Http.ServerRefs)
+				newSet := utils.SetFrom(newObj.Spec.Http.ServerRefs)
+
+				for serverRef := range oldSet {
+					if _, stillPresent := newSet[serverRef]; !stillPresent {
+						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(oldObj.Namespace, oldObj.Name, serverRef)
+					}
+				}
+				return true
+			},
+		}).
 		Complete(r)
 }

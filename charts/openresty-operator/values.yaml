@@ -32,6 +32,7 @@ openresty:
     gzip: true
     serverRefs:
       - api-server
+      - api-server02
     upstreamRefs:
       - etherscan-api
   metrics:
@@ -58,6 +59,10 @@ servers:
     locationRefs:
       - api-01
       - api-02
+  - name: api-server02
+    listen: "80"
+    locationRefs:
+      - api-01
 
 locations:
   - name: api-01

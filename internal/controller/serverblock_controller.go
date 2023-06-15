@@ -45,9 +45,9 @@ type ServerBlockReconciler struct {
 	Recorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=serverblocks,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=serverblocks/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=serverblocks/finalizers,verbs=update
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=serverblocks,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=serverblocks/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=serverblocks/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

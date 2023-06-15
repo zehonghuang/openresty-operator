@@ -1,4 +1,4 @@
-apiVersion: web.chillyroom.com/v1alpha1
+apiVersion: operator.openresty.io/v1alpha1
 kind: OpenResty
 metadata:
   name: {{ .Values.openresty.name }}

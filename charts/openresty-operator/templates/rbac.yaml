@@ -18,7 +18,7 @@ rules:
       - deployments
     verbs: ["*"]
   - apiGroups:
-      - web.chillyroom.com
+      - openresty.huangzehong.me
     resources:
       - "*"
     verbs: ["*"]

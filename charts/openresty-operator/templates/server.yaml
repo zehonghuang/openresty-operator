@@ -1,5 +1,5 @@
 {{- range .Values.servers }}
-apiVersion: web.chillyroom.com/v1alpha1
+apiVersion: openresty.huangzehong.me/v1alpha1
 kind: ServerBlock
 metadata:
   name: {{ .name }}

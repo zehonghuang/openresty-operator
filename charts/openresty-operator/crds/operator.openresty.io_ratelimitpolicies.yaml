@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: ratelimitpolicies.web.chillyroom.com
+  name: ratelimitpolicies.operator.openresty.io
 spec:
-  group: web.chillyroom.com
+  group: operator.openresty.io
   names:
     kind: RateLimitPolicy
     listKind: RateLimitPolicyList

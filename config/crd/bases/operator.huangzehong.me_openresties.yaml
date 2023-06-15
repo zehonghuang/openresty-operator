@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: openresties.web.chillyroom.com
+  name: openresties.operator.huangzehong.me
 spec:
-  group: web.chillyroom.com
+  group: operator.huangzehong.me
   names:
     kind: OpenResty
     listKind: OpenRestyList

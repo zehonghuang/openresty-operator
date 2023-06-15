@@ -8,7 +8,7 @@ metadata:
   name: upstream-editor-role
 rules:
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - upstreams
   verbs:
@@ -20,7 +20,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - upstreams/status
   verbs:

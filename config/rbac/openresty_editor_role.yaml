@@ -8,7 +8,7 @@ metadata:
   name: openresty-editor-role
 rules:
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - openresties
   verbs:
@@ -20,7 +20,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - openresties/status
   verbs:

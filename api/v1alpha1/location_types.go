@@ -86,7 +86,7 @@ type LocationStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:webhookserver:path=/validate-location,mutating=false,failurePolicy=fail,groups=web.chillyroom.com,resources=locations,verbs=create;update,versions=v1alpha1,name=validation.location.webhookserver.chillyroom.com,sideEffects=None,admissionReviewVersions=v1
+// +kubebuilder:webhookserver:path=/validate-location,mutating=false,failurePolicy=fail,groups=openresty.huangzehong.me,resources=locations,verbs=create;update,versions=v1alpha1,name=validation.location.webhookserver.chillyroom.com,sideEffects=None,admissionReviewVersions=v1
 
 // Location is the Schema for the locations API
 type Location struct {

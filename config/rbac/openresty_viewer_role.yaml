@@ -8,7 +8,7 @@ metadata:
   name: openresty-viewer-role
 rules:
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - openresties
   verbs:
@@ -16,7 +16,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - openresties/status
   verbs:

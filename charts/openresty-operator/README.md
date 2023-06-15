@@ -76,11 +76,11 @@ The operator will automatically:
 
 This chart installs the following CRDs:
 
-- `openrestyapps.web.chillyroom.com`
-- `serverblocks.web.chillyroom.com`
-- `locations.web.chillyroom.com`
-- `upstreams.web.chillyroom.com`
-- `ratelimitpolicies.web.chillyroom.com`
+- `openrestyapps.openresty.huangzehong.me`
+- `serverblocks.openresty.huangzehong.me`
+- `locations.openresty.huangzehong.me`
+- `upstreams.openresty.huangzehong.me`
+- `ratelimitpolicies.openresty.huangzehong.me`
 
 ## License
 

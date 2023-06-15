@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: upstreams.web.chillyroom.com
+  name: ratelimitpolicies.operator.huangzehong.me
 spec:
-  group: web.chillyroom.com
+  group: operator.huangzehong.me
   names:
-    kind: Upstream
-    listKind: UpstreamList
-    plural: upstreams
-    singular: upstream
+    kind: RateLimitPolicy
+    listKind: RateLimitPolicyList
+    plural: ratelimitpolicies
+    singular: ratelimitpolicy
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Upstream is the Schema for the upstreams API
+        description: RateLimitPolicy is the Schema for the ratelimitpolicies API
         properties:
           apiVersion:
             description: |-
@@ -37,45 +37,32 @@ spec:
           metadata:
             type: object
           spec:
-            description: UpstreamSpec defines the desired state of Upstream
+            description: RateLimitPolicySpec defines the desired state of RateLimitPolicy
             properties:
-              servers:
-                description: Foo is an example field of Upstream. Edit upstream_types.go
-                  to remove/update
-                items:
-                  type: string
-                type: array
+              burst:
+                type: integer
+              key:
+                type: string
+              nodelay:
+                type: boolean
+              rate:
+                type: string
+              zoneName:
+                type: string
+              zoneSize:
+                type: string
             required:
-            - servers
+            - rate
+            - zoneName
             type: object
           status:
-            description: UpstreamStatus defines the observed state of Upstream
             properties:
-              nginxConfig:
-                description: |-
-                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-                  Important: Run "make" to regenerate code after modifying this file
-                type: string
               ready:
                 type: boolean
               reason:
                 type: string
-              servers:
-                items:
-                  properties:
-                    address:
-                      type: string
-                    alive:
-                      type: boolean
-                  required:
-                  - address
-                  - alive
-                  type: object
-                type: array
               version:
                 type: string
-            required:
-            - ready
             type: object
         type: object
     served: true

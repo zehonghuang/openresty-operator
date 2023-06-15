@@ -44,7 +44,7 @@ helm install openresty-operator openresty-operator/openresty-operator
 ### 2. 创建 OpenResty 应用
 
 ```yaml
-apiVersion: web.chillyroom.com/v1alpha1
+apiVersion: openresty.huangzehong.me/v1alpha1
 kind: OpenResty
 metadata:
   name: openresty-sample

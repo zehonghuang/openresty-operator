@@ -39,9 +39,9 @@ type RateLimitPolicyReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=ratelimitpolicies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=ratelimitpolicies/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=ratelimitpolicies/finalizers,verbs=update
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=ratelimitpolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=ratelimitpolicies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=ratelimitpolicies/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

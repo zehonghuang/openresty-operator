@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: upstreams.web.chillyroom.com
+  name: serverblocks.operator.openresty.io
 spec:
-  group: web.chillyroom.com
+  group: operator.openresty.io
   names:
-    kind: Upstream
-    listKind: UpstreamList
-    plural: upstreams
-    singular: upstream
+    kind: ServerBlock
+    listKind: ServerBlockList
+    plural: serverblocks
+    singular: serverblock
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Upstream is the Schema for the upstreams API
+        description: ServerBlock is the Schema for the serverblocks API
         properties:
           apiVersion:
             description: |-
@@ -37,42 +37,49 @@ spec:
           metadata:
             type: object
           spec:
-            description: UpstreamSpec defines the desired state of Upstream
+            description: ServerBlockSpec defines the desired state of ServerBlock
             properties:
-              servers:
-                description: Foo is an example field of Upstream. Edit upstream_types.go
+              accessLog:
+                type: string
+              errorLog:
+                type: string
+              extra:
+                items:
+                  type: string
+                type: array
+              headers:
+                items:
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                  - key
+                  - value
+                  type: object
+                type: array
+              listen:
+                description: Foo is an example field of ServerBlock. Edit serverblock_types.go
                   to remove/update
+                type: string
+              locationRefs:
                 items:
                   type: string
                 type: array
             required:
-            - servers
+            - listen
+            - locationRefs
             type: object
           status:
-            description: UpstreamStatus defines the observed state of Upstream
+            description: ServerBlockStatus defines the observed state of ServerBlock
             properties:
-              nginxConfig:
+              ready:
                 description: |-
                   INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
                   Important: Run "make" to regenerate code after modifying this file
-                type: string
-              ready:
                 type: boolean
               reason:
-                type: string
-              servers:
-                items:
-                  properties:
-                    address:
-                      type: string
-                    alive:
-                      type: boolean
-                  required:
-                  - address
-                  - alive
-                  type: object
-                type: array
-              version:
                 type: string
             required:
             - ready

@@ -2,11 +2,11 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/web.chillyroom.com_openresties.yaml
-- bases/web.chillyroom.com_upstreams.yaml
-- bases/web.chillyroom.com_locations.yaml
-- bases/web.chillyroom.com_serverblocks.yaml
-- bases/web.chillyroom.com_ratelimitpolicies.yaml
+- bases/openresty.huangzehong.me_openresties.yaml
+- bases/openresty.huangzehong.me_upstreams.yaml
+- bases/openresty.huangzehong.me_locations.yaml
+- bases/openresty.huangzehong.me_serverblocks.yaml
+- bases/openresty.huangzehong.me_ratelimitpolicies.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

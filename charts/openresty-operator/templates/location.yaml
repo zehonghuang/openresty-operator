@@ -1,5 +1,5 @@
 {{- range .Values.locations }}
-apiVersion: web.chillyroom.com/v1alpha1
+apiVersion: operator.openresty.io/v1alpha1
 kind: Location
 metadata:
   name: {{ .name }}

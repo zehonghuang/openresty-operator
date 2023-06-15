@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: locations.web.chillyroom.com
+  name: locations.operator.huangzehong.me
 spec:
-  group: web.chillyroom.com
+  group: operator.huangzehong.me
   names:
     kind: Location
     listKind: LocationList

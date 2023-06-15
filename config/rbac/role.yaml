@@ -5,7 +5,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - locations
   - openresties
@@ -21,7 +21,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - locations/finalizers
   - openresties/finalizers
@@ -31,7 +31,7 @@ rules:
   verbs:
   - update
 - apiGroups:
-  - web.chillyroom.com
+  - openresty.huangzehong.me
   resources:
   - locations/status
   - openresties/status

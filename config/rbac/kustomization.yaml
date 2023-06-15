@@ -28,8 +28,6 @@ resources:
 - serverblock_viewer_role.yaml
 - location_editor_role.yaml
 - location_viewer_role.yaml
-- httpblock_editor_role.yaml
-- httpblock_viewer_role.yaml
 - upstream_editor_role.yaml
 - upstream_viewer_role.yaml
 - openresty_editor_role.yaml

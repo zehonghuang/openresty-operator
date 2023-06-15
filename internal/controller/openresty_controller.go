@@ -55,9 +55,9 @@ type OpenRestyReconciler struct {
 	Recorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=openresties,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=openresties/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=openresties/finalizers,verbs=update
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=openresties,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=openresties/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=openresties/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

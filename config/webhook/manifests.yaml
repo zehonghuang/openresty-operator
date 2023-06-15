@@ -15,7 +15,7 @@ webhooks:
   name: validation.location.webhookserver.chillyroom.com
   rules:
   - apiGroups:
-    - web.chillyroom.com
+    - openresty.huangzehong.me
     apiVersions:
     - v1alpha1
     operations:

@@ -50,9 +50,9 @@ type UpstreamReconciler struct {
 	Recorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=upstreams,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=upstreams/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=web.chillyroom.com,resources=upstreams/finalizers,verbs=update
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -171,7 +171,7 @@ func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstre
 			Name:      name,
 			Namespace: upstream.Namespace,
 			Annotations: map[string]string{
-				"web.chillyroom.com/generated-from-generation": fmt.Sprintf("%d", upstream.GetGeneration()),
+				"openresty.huangzehong.me/generated-from-generation": fmt.Sprintf("%d", upstream.GetGeneration()),
 			},
 		},
 		Data: map[string]string{
@@ -197,7 +197,7 @@ func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstre
 		log.Info("Updating ConfigMap", "name", name)
 		existing.Data[dataName] = config
 		existing.Annotations = map[string]string{
-			"web.chillyroom.com/generated-from-generation": fmt.Sprintf("%d", upstream.GetGeneration()),
+			"openresty.huangzehong.me/generated-from-generation": fmt.Sprintf("%d", upstream.GetGeneration()),
 		}
 		return r.Update(ctx, &existing)
 	}

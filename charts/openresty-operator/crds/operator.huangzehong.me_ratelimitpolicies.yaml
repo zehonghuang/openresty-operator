@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: serverblocks.operator.openresty.io
+  name: ratelimitpolicies.operator.huangzehong.me
 spec:
-  group: operator.openresty.io
+  group: operator.huangzehong.me
   names:
-    kind: ServerBlock
-    listKind: ServerBlockList
-    plural: serverblocks
-    singular: serverblock
+    kind: RateLimitPolicy
+    listKind: RateLimitPolicyList
+    plural: ratelimitpolicies
+    singular: ratelimitpolicy
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ServerBlock is the Schema for the serverblocks API
+        description: RateLimitPolicy is the Schema for the ratelimitpolicies API
         properties:
           apiVersion:
             description: |-
@@ -37,52 +37,32 @@ spec:
           metadata:
             type: object
           spec:
-            description: ServerBlockSpec defines the desired state of ServerBlock
+            description: RateLimitPolicySpec defines the desired state of RateLimitPolicy
             properties:
-              accessLog:
+              burst:
+                type: integer
+              key:
                 type: string
-              errorLog:
+              nodelay:
+                type: boolean
+              rate:
                 type: string
-              extra:
-                items:
-                  type: string
-                type: array
-              headers:
-                items:
-                  properties:
-                    key:
-                      type: string
-                    value:
-                      type: string
-                  required:
-                  - key
-                  - value
-                  type: object
-                type: array
-              listen:
-                description: Foo is an example field of ServerBlock. Edit serverblock_types.go
-                  to remove/update
+              zoneName:
                 type: string
-              locationRefs:
-                items:
-                  type: string
-                type: array
+              zoneSize:
+                type: string
             required:
-            - listen
-            - locationRefs
+            - rate
+            - zoneName
             type: object
           status:
-            description: ServerBlockStatus defines the observed state of ServerBlock
             properties:
               ready:
-                description: |-
-                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-                  Important: Run "make" to regenerate code after modifying this file
                 type: boolean
               reason:
                 type: string
-            required:
-            - ready
+              version:
+                type: string
             type: object
         type: object
     served: true

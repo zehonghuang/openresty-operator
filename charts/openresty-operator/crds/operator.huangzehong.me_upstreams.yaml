@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: upstreams.operator.openresty.io
+  name: upstreams.operator.huangzehong.me
 spec:
-  group: operator.openresty.io
+  group: operator.huangzehong.me
   names:
     kind: Upstream
     listKind: UpstreamList

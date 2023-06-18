@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: openresties.operator.huangzehong.me
+  name: openresties.openresty.huangzehong.me
 spec:
-  group: operator.huangzehong.me
+  group: openresty.huangzehong.me
   names:
     kind: OpenResty
     listKind: OpenRestyList

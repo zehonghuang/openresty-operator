@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: ratelimitpolicies.operator.huangzehong.me
+  name: ratelimitpolicies.openresty.huangzehong.me
 spec:
-  group: operator.huangzehong.me
+  group: openresty.huangzehong.me
   names:
     kind: RateLimitPolicy
     listKind: RateLimitPolicyList

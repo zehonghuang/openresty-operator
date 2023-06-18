@@ -10,6 +10,11 @@ appVersion: "v0.2.1"
 
 type: application
 
+home: https://github.com/huangzehong/openresty-operator
+sources:
+  - https://github.com/huangzehong/openresty-operator
+license: Apache-2.0
+
 keywords:
   - openresty
   - operator

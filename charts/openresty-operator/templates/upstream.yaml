@@ -1,5 +1,5 @@
 {{- range .Values.upstreams }}
-apiVersion: operator.huangzehong.me/v1alpha1
+apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Upstream
 metadata:
   name: {{ .name }}

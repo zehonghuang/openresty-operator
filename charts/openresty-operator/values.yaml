@@ -1,8 +1,10 @@
+installCRDs: true
+
 replicaCount: 1
 
 image:
   repository: gintonic1glass/openresty-operator
-  tag: v0.2.4
+  tag: v0.2.5
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

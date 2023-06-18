@@ -1,5 +1,5 @@
 {{- range .Values.locations }}
-apiVersion: operator.huangzehong.me/v1alpha1
+apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
 metadata:
   name: {{ .name }}

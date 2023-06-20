@@ -29,14 +29,17 @@ type UpstreamSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Servers is a list of backend server addresses (can be IP:Port or domain names)
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Servers"
 	Servers []string `json:"servers"`
 }
 
 type UpstreamServerStatus struct {
 	// Address is the full address of the upstream server (e.g., "example.com:80")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Address"
 	Address string `json:"address"`
 
 	// Alive indicates whether the server is reachable and responsive
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Alive"
 	Alive bool `json:"alive"`
 }
 
@@ -56,6 +59,7 @@ type UpstreamStatus struct {
 // +kubebuilder:subresource:status
 
 // Upstream is the Schema for the upstreams API
+// +operator-sdk:csv:customresourcedefinitions:displayName="Upstream",resources={{ConfigMap,v1,upstream-cm}}
 type Upstream struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -29,21 +29,27 @@ type ServerBlockSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Listen specifies the address and port that this server block listens on (e.g., "80", "443 ssl")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Listen"
 	Listen string `json:"listen"`
 
 	// AccessLog specifies the path and format of the access log (e.g., "/var/log/nginx/access.log main")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="AccessLog"
 	AccessLog string `json:"accessLog,omitempty"`
 
 	// ErrorLog specifies the path and log level of the error log (e.g., "/var/log/nginx/error.log warn")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ErrorLog"
 	ErrorLog string `json:"errorLog,omitempty"`
 
 	// Headers defines additional headers to include using the `add_header` directive
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Headers"
 	Headers []NginxKV `json:"headers,omitempty"`
 
 	// LocationRefs is a list of referenced Location resource names included in this server block
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="LocationRefs"
 	LocationRefs []string `json:"locationRefs"`
 
 	// Extra contains raw Nginx directives for advanced configuration (e.g., custom error_page rules)
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Extra"
 	Extra []string `json:"extra,omitempty"`
 }
 
@@ -59,6 +65,7 @@ type ServerBlockStatus struct {
 // +kubebuilder:subresource:status
 
 // ServerBlock is the Schema for the serverblocks API
+// +operator-sdk:csv:customresourcedefinitions:displayName="ServerBlock",resources={{ConfigMap,v1,server-cm}}
 type ServerBlock struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

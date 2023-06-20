@@ -26,56 +26,72 @@ import (
 // OpenRestySpec defines the desired state of OpenResty
 type OpenRestySpec struct {
 	// Replicas defines how many OpenResty pods to run
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Replicas",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podCount"
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// Image specifies the Docker image for OpenResty
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Image string `json:"image,omitempty"`
 
 	// Http contains configuration for the HTTP block of the OpenResty instance
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Http",xDescriptors="urn:alm:descriptor:com.tectonic.ui:object"
 	Http *HttpBlock `json:"http"`
 
 	// MetricsServer defines an optional Prometheus metrics endpoint
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Metrics Server",xDescriptors="urn:alm:descriptor:com.tectonic.ui:object"
 	MetricsServer *MetricsServer `json:"metrics,omitempty"`
 }
 
 type HttpBlock struct {
 	// Include is a list of additional Nginx include files (e.g., mime.types)
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Include",xDescriptors="urn:alm:descriptor:com.tectonic.ui:array"
 	Include []string `json:"include,omitempty"`
 
 	// LogFormat specifies the log_format directive in Nginx
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Log Format",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// AccessLog specifies the path for access logs
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Access Log",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	AccessLog string `json:"accessLog,omitempty"`
 
 	// ErrorLog specifies the path for error logs
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Access Log",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ErrorLog string `json:"errorLog,omitempty"`
 
 	// ClientMaxBodySize sets the client_max_body_size directive
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Client Max Body Size",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	ClientMaxBodySize string `json:"clientMaxBodySize,omitempty"`
 
 	// Gzip enables gzip compression in the HTTP block
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Gzip",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Gzip bool `json:"gzip,omitempty"`
 
 	// Extra allows appending custom HTTP directives
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Gzip",xDescriptors="urn:alm:descriptor:com.tectonic.ui:array"
 	Extra []string `json:"extra,omitempty"`
 
 	// ServerRefs lists referenced ServerBlock CR names
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ServerRefs",xDescriptors="urn:alm:descriptor:com.tectonic.ui:array"
 	ServerRefs []string `json:"serverRefs"`
 
 	// UpstreamRefs lists referenced Upstream CR names
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="UpstreamRefs",xDescriptors="urn:alm:descriptor:com.tectonic.ui:array"
 	UpstreamRefs []string `json:"upstreamRefs,omitempty"`
 }
 
 // MetricsServer defines an optional server to expose Prometheus metrics
 type MetricsServer struct {
 	// Enable controls whether the /metrics endpoint is exposed
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Enable bool `json:"enable,omitempty"`
 
 	// Listen specifies the port to expose Prometheus metrics on (default: "8080")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Listen",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Listen string `json:"listen,omitempty"`
 
 	// Path defines the HTTP path for Prometheus metrics (default: "/metrics")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Path string `json:"path,omitempty"`
 }
 
@@ -89,6 +105,7 @@ type OpenRestyStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
+// +operator-sdk:csv:customresourcedefinitions:displayName="OpenResty",resources={{ConfigMap,v1,openresty-cm}, {Pod,v1,openresty-app},{Deployment,v1,openresty-deployment}}
 type OpenResty struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

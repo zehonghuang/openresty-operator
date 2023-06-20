@@ -40,16 +40,28 @@ spec:
             description: RateLimitPolicySpec defines the desired state of RateLimitPolicy
             properties:
               burst:
+                description: Burst specifies the maximum burst of requests allowed
+                  beyond the rate
                 type: integer
               key:
+                description: 'Key specifies the key to identify a client for rate
+                  limiting (default: "$binary_remote_addr")'
                 type: string
               nodelay:
+                description: NoDelay controls whether to allow burst requests to be
+                  served immediately without delay
                 type: boolean
               rate:
+                description: Rate defines the rate limit, such as "10r/s" for 10 requests
+                  per second
                 type: string
               zoneName:
+                description: ZoneName is the name of the rate limiting zone defined
+                  via `limit_req_zone`
                 type: string
               zoneSize:
+                description: 'ZoneSize is the size of the shared memory zone (default:
+                  "10m")'
                 type: string
             required:
             - rate

@@ -6,4 +6,8 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: ratelimitpolicy-sample
 spec:
-  # TODO(user): Add fields here
+  zoneName: login_zone
+  rate: 10r/s
+  burst: 20
+  nodelay: true
+  zoneSize: 10m  # optional, default 10m

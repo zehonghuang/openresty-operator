@@ -2,7 +2,7 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: openresty.huangzehong.me
+domain: huangzehong.me
 layout:
 - go.kubebuilder.io/v4
 plugins:
@@ -15,45 +15,45 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: openresty.huangzehong.me
-  group: openresty.huangzehong.me
+  domain: huangzehong.me
+  group: openresty
   kind: OpenResty
-  path: openresty-operator/api/v1alpha1
+  path: github.com/zehonghuang/openresty-operator/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: openresty.huangzehong.me
-  group: openresty.huangzehong.me
+  domain: huangzehong.me
+  group: openresty
   kind: Upstream
-  path: openresty-operator/api/v1alpha1
+  path: github.com/zehonghuang/openresty-operator/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: openresty.huangzehong.me
-  group: openresty.huangzehong.me
+  domain: huangzehong.me
+  group: openresty
   kind: Location
-  path: openresty-operator/api/v1alpha1
+  path: github.com/zehonghuang/openresty-operator/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: openresty.huangzehong.me
-  group: openresty.huangzehong.me
+  domain: huangzehong.me
+  group: openresty
   kind: ServerBlock
-  path: openresty-operator/api/v1alpha1
+  path: github.com/zehonghuang/openresty-operator/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: openresty.huangzehong.me
-  group: openresty.huangzehong.me
+  domain: huangzehong.me
+  group: openresty
   kind: RateLimitPolicy
-  path: openresty-operator/api/v1alpha1
+  path: github.com/zehonghuang/openresty-operator/api/v1alpha1
   version: v1alpha1
 version: "3"

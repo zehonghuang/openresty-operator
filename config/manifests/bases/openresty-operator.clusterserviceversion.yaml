@@ -8,7 +8,274 @@ metadata:
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
-  customresourcedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: Location is the Schema for the locations API
+      displayName: Location
+      kind: Location
+      name: locations.openresty.huangzehong.me
+      resources:
+      - kind: ConfigMap
+        name: location-cm
+        version: v1
+      specDescriptors:
+      - description: Entries is a list of individual location configuration entries
+        displayName: Entries
+        path: entries
+      - description: AccessLog enables or disables access logging for this location
+        displayName: AccessLog
+        path: entries[0].accessLog
+      - description: Cache defines caching configuration for the location
+        displayName: Cache
+        path: entries[0].cache
+      - description: Valid defines cache duration per status code (e.g., "200 1m")
+        displayName: Zone
+        path: entries[0].cache.valid
+      - description: Zone specifies the cache zone name
+        displayName: Zone
+        path: entries[0].cache.zone
+      - description: EnableUpstreamMetrics enables automatic Prometheus metrics collection
+          for upstream requests
+        displayName: EnableUpstreamMetrics
+        path: entries[0].enableUpstreamMetrics
+      - description: Extra allows defining custom raw Nginx directives
+        displayName: Extra
+        path: entries[0].extra
+      - description: Gzip enables gzip compression for specific content types
+        displayName: Gzip
+        path: entries[0].gzip
+      - description: Enable toggles gzip compression
+        displayName: Enable
+        path: entries[0].gzip.enable
+      - description: Types lists MIME types to compress
+        displayName: Types
+        path: entries[0].gzip.types
+      - description: Headers defines a list of headers to set via proxy_set_header
+          or add_header
+        displayName: Headers
+        path: entries[0].headers
+      - description: LimitReq applies request rate limiting (e.g., "zone=api burst=10
+          nodelay")
+        displayName: LimitReq
+        path: entries[0].limitReq
+      - description: Lua allows embedding custom Lua logic via access/content phases
+        displayName: Lua
+        path: entries[0].lua
+      - description: Access contains Lua code to execute during access phase
+        displayName: Access
+        path: entries[0].lua.access
+      - description: Content contains Lua code to execute during content phase
+        displayName: Content
+        path: entries[0].lua.content
+      - description: Path is the location match path (e.g., "/", "/api", etc.)
+        displayName: Path
+        path: entries[0].path
+      - description: ProxyPass sets the backend address to proxy traffic to
+        displayName: ProxyPass
+        path: entries[0].proxyPass
+      - description: Timeout configures upstream timeout values (connect/send/read)
+        displayName: Timeout
+        path: entries[0].timeout
+      - description: Connect is the maximum time to establish a connection
+        displayName: Connect
+        path: entries[0].timeout.connect
+      - description: Read is the timeout for reading a response from the upstream
+        displayName: Read
+        path: entries[0].timeout.read
+      - description: Send is the timeout for sending a request to the upstream
+        displayName: Send
+        path: entries[0].timeout.send
+      version: v1alpha1
+    - displayName: OpenResty
+      kind: OpenResty
+      name: openresties.openresty.huangzehong.me
+      resources:
+      - kind: Pod
+        name: openresty-app
+        version: v1
+      - kind: ConfigMap
+        name: openresty-cm
+        version: v1
+      - kind: Deployment
+        name: openresty-deployment
+        version: v1
+      specDescriptors:
+      - description: Http contains configuration for the HTTP block of the OpenResty
+          instance
+        displayName: Http
+        path: http
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:object
+      - description: AccessLog specifies the path for access logs
+        displayName: Access Log
+        path: http.accessLog
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ClientMaxBodySize sets the client_max_body_size directive
+        displayName: Client Max Body Size
+        path: http.clientMaxBodySize
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ErrorLog specifies the path for error logs
+        displayName: Access Log
+        path: http.errorLog
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Extra allows appending custom HTTP directives
+        displayName: Gzip
+        path: http.extra
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:array
+      - description: Gzip enables gzip compression in the HTTP block
+        displayName: Gzip
+        path: http.gzip
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Include is a list of additional Nginx include files (e.g., mime.types)
+        displayName: Include
+        path: http.include
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:array
+      - description: LogFormat specifies the log_format directive in Nginx
+        displayName: Log Format
+        path: http.logFormat
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ServerRefs lists referenced ServerBlock CR names
+        displayName: ServerRefs
+        path: http.serverRefs
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:array
+      - description: UpstreamRefs lists referenced Upstream CR names
+        displayName: UpstreamRefs
+        path: http.upstreamRefs
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:array
+      - description: Image specifies the Docker image for OpenResty
+        displayName: Image
+        path: image
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: MetricsServer defines an optional Prometheus metrics endpoint
+        displayName: Metrics Server
+        path: metrics
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:object
+      - description: Enable controls whether the /metrics endpoint is exposed
+        displayName: Enable
+        path: metrics.enable
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: 'Listen specifies the port to expose Prometheus metrics on (default:
+          "8080")'
+        displayName: Listen
+        path: metrics.listen
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'Path defines the HTTP path for Prometheus metrics (default:
+          "/metrics")'
+        displayName: Path
+        path: metrics.path
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Replicas defines how many OpenResty pods to run
+        displayName: Replicas
+        path: replicas
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podCount
+      version: v1alpha1
+    - description: RateLimitPolicy is the Schema for the ratelimitpolicies API
+      displayName: RateLimitPolicy
+      kind: RateLimitPolicy
+      name: ratelimitpolicies.openresty.huangzehong.me
+      resources:
+      - kind: ConfigMap
+        name: ratelimit-cm
+        version: v1
+      specDescriptors:
+      - description: Burst specifies the maximum burst of requests allowed beyond
+          the rate
+        displayName: Burst
+        path: burst
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'Key specifies the key to identify a client for rate limiting
+          (default: "$binary_remote_addr")'
+        displayName: Key
+        path: key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: NoDelay controls whether to allow burst requests to be served
+          immediately without delay
+        displayName: ZoneName
+        path: nodelay
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Rate defines the rate limit, such as "10r/s" for 10 requests
+          per second
+        displayName: Rate
+        path: rate
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ZoneName is the name of the rate limiting zone defined via `limit_req_zone`
+        displayName: ZoneName
+        path: zoneName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'ZoneSize is the size of the shared memory zone (default: "10m")'
+        displayName: ZoneSize
+        path: zoneSize
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      version: v1alpha1
+    - description: ServerBlock is the Schema for the serverblocks API
+      displayName: ServerBlock
+      kind: ServerBlock
+      name: serverblocks.openresty.huangzehong.me
+      resources:
+      - kind: ConfigMap
+        name: server-cm
+        version: v1
+      specDescriptors:
+      - description: AccessLog specifies the path and format of the access log (e.g.,
+          "/var/log/nginx/access.log main")
+        displayName: AccessLog
+        path: accessLog
+      - description: ErrorLog specifies the path and log level of the error log (e.g.,
+          "/var/log/nginx/error.log warn")
+        displayName: ErrorLog
+        path: errorLog
+      - description: Extra contains raw Nginx directives for advanced configuration
+          (e.g., custom error_page rules)
+        displayName: Extra
+        path: extra
+      - description: Headers defines additional headers to include using the `add_header`
+          directive
+        displayName: Headers
+        path: headers
+      - description: Listen specifies the address and port that this server block
+          listens on (e.g., "80", "443 ssl")
+        displayName: Listen
+        path: listen
+      - description: LocationRefs is a list of referenced Location resource names
+          included in this server block
+        displayName: LocationRefs
+        path: locationRefs
+      version: v1alpha1
+    - description: Upstream is the Schema for the upstreams API
+      displayName: Upstream
+      kind: Upstream
+      name: upstreams.openresty.huangzehong.me
+      resources:
+      - kind: ConfigMap
+        name: upstream-cm
+        version: v1
+      specDescriptors:
+      - description: Servers is a list of backend server addresses (can be IP:Port
+          or domain names)
+        displayName: Servers
+        path: servers
+      version: v1alpha1
   description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenResty,
     Server, Location, Upstream, RateLimitPolicy)
   displayName: openresty-operator

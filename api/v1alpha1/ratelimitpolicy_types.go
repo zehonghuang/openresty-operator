@@ -25,12 +25,29 @@ import (
 
 // RateLimitPolicySpec defines the desired state of RateLimitPolicy
 type RateLimitPolicySpec struct {
-	ZoneName string `json:"zoneName"`           // limit_req zone 名称
-	Rate     string `json:"rate"`               // 限流速率，例：10r/s
-	Key      string `json:"key,omitempty"`      // 限流 key（默认 $binary_remote_addr）
-	ZoneSize string `json:"zoneSize,omitempty"` // 默认 "10m"
-	Burst    int    `json:"burst,omitempty"`    // 突发请求数
-	NoDelay  bool   `json:"nodelay,omitempty"`  // 是否启用 nodelay
+	// ZoneName is the name of the rate limiting zone defined via `limit_req_zone`
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ZoneName",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	ZoneName string `json:"zoneName"`
+
+	// Rate defines the rate limit, such as "10r/s" for 10 requests per second
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Rate",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	Rate string `json:"rate"`
+
+	// Key specifies the key to identify a client for rate limiting (default: "$binary_remote_addr")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Key",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	Key string `json:"key,omitempty"`
+
+	// ZoneSize is the size of the shared memory zone (default: "10m")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ZoneSize",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	ZoneSize string `json:"zoneSize,omitempty"`
+
+	// Burst specifies the maximum burst of requests allowed beyond the rate
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Burst",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
+	Burst int `json:"burst,omitempty"`
+
+	// NoDelay controls whether to allow burst requests to be served immediately without delay
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ZoneName",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	NoDelay bool `json:"nodelay,omitempty"`
 }
 
 type RateLimitPolicyStatus struct {
@@ -43,6 +60,7 @@ type RateLimitPolicyStatus struct {
 // +kubebuilder:subresource:status
 
 // RateLimitPolicy is the Schema for the ratelimitpolicies API
+// +operator-sdk:csv:customresourcedefinitions:displayName="RateLimitPolicy",resources={{ConfigMap,v1,ratelimit-cm}}
 type RateLimitPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

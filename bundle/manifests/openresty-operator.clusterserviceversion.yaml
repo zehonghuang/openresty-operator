@@ -1,0 +1,625 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "openresty.huangzehong.me/v1alpha1",
+          "kind": "Location",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "openresty-operator"
+            },
+            "name": "location-sample-01"
+          },
+          "spec": {
+            "entries": [
+              {
+                "accessLog": false,
+                "enableUpstreamMetrics": true,
+                "gzip": {
+                  "enable": true,
+                  "types": [
+                    "text/plain",
+                    "application/json"
+                  ]
+                },
+                "headers": [
+                  {
+                    "key": "Host",
+                    "value": "$host"
+                  },
+                  {
+                    "key": "X-Real-IP",
+                    "value": "$remote_addr"
+                  },
+                  {
+                    "key": "X-Forwarded-For",
+                    "value": "$proxy_add_x_forwarded_for"
+                  },
+                  {
+                    "key": "X-Forwarded-Proto",
+                    "value": "$scheme"
+                  },
+                  {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                  },
+                  {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                  }
+                ],
+                "lua": {
+                  "access": "if not ngx.var.arg_token then\n    return ngx.exit(401)\nend\n"
+                },
+                "path": "/api-1/",
+                "proxyPass": "http://upstream-sample",
+                "timeout": {
+                  "connect": "5s",
+                  "read": "10s",
+                  "send": "10s"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "openresty.huangzehong.me/v1alpha1",
+          "kind": "Location",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "openresty-operator"
+            },
+            "name": "location-sample-02"
+          },
+          "spec": {
+            "entries": [
+              {
+                "accessLog": false,
+                "enableUpstreamMetrics": true,
+                "gzip": {
+                  "enable": true,
+                  "types": [
+                    "text/plain",
+                    "application/json"
+                  ]
+                },
+                "headers": [
+                  {
+                    "key": "Host",
+                    "value": "$host"
+                  },
+                  {
+                    "key": "X-Real-IP",
+                    "value": "$remote_addr"
+                  },
+                  {
+                    "key": "X-Forwarded-For",
+                    "value": "$proxy_add_x_forwarded_for"
+                  },
+                  {
+                    "key": "X-Forwarded-Proto",
+                    "value": "$scheme"
+                  },
+                  {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                  },
+                  {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                  }
+                ],
+                "lua": {
+                  "access": "if not ngx.var.arg_token then\n    return ngx.exit(401)\nend\n"
+                },
+                "path": "/api-2/",
+                "proxyPass": "http://upstream-sample",
+                "timeout": {
+                  "connect": "5s",
+                  "read": "10s",
+                  "send": "10s"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "openresty.huangzehong.me/v1alpha1",
+          "kind": "OpenResty",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "openresty-operator"
+            },
+            "name": "openresty-sample"
+          },
+          "spec": {
+            "http": {
+              "clientMaxBodySize": "16m",
+              "extra": [
+                "sendfile on;",
+                "tcp_nopush on;"
+              ],
+              "gzip": true,
+              "include": [
+                "mime.types"
+              ],
+              "logFormat": "$remote_addr - $remote_user [$time_local] \"$request\" ...\n",
+              "serverRefs": [
+                "serverblock-sample"
+              ],
+              "upstreamRefs": [
+                "upstream-sample"
+              ]
+            },
+            "image": "gintonic1glass/openresty:with-prometheus",
+            "metrics": {
+              "enable": true,
+              "listen": "8080",
+              "path": "/metrics"
+            }
+          }
+        },
+        {
+          "apiVersion": "openresty.huangzehong.me/v1alpha1",
+          "kind": "RateLimitPolicy",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "openresty-operator"
+            },
+            "name": "ratelimitpolicy-sample"
+          },
+          "spec": null
+        },
+        {
+          "apiVersion": "openresty.huangzehong.me/v1alpha1",
+          "kind": "ServerBlock",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "openresty-operator"
+            },
+            "name": "serverblock-sample"
+          },
+          "spec": {
+            "listen": "80",
+            "locationRefs": [
+              "location-sample-01",
+              "location-sample-02"
+            ]
+          }
+        },
+        {
+          "apiVersion": "openresty.huangzehong.me/v1alpha1",
+          "kind": "Upstream",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "openresty-operator"
+            },
+            "name": "upstream-sample"
+          },
+          "spec": {
+            "servers": [
+              "example.com:80",
+              "www.baidu.com:443",
+              "invalid.domain.local:8080"
+            ]
+          }
+        }
+      ]
+    capabilities: Basic Install
+    createdAt: "2025-04-22T04:18:59Z"
+    operators.operatorframework.io/builder: operator-sdk-v1.39.1
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
+  name: openresty-operator.v0.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: Location
+      name: locations.openresty.huangzehong.me
+      version: v1alpha1
+      specDescriptors:
+        - path: entries
+          displayName: Location Entries
+          description: List of Nginx location configuration entries
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:arrayFieldGroup'
+        - path: entries[].path
+          displayName: Path
+          description: Location match path (e.g., "/", "/api")
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].proxyPass
+          displayName: Proxy Pass
+          description: Backend address to proxy traffic to
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].headers
+          displayName: Headers
+          description: Headers to be added or proxied
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:arrayFieldGroup'
+        - path: entries[].timeout.connect
+          displayName: Timeout Connect
+          description: Timeout for establishing connection to upstream
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].timeout.send
+          displayName: Timeout Send
+          description: Timeout for sending data to upstream
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].timeout.read
+          displayName: Timeout Read
+          description: Timeout for reading data from upstream
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].accessLog
+          displayName: Access Log Enabled
+          description: Whether to enable access logs
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+        - path: entries[].limitReq
+          displayName: Limit Req
+          description: Request rate limiting string (e.g., "zone=api burst=10 nodelay")
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].gzip.enable
+          displayName: Gzip Enable
+          description: Enable gzip compression
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+        - path: entries[].gzip.types
+          displayName: Gzip Types
+          description: MIME types for gzip compression
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].cache.zone
+          displayName: Cache Zone
+          description: Name of the cache zone
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].cache.valid
+          displayName: Cache Valid
+          description: Cache time setting (e.g., "200 1m")
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: entries[].lua.access
+          displayName: Lua Access Block
+          description: Lua code for access phase
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:textarea'
+        - path: entries[].lua.content
+          displayName: Lua Content Block
+          description: Lua code for content phase
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:textarea'
+        - path: entries[].enableUpstreamMetrics
+          displayName: Enable Upstream Metrics
+          description: Enable Prometheus metrics collection for upstreams
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+        - path: entries[].extra
+          displayName: Extra Directives
+          description: Additional raw Nginx directives
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+    - kind: OpenResty
+      name: openresties.openresty.huangzehong.me
+      version: v1alpha1
+      specDescriptors:
+        - path: replicas
+          displayName: Replicas
+          description: Defines how many OpenResty pods to run
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:integer'
+        - path: image
+          displayName: Image
+          description: Specifies the Docker image for OpenResty
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http
+          displayName: HTTP Configuration
+          description: Configuration for the HTTP block of the OpenResty instance
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:advanced'
+        - path: metrics
+          displayName: Metrics Server
+          description: Prometheus metrics exposure configuration
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:advanced'
+        - path: http.include
+          displayName: Include Files
+          description: List of additional Nginx include files (e.g., mime.types)
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http.logFormat
+          displayName: Log Format
+          description: The log_format directive for Nginx logs
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http.accessLog
+          displayName: Access Log
+          description: Path for access log output
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http.errorLog
+          displayName: Error Log
+          description: Path for error log output
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http.clientMaxBodySize
+          displayName: Client Max Body Size
+          description: Sets the client_max_body_size directive in Nginx
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http.gzip
+          displayName: Enable Gzip
+          description: Whether to enable gzip compression in HTTP block
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+        - path: http.extra
+          displayName: Extra HTTP Directives
+          description: Additional raw HTTP-level directives
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http.serverRefs
+          displayName: Server Refs
+          description: List of referenced ServerBlock CR names
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: http.upstreamRefs
+          displayName: Upstream Refs
+          description: List of referenced Upstream CR names
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: metrics.enable
+          displayName: Enable Metrics Server
+          description: "Whether to expose a /metrics Prometheus endpoint"
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+        - path: metrics.listen
+          displayName: Metrics Listen Port
+          description:
+            "Port to expose Prometheus metrics on (default: 8080)"
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+        - path: metrics.path
+          displayName: Metrics Path
+          description:
+            "HTTP path for Prometheus metrics (default: /metrics)"
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+    - kind: RateLimitPolicy
+      name: ratelimitpolicies.openresty.huangzehong.me
+      version: v1alpha1
+    - kind: ServerBlock
+      name: serverblocks.openresty.huangzehong.me
+      version: v1alpha1
+      specDescriptors:
+        - path: listen
+          displayName: Listen
+          description: Listen specifies the address and port that this server block listens on (e.g., "80", "443 ssl")
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:advanced'
+        - path: locationRefs
+          displayName: Location References
+          description: A list of referenced Location resource names included in this server block
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:arrayFieldGroup'
+
+    - kind: Upstream
+      name: upstreams.openresty.huangzehong.me
+      version: v1alpha1
+      specDescriptors:
+        - path: servers
+          displayName: Upstream Servers
+          description: A list of backend server addresses (e.g., IP:Port or domain names)
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:arrayFieldGroup'
+
+  description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenResty,
+    Server, Location, Upstream, RateLimitPolicy)
+  displayName: openresty-operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - openresty.huangzehong.me
+          resources:
+          - locations
+          - openresties
+          - ratelimitpolicies
+          - serverblocks
+          - upstreams
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - openresty.huangzehong.me
+          resources:
+          - locations/finalizers
+          - openresties/finalizers
+          - ratelimitpolicies/finalizers
+          - serverblocks/finalizers
+          - upstreams/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - openresty.huangzehong.me
+          resources:
+          - locations/status
+          - openresties/status
+          - ratelimitpolicies/status
+          - serverblocks/status
+          - upstreams/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: openresty-operator-controller-manager
+      deployments:
+      - label:
+          app.kubernetes.io/managed-by: kustomize
+          app.kubernetes.io/name: openresty-operator
+          control-plane: controller-manager
+        name: openresty-operator-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: controller-manager
+          strategy: {}
+          template:
+            metadata:
+              annotations:
+                kubectl.kubernetes.io/default-container: manager
+              labels:
+                control-plane: controller-manager
+            spec:
+              containers:
+              - args:
+                - --metrics-bind-address=:8443
+                - --leader-elect
+                - --health-probe-bind-address=:8081
+                command:
+                - /manager
+                image: controller:latest
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 10m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              securityContext:
+                runAsNonRoot: true
+              serviceAccountName: openresty-operator-controller-manager
+              terminationGracePeriodSeconds: 10
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        serviceAccountName: openresty-operator-controller-manager
+    strategy: deployment
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - openresty
+  - operator
+  - nginx
+  - metrics
+  links:
+  - name: Openresty Operator
+    url: https://openresty-operator.domain
+  maintainers:
+  - email: zehong.hongframe.huang@gmail.com
+    name: huangzehong
+  maturity: alpha
+  provider:
+    name: huangzehong
+    url: https://github.com/huangzehong/openresty-operator
+  version: 0.0.1
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1
+    deploymentName: webhookserver
+    failurePolicy: Fail
+    generateName: validation.location.webhookserver.chillyroom.com
+    rules:
+    - apiGroups:
+      - openresty.huangzehong.me
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - locations
+    sideEffects: None
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-location

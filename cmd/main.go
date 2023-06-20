@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"openresty-operator/internal/httpapi"
 	"openresty-operator/internal/metrics"
 	"os"
 
@@ -145,8 +146,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	_ = metrics.RegisterAll()
-
 	if err = (&controller.OpenRestyReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
@@ -196,6 +195,11 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
+
+	_ = metrics.RegisterAll()
+
+	server := httpapi.NewServer(mgr)
+	server.RegisterHandler(&httpapi.MetricsDNSCacheHandler{})
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

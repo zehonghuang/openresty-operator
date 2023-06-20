@@ -50,6 +50,13 @@ type UpstreamReconciler struct {
 	Recorder record.EventRecorder
 }
 
+var DnsCache = struct {
+	sync.RWMutex
+	Data map[string][]string
+}{
+	Data: make(map[string][]string),
+}
+
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams/finalizers,verbs=update
@@ -104,10 +111,15 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 				return
 			}
 
-			if _, err := net.LookupHost(host); err != nil {
+			ips, err := net.LookupHost(host)
+			if err != nil {
 				r.Recorder.Eventf(&upstream, corev1.EventTypeWarning, "DNSError", "Failed to resolve host %s: %v", host, err)
 				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // DNS error", addr)}
 				return
+			} else {
+				DnsCache.Lock()
+				DnsCache.Data[host] = ips
+				DnsCache.Unlock()
 			}
 
 			alive, err := testTCP(host, port)
@@ -137,7 +149,11 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			Address: r.Address,
 			Alive:   r.Alive,
 		})
-		metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, r.Address, r.Alive)
+		metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, r.Address, "ALL", r.Alive)
+		host, _, _ := splitHostPort(r.Address)
+		for _, ip := range DnsCache.Data[host] {
+			metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, r.Address, ip, r.Alive)
+		}
 	}
 
 	// 写入 ConfigMap

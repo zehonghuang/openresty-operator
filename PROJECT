@@ -9,14 +9,14 @@ plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: openresty-operator
-repo: openresty-operator
+repo: github.com/zehonghuang/openresty-operator
 resources:
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
   domain: openresty.huangzehong.me
-  group: web
+  group: openresty.huangzehong.me
   kind: OpenResty
   path: openresty-operator/api/v1alpha1
   version: v1alpha1
@@ -25,7 +25,7 @@ resources:
     namespaced: true
   controller: true
   domain: openresty.huangzehong.me
-  group: web
+  group: openresty.huangzehong.me
   kind: Upstream
   path: openresty-operator/api/v1alpha1
   version: v1alpha1
@@ -34,7 +34,7 @@ resources:
     namespaced: true
   controller: true
   domain: openresty.huangzehong.me
-  group: web
+  group: openresty.huangzehong.me
   kind: Location
   path: openresty-operator/api/v1alpha1
   version: v1alpha1
@@ -43,7 +43,7 @@ resources:
     namespaced: true
   controller: true
   domain: openresty.huangzehong.me
-  group: web
+  group: openresty.huangzehong.me
   kind: ServerBlock
   path: openresty-operator/api/v1alpha1
   version: v1alpha1
@@ -52,7 +52,7 @@ resources:
     namespaced: true
   controller: true
   domain: openresty.huangzehong.me
-  group: web
+  group: openresty.huangzehong.me
   kind: RateLimitPolicy
   path: openresty-operator/api/v1alpha1
   version: v1alpha1

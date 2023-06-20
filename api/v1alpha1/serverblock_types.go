@@ -28,13 +28,23 @@ type ServerBlockSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of ServerBlock. Edit serverblock_types.go to remove/update
-	Listen       string    `json:"listen"`              // 如 "80"、"443 ssl"
-	AccessLog    string    `json:"accessLog,omitempty"` // 如 /var/log/nginx/xx.log main
-	ErrorLog     string    `json:"errorLog,omitempty"`  // 如 /var/log/nginx/xx.log warn
-	Headers      []NginxKV `json:"headers,omitempty"`   // add_header
-	LocationRefs []string  `json:"locationRefs"`        // 引用多个 Location CRD（生成 include）
-	Extra        []string  `json:"extra,omitempty"`     // 兜底扩展字段（如 error_page）
+	// Listen specifies the address and port that this server block listens on (e.g., "80", "443 ssl")
+	Listen string `json:"listen"`
+
+	// AccessLog specifies the path and format of the access log (e.g., "/var/log/nginx/access.log main")
+	AccessLog string `json:"accessLog,omitempty"`
+
+	// ErrorLog specifies the path and log level of the error log (e.g., "/var/log/nginx/error.log warn")
+	ErrorLog string `json:"errorLog,omitempty"`
+
+	// Headers defines additional headers to include using the `add_header` directive
+	Headers []NginxKV `json:"headers,omitempty"`
+
+	// LocationRefs is a list of referenced Location resource names included in this server block
+	LocationRefs []string `json:"locationRefs"`
+
+	// Extra contains raw Nginx directives for advanced configuration (e.g., custom error_page rules)
+	Extra []string `json:"extra,omitempty"`
 }
 
 // ServerBlockStatus defines the observed state of ServerBlock

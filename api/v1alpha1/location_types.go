@@ -28,25 +28,44 @@ type LocationSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Location. Edit location_types.go to remove/update
+	// Entries is a list of individual location configuration entries
 	Entries []LocationEntry `json:"entries"`
 }
 
+// LocationEntry defines a single Nginx `location` block and its behavior
 type LocationEntry struct {
+	// Path is the location match path (e.g., "/", "/api", etc.)
 	Path string `json:"path"`
 
+	// ProxyPass sets the backend address to proxy traffic to
 	ProxyPass string `json:"proxyPass,omitempty"`
 
-	Headers               []NginxKV  `json:"headers,omitempty"` // proxy_set_header / add_header
-	Timeout               *Timeouts  `json:"timeout,omitempty"`
-	AccessLog             *bool      `json:"accessLog,omitempty"` // true/false
-	LimitReq              *string    `json:"limitReq,omitempty"`  // zone=api burst=10 nodelay
-	Gzip                  *GzipConf  `json:"gzip,omitempty"`
-	Cache                 *CacheConf `json:"cache,omitempty"`
-	Lua                   *LuaBlock  `json:"lua,omitempty"`
-	EnableUpstreamMetrics bool       `json:"enableUpstreamMetrics,omitempty"`
+	// Headers defines a list of headers to set via proxy_set_header or add_header
+	Headers []NginxKV `json:"headers,omitempty"`
 
-	Extra []string `json:"extra,omitempty"` // 自定义指令
+	// Timeout configures upstream timeout values (connect/send/read)
+	Timeout *Timeouts `json:"timeout,omitempty"`
+
+	// AccessLog enables or disables access logging for this location
+	AccessLog *bool `json:"accessLog,omitempty"`
+
+	// LimitReq applies request rate limiting (e.g., "zone=api burst=10 nodelay")
+	LimitReq *string `json:"limitReq,omitempty"`
+
+	// Gzip enables gzip compression for specific content types
+	Gzip *GzipConf `json:"gzip,omitempty"`
+
+	// Cache defines caching configuration for the location
+	Cache *CacheConf `json:"cache,omitempty"`
+
+	// Lua allows embedding custom Lua logic via access/content phases
+	Lua *LuaBlock `json:"lua,omitempty"`
+
+	// EnableUpstreamMetrics enables automatic Prometheus metrics collection for upstream requests
+	EnableUpstreamMetrics bool `json:"enableUpstreamMetrics,omitempty"`
+
+	// Extra allows defining custom raw Nginx directives
+	Extra []string `json:"extra,omitempty"`
 }
 
 type NginxKV struct {
@@ -54,24 +73,42 @@ type NginxKV struct {
 	Value string `json:"value"`
 }
 
+// Timeouts defines upstream timeout configuration
 type Timeouts struct {
-	Connect string `json:"connect,omitempty"` // 5s
-	Send    string `json:"send,omitempty"`    // 10s
-	Read    string `json:"read,omitempty"`    // 10s
+	// Connect is the maximum time to establish a connection
+	Connect string `json:"connect,omitempty"`
+
+	// Send is the timeout for sending a request to the upstream
+	Send string `json:"send,omitempty"`
+
+	// Read is the timeout for reading a response from the upstream
+	Read string `json:"read,omitempty"`
 }
 
+// GzipConf configures gzip compression
 type GzipConf struct {
-	Enable bool     `json:"enable"`
-	Types  []string `json:"types,omitempty"`
+	// Enable toggles gzip compression
+	Enable bool `json:"enable"`
+
+	// Types lists MIME types to compress
+	Types []string `json:"types,omitempty"`
 }
 
+// CacheConf configures caching for responses
 type CacheConf struct {
-	Zone  string `json:"zone,omitempty"`
-	Valid string `json:"valid,omitempty"` // 如 "200 1m"
+	// Zone specifies the cache zone name
+	Zone string `json:"zone,omitempty"`
+
+	// Valid defines cache duration per status code (e.g., "200 1m")
+	Valid string `json:"valid,omitempty"`
 }
 
+// LuaBlock defines embedded Lua logic for access/content phases
 type LuaBlock struct {
-	Access  string `json:"access,omitempty"`
+	// Access contains Lua code to execute during access phase
+	Access string `json:"access,omitempty"`
+
+	// Content contains Lua code to execute during content phase
 	Content string `json:"content,omitempty"`
 }
 
@@ -86,7 +123,6 @@ type LocationStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:webhookserver:path=/validate-location,mutating=false,failurePolicy=fail,groups=openresty.huangzehong.me,resources=locations,verbs=create;update,versions=v1alpha1,name=validation.location.webhookserver.chillyroom.com,sideEffects=None,admissionReviewVersions=v1
 
 // Location is the Schema for the locations API
 type Location struct {

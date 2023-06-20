@@ -28,13 +28,16 @@ type UpstreamSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Upstream. Edit upstream_types.go to remove/update
+	// Servers is a list of backend server addresses (can be IP:Port or domain names)
 	Servers []string `json:"servers"`
 }
 
 type UpstreamServerStatus struct {
-	Address string `json:"address"` // 如 "example.com:80"
-	Alive   bool   `json:"alive"`
+	// Address is the full address of the upstream server (e.g., "example.com:80")
+	Address string `json:"address"`
+
+	// Alive indicates whether the server is reachable and responsive
+	Alive bool `json:"alive"`
 }
 
 // UpstreamStatus defines the observed state of Upstream

@@ -50,6 +50,7 @@
               "type": "auto",
               "wrapText": false
             },
+            "filterable": true,
             "inspect": false
           },
           "mappings": [
@@ -301,6 +302,18 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Server"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 179
+              }
+            ]
           }
         ]
       },
@@ -322,12 +335,7 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value (lastNotNull)"
-          }
-        ]
+        "sortBy": []
       },
       "pluginVersion": "11.5.1",
       "targets": [
@@ -338,7 +346,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "openresty_upstream_dns_resolvable{prometheus=\"kube-system/prometheus-agent\"}",
+          "expr": "openresty_upstream_dns_resolvable{prometheus=\"kube-system/prometheus-agent\", ip=\"ALL\"}",
           "format": "table",
           "instant": false,
           "interval": "1",
@@ -430,6 +438,98 @@
       "panels": [],
       "title": "Openresty",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aef063snpzytcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "upstream"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aef063snpzytcf"
+          },
+          "editorMode": "code",
+          "expr": "upstream_requests_total{}",
+          "format": "table",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aef063snpzytcf"
+          },
+          "expr": "",
+          "hide": false,
+          "instant": false,
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Panel Title",
+      "type": "table"
     }
   ],
   "preload": false,
@@ -447,6 +547,6 @@
   "timezone": "browser",
   "title": "Openresty-Operator",
   "uid": "fejh69eovtog0d",
-  "version": 17,
+  "version": 23,
   "weekStart": ""
 }

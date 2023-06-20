@@ -54,3 +54,20 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openresty-operator.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "openresty-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "openresty-operator.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: metrics
+      protocol: TCP

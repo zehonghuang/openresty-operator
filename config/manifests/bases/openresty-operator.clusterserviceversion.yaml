@@ -1,0 +1,46 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: openresty-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions: {}
+  description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenResty,
+    Server, Location, Upstream, RateLimitPolicy)
+  displayName: openresty-operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - openresty
+  - operator
+  - nginx
+  - metrics
+  links:
+  - name: Openresty Operator
+    url: https://openresty-operator.domain
+  maintainers:
+  - email: zehong.hongframe.huang@gmail.com
+    name: huangzehong
+  maturity: alpha
+  provider:
+    name: huangzehong
+    url: https://github.com/huangzehong/openresty-operator
+  version: 0.0.0

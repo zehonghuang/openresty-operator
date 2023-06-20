@@ -25,33 +25,58 @@ import (
 
 // OpenRestySpec defines the desired state of OpenResty
 type OpenRestySpec struct {
-	// 副本数量
+	// Replicas defines how many OpenResty pods to run
 	Replicas *int32 `json:"replicas,omitempty"`
-	// 镜像地址
-	Image string `json:"image,omitempty"`
-	// Service 的端口
-	Http *HttpBlock `json:"http"` // http 配置 + serverRefs
 
+	// Image specifies the Docker image for OpenResty
+	Image string `json:"image,omitempty"`
+
+	// Http contains configuration for the HTTP block of the OpenResty instance
+	Http *HttpBlock `json:"http"`
+
+	// MetricsServer defines an optional Prometheus metrics endpoint
 	MetricsServer *MetricsServer `json:"metrics,omitempty"`
 }
 
-// http 层配置
 type HttpBlock struct {
-	Include           []string `json:"include,omitempty"`           // include 文件，如 mime.types
-	LogFormat         string   `json:"logFormat,omitempty"`         // log_format 指令
-	AccessLog         string   `json:"accessLog,omitempty"`         // access_log 路径
-	ErrorLog          string   `json:"errorLog,omitempty"`          // error_log 路径
-	ClientMaxBodySize string   `json:"clientMaxBodySize,omitempty"` // client_max_body_size
-	Gzip              bool     `json:"gzip,omitempty"`              // gzip on/off
-	Extra             []string `json:"extra,omitempty"`             // 其他 http 层自定义指令
-	ServerRefs        []string `json:"serverRefs"`                  // 引用 ServerBlock 名称
-	UpstreamRefs      []string `json:"upstreamRefs,omitempty"`      // 引用 Upstream 名称
+	// Include is a list of additional Nginx include files (e.g., mime.types)
+	Include []string `json:"include,omitempty"`
+
+	// LogFormat specifies the log_format directive in Nginx
+	LogFormat string `json:"logFormat,omitempty"`
+
+	// AccessLog specifies the path for access logs
+	AccessLog string `json:"accessLog,omitempty"`
+
+	// ErrorLog specifies the path for error logs
+	ErrorLog string `json:"errorLog,omitempty"`
+
+	// ClientMaxBodySize sets the client_max_body_size directive
+	ClientMaxBodySize string `json:"clientMaxBodySize,omitempty"`
+
+	// Gzip enables gzip compression in the HTTP block
+	Gzip bool `json:"gzip,omitempty"`
+
+	// Extra allows appending custom HTTP directives
+	Extra []string `json:"extra,omitempty"`
+
+	// ServerRefs lists referenced ServerBlock CR names
+	ServerRefs []string `json:"serverRefs"`
+
+	// UpstreamRefs lists referenced Upstream CR names
+	UpstreamRefs []string `json:"upstreamRefs,omitempty"`
 }
 
+// MetricsServer defines an optional server to expose Prometheus metrics
 type MetricsServer struct {
-	Enable bool   `json:"enable,omitempty"`
-	Listen string `json:"listen,omitempty"` // 默认: "8080"
-	Path   string `json:"path,omitempty"`   // 默认: "/metrics"
+	// Enable controls whether the /metrics endpoint is exposed
+	Enable bool `json:"enable,omitempty"`
+
+	// Listen specifies the port to expose Prometheus metrics on (default: "8080")
+	Listen string `json:"listen,omitempty"`
+
+	// Path defines the HTTP path for Prometheus metrics (default: "/metrics")
+	Path string `json:"path,omitempty"`
 }
 
 // OpenRestyStatus defines the observed state of OpenResty
@@ -64,7 +89,6 @@ type OpenRestyStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// OpenResty is the Schema for the openresties API
 type OpenResty struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -75,7 +99,6 @@ type OpenResty struct {
 
 // +kubebuilder:object:root=true
 
-// OpenRestyList contains a list of OpenResty
 type OpenRestyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -224,7 +224,7 @@ metadata:
     createdAt: "2025-04-22T07:31:06Z"
     operators.operatorframework.io/builder: operator-sdk-v1.39.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
-  name: openresty-operator.v0.0.1
+  name: openresty-operator.v0.2.9
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -672,7 +672,7 @@ spec:
   provider:
     name: huangzehong
     url: https://github.com/huangzehong/openresty-operator
-  version: 0.0.1
+  version: 0.2.9
   webhookdefinitions:
   - admissionReviewVersions:
     - v1

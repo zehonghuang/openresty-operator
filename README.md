@@ -48,7 +48,7 @@
 推荐方式：使用 Helm 安装。
 
 ```bash
-helm repo add openresty-operator https://zehonghuang.github.io/openresty-operator
+helm repo add openresty-operator https://github.com/zehonghuang/openresty-operator
 helm install openresty openresty-operator/openresty-operator
 ```
 
@@ -64,7 +64,7 @@ kubectl apply -k config/default/
 示例：一个简单的 Location 配置。
 
 ```yaml
-apiVersion: openresty.org/v1alpha1
+apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
 metadata:
   name: hello
@@ -77,8 +77,8 @@ spec:
 ### 3. 创建 OpenResty 实例
 
 ```yaml
-apiVersion: openresty.org/v1alpha1
-kind: OpenRestyApp
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: OpenResty
 metadata:
   name: demo-app
 spec:

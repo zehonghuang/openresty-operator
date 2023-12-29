@@ -44,32 +44,283 @@
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "count(count by (openresty) (openresty_crd_ref_status))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "OpenResty CRs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aef063snpzytcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "count(openresty_crd_ref_status{crd_kind=\"ServerBlock\"})by()",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "ServerBlocks",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aef063snpzytcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "count(openresty_crd_ref_status{crd_kind=\"ServerBlock\"})by()",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Locations",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aef063snpzytcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "count(openresty_crd_ref_status{crd_kind=\"ServerBlock\"})by()",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Upstreams",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aef063snpzytcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "custom": {
             "align": "left",
             "cellOptions": {
-              "type": "auto",
-              "wrapText": false
+              "type": "auto"
             },
-            "filterable": true,
             "inspect": false
           },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "color": "dark-red",
-                  "index": 0,
-                  "text": "NotReady"
-                },
-                "1": {
-                  "color": "dark-green",
-                  "index": 1,
-                  "text": "Ready"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "links": [],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -88,13 +339,53 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Is Ready"
+              "options": "Status Code"
             },
             "properties": [
               {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "pattern": "5..",
+                      "result": {
+                        "color": "dark-red",
+                        "index": 0,
+                        "text": "5XX"
+                      }
+                    },
+                    "type": "regex"
+                  },
+                  {
+                    "options": {
+                      "pattern": "4..",
+                      "result": {
+                        "color": "dark-yellow",
+                        "index": 1,
+                        "text": "4XX"
+                      }
+                    },
+                    "type": "regex"
+                  },
+                  {
+                    "options": {
+                      "pattern": "2..",
+                      "result": {
+                        "color": "transparent",
+                        "index": 2,
+                        "text": "2XX"
+                      }
+                    },
+                    "type": "regex"
+                  }
+                ]
+              },
+              {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-text",
+                  "applyToRow": true,
+                  "mode": "gradient",
+                  "type": "color-background",
                   "wrapText": false
                 }
               }
@@ -103,60 +394,60 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Namespace"
+              "options": "server"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 110
+                "value": 210
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Openresty"
+              "options": "Status Code"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 118
+                "value": 111
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Kind"
+              "options": "Request Total"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 107
+                "value": 121
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "ServerName"
+              "options": "Domain"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 123
+                "value": 177
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 8,
-        "w": 9,
-        "x": 0,
+        "h": 11,
+        "w": 7,
+        "x": 16,
         "y": 1
       },
-      "id": 4,
+      "id": 5,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -173,15 +464,22 @@
       "pluginVersion": "11.5.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aef063snpzytcf"
+          },
           "editorMode": "code",
-          "expr": "openresty_crd_ref_status{prometheus=\"kube-system/prometheus-agent\"}",
+          "exemplar": false,
+          "expr": "label_replace(\n  increase(upstream_requests_total[$__range]),\n  \"ip\", \"$1\", \"upstream\", \"([0-9.]+):[0-9]+\"\n)\n*\non (ip)\ngroup_left(server)\nlabel_replace(\n  avg(openresty_upstream_dns_resolvable{ip != \"ALL\"}) by (server, ip),\n  \"dummy\", \"1\", \"\", \"\") > 0",
           "format": "table",
+          "hide": false,
+          "instant": true,
           "legendFormat": "__auto",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "OpenResty Instances Overview",
+      "title": "Upstream Domain × Status Code Matrix",
       "transformations": [
         {
           "id": "groupBy",
@@ -189,25 +487,20 @@
             "fields": {
               "Value": {
                 "aggregations": [
-                  "lastNotNull"
+                  "sum"
                 ],
                 "operation": "aggregate"
               },
-              "crd_kind": {
+              "server": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "crd_name": {
+              "status": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "namespace": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "openresty": {
-                "aggregations": [],
-                "operation": "groupby"
+              "upstream": {
+                "aggregations": []
               }
             }
           }
@@ -217,19 +510,12 @@
           "options": {
             "excludeByName": {},
             "includeByName": {},
-            "indexByName": {
-              "Value (lastNotNull)": 4,
-              "crd_kind": 2,
-              "crd_name": 3,
-              "namespace": 0,
-              "openresty": 1
-            },
+            "indexByName": {},
             "renameByName": {
-              "Value (lastNotNull)": "Is Ready",
-              "crd_kind": "Kind",
-              "crd_name": "ServerName",
-              "namespace": "Namespace",
-              "openresty": "Openresty"
+              "Nested frames": "",
+              "Value (sum)": "Request Total",
+              "server": "Domain",
+              "status": "Status Code"
             }
           }
         }
@@ -244,18 +530,90 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 10,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "100 *\ncount(\n  max by (server) (\n    openresty_upstream_dns_resolvable{ip=\"ALL\", prometheus=\"kube-system/prometheus-agent\"}\n  ) == 0\n)\n/\ncount(\n  max by (server) (\n    openresty_upstream_dns_resolvable{ip=\"ALL\", prometheus=\"kube-system/prometheus-agent\"}\n  )\n)",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Upstream DNS Health",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aef063snpzytcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "mode": "continuous-GrYlRd"
           },
           "custom": {
             "align": "left",
             "cellOptions": {
-              "type": "auto",
+              "applyToRow": true,
+              "mode": "gradient",
+              "type": "color-background",
               "wrapText": false
             },
             "filterable": true,
             "inspect": true
           },
           "decimals": 3,
+          "fieldMinMax": false,
           "mappings": [
             {
               "options": {
@@ -282,7 +640,7 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 0
               }
             ]
           }
@@ -293,15 +651,7 @@
               "id": "byName",
               "options": "Value (lastNotNull)"
             },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text",
-                  "wrapText": false
-                }
-              }
-            ]
+            "properties": []
           },
           {
             "matcher": {
@@ -311,17 +661,41 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 179
+                "value": 217
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 121
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "UpStream"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 165
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 8,
-        "w": 9,
-        "x": 9,
-        "y": 1
+        "h": 7,
+        "w": 12,
+        "x": 4,
+        "y": 5
       },
       "id": 1,
       "options": {
@@ -427,19 +801,6 @@
       "type": "table"
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 9
-      },
-      "id": 3,
-      "panels": [],
-      "title": "Openresty",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
         "uid": "aef063snpzytcf"
@@ -450,13 +811,257 @@
             "mode": "thresholds"
           },
           "custom": {
-            "align": "auto",
+            "align": "left",
             "cellOptions": {
               "type": "auto"
             },
+            "filterable": true,
             "inspect": false
           },
-          "links": [],
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "dark-red",
+                  "index": 0,
+                  "text": "NotReady"
+                },
+                "1": {
+                  "color": "dark-green",
+                  "index": 1,
+                  "text": "Ready"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Is Ready"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text",
+                  "wrapText": false
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "dark-red",
+                        "index": 1,
+                        "text": "NotReady"
+                      },
+                      "1": {
+                        "color": "dark-green",
+                        "index": 0,
+                        "text": "Ready"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Openresty"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 118
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Kind"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 107
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "mode": "gradient",
+                  "type": "color-background",
+                  "wrapText": false
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "ServerBlock": {
+                        "color": "#7b9617",
+                        "index": 0,
+                        "text": "ServerBlock"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ServerName"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 123
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 10,
+        "x": 0,
+        "y": 12
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "openresty_crd_ref_status{prometheus=\"kube-system/prometheus-agent\"}",
+          "format": "table",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "OpenResty Ref Overview",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Value": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "crd_kind": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "crd_name": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "namespace": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "openresty": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Value (lastNotNull)": 4,
+              "crd_kind": 2,
+              "crd_name": 3,
+              "namespace": 0,
+              "openresty": 1
+            },
+            "renameByName": {
+              "Value (lastNotNull)": "Is Ready",
+              "crd_kind": "Kind",
+              "crd_name": "ServerName",
+              "namespace": "Namespace",
+              "openresty": "Openresty"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "uid": "aef063snpzytcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto",
+              "wrapText": false
+            },
+            "inspect": false
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -476,19 +1081,75 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "upstream"
+              "options": "kind"
             },
-            "properties": []
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 172
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Location": {
+                        "color": "#6464e1",
+                        "index": 0,
+                        "text": "Location"
+                      },
+                      "Upstream": {
+                        "color": "#dfb1f2",
+                        "index": 1,
+                        "text": "Upstream"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 169
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 165
+              }
+            ]
           }
         ]
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 10
+        "h": 9,
+        "w": 13,
+        "x": 10,
+        "y": 12
       },
-      "id": 5,
+      "id": 11,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -499,37 +1160,62 @@
           ],
           "show": false
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": []
       },
       "pluginVersion": "11.5.1",
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "aef063snpzytcf"
-          },
           "editorMode": "code",
-          "expr": "upstream_requests_total{}",
+          "exemplar": false,
+          "expr": "rate(openresty_operator_event_info{type=\"Warning\"}[1m]) > 0",
           "format": "table",
-          "instant": false,
+          "instant": true,
           "legendFormat": "__auto",
-          "range": true,
+          "range": false,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "aef063snpzytcf"
-          },
-          "expr": "",
-          "hide": false,
-          "instant": false,
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "Panel Title",
+      "title": "Recent Warnings",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "kind": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "name": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "namespace": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "reason": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        }
+      ],
       "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 3,
+      "panels": [],
+      "title": "Openresty",
+      "type": "row"
     }
   ],
   "preload": false,
@@ -540,13 +1226,13 @@
     "list": []
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Openresty-Operator",
   "uid": "fejh69eovtog0d",
-  "version": 23,
+  "version": 60,
   "weekStart": ""
 }

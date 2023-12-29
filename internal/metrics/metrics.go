@@ -14,6 +14,7 @@ func RegisterAll() error {
 	collectors := []prometheus.Collector{
 		OpenRestyCRDRefStatus,
 		UpstreamDNSResolvable,
+		OpenrestyOperatorEventInfo,
 	}
 
 	for _, c := range collectors {

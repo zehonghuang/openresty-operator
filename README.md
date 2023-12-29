@@ -89,11 +89,26 @@ spec:
     accessLog: /dev/stdout
 ```
 
-## 指标与监控
+## 📈 指标与监控
 
-- 可导出 Prometheus 指标，如 `openresty_crd_ref_status`，用于监控配置依赖状态。
-- 支持自定义 Lua metrics 和 upstream latency 指标。
-- 后续将提供官方 Grafana Dashboard。
+OpenResty Operator 默认导出多种 Prometheus 指标，便于观测配置状态与流量健康状况，适配常见的云原生监控栈（Prometheus + Grafana）：
+
+- `openresty_crd_ref_status`：追踪各类 CRD（如 ServerBlock、Location、Upstream）之间的引用关系和就绪状态。
+- `openresty_upstream_dns_ready`：展示 upstream DNS 解析成功率与可达性。
+- `openresty_request_total` 与 `openresty_response_status`：分析各个 upstream 的请求量与状态码分布。
+- 支持通过 Lua 扩展自定义业务级 metrics。
+
+## 📊 Grafana Dashboard 示例
+
+OpenResty Operator 默认导出 Prometheus 指标，可用于构建如下监控面板
+
+![OpenResty Operator Grafana Dashboard](./docs/images/grafana-dashboard-01.png)
+
+该仪表盘展示了：
+
+- CRD 数量、Ready 状态、引用结构
+- Upstream 的 DNS 健康度和响应情况；
+- 近期配置异常与告警事件（如路径冲突、域名无法解析等）
 
 ## 项目结构
 

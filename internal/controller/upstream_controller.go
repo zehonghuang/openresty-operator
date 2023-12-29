@@ -115,6 +115,7 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			if err != nil {
 				r.Recorder.Eventf(&upstream, corev1.EventTypeWarning, "DNSError", "Failed to resolve host %s: %v", host, err)
 				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // DNS error", addr)}
+				metrics.Recorder(upstream.Kind, upstream.Namespace, upstream.Name, corev1.EventTypeWarning, fmt.Sprintf("# server %s;  // DNS error", addr))
 				return
 			} else {
 				DnsCache.Lock()

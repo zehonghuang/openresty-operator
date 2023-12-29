@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: gintonic1glass/openresty-operator
-  tag: v0.2.8
+  tag: v0.2.9
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -76,9 +76,30 @@ locations:
         extra:
           - "proxy_redirect off;"
           - "proxy_ssl_server_name on;"
+      - path: /api-1/
+        proxyPass: https://etherscan-api/
+        enableUpstreamMetrics: true
+        accessLog: false
+        extra:
+          - "proxy_redirect off;"
+          - "proxy_ssl_server_name on;"
   - name: api-02
     entries:
       - path: /api-2/
+        proxyPass: https://etherscan-api/
+        enableUpstreamMetrics: true
+        accessLog: false
+        extra:
+          - "proxy_redirect off;"
+          - "proxy_ssl_server_name on;"
+      - path: /api-3/
+        proxyPass: https://etherscan-api/
+        enableUpstreamMetrics: true
+        accessLog: false
+        extra:
+          - "proxy_redirect off;"
+          - "proxy_ssl_server_name on;"
+      - path: api-2/
         proxyPass: https://etherscan-api/
         enableUpstreamMetrics: true
         accessLog: false

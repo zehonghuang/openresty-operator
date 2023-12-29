@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
 	"strings"
 	"time"
@@ -99,6 +100,7 @@ func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		msg := strings.Join(allProblems, " | ")
 		log.Error(nil, "Path validation failed", "details", msg)
 		r.Recorder.Eventf(&location, corev1.EventTypeWarning, "InvalidPath", msg)
+		metrics.Recorder(location.Kind, location.Namespace, location.Name, corev1.EventTypeWarning, msg)
 
 		r.updateLocationStatus(ctx, location, false, msg, log)
 

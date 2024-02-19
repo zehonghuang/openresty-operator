@@ -4,10 +4,11 @@ description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenRe
 version: 0.2.0
 
 # App (controller) version
-appVersion: "v0.2.1"
+appVersion: "v0.2.9"
 
 type: application
 
+icon: https://raw.githubusercontent.com/zehonghuang/openresty-operator/main/logo.png
 home: https://github.com/huangzehong/openresty-operator
 sources:
   - https://github.com/huangzehong/openresty-operator

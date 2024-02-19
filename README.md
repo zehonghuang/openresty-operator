@@ -48,7 +48,7 @@
 推荐方式：使用 Helm 安装。
 
 ```bash
-helm repo add openresty-operator https://github.com/zehonghuang/openresty-operator
+helm repo add openresty-operator https://huangzehong.me/openresty-operator
 helm install openresty openresty-operator/openresty-operator
 ```
 

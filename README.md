@@ -63,7 +63,7 @@ helm install openresty openresty-operator/openresty-operator
 
 ```bash
 kubectl apply -f config/crd/bases/
-kubectl apply -k config/default/
+kubectl apply -k config/smaples/
 ```
 
 ### 2. 定义配置资源
@@ -116,18 +116,6 @@ OpenResty Operator 默认导出 Prometheus 指标，可用于构建如下监控�
 - CRD 数量、Ready 状态、引用结构
 - Upstream 的 DNS 健康度和响应情况；
 - 近期配置异常与告警事件（如路径冲突、域名无法解析等）
-
-## 项目结构
-
-```bash
-.
-├── api/              # CRD 定义
-├── charts/           # Helm Chart
-├── config/           # Kustomize 安装文件
-├── controllers/      # Operator 控制逻辑
-└── docs/             # 使用文档与架构说明
-```
-
 
 ## 许可证
 

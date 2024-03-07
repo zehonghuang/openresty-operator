@@ -68,7 +68,7 @@ kubectl apply -k config/smaples/
 
 ### 2. 定义配置资源
 
-示例：一个简单的 Location / ServerBlock / ServerBlock 配置。
+示例：一个简单的 Location / ServerBlock / Upstream 配置。
 
 ```yaml
 apiVersion: openresty.huangzehong.me/v1alpha1

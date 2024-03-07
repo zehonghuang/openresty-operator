@@ -68,7 +68,7 @@ kubectl apply -k config/smaples/
 
 ### 2. 定义配置资源
 
-示例：一个简单的 Location 配置。
+示例：一个简单的 Location / ServerBlock / ServerBlock 配置。
 
 ```yaml
 apiVersion: openresty.huangzehong.me/v1alpha1
@@ -94,11 +94,7 @@ spec:
         - key: Access-Control-Allow-Origin
           value: "*"
       accessLog: false
-```
-
-### 3. 创建 ServerBlock 实例
-
-```yaml
+---
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: ServerBlock
 metadata:
@@ -107,11 +103,7 @@ spec:
   listen: "80"
   locationRefs:
     - location-sample
-```
-
-### 4. 创建 Upstream 实例
-
-```yaml
+---
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Upstream
 metadata:
@@ -123,7 +115,7 @@ spec:
     - invalid.domain.local:8080
 ```
 
-### 5. 创建 OpenResty 实例
+### 3. 创建 OpenResty 实例
 
 ```yaml
 apiVersion: openresty.huangzehong.me/v1alpha1

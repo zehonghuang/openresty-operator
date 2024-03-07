@@ -74,26 +74,82 @@ kubectl apply -k config/smaples/
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
 metadata:
-  name: hello
+  name: location-sample
 spec:
   entries:
-    - path: /hello
-      proxyPass: http://example.com
+    - path: /sample-api/
+      proxyPass: http://upstream-sample/
+      enableUpstreamMetrics: true
+      headers:
+        - key: Host
+          value: $host
+        - key: X-Real-IP
+          value: $remote_addr
+        - key: X-Forwarded-For
+          value: $proxy_add_x_forwarded_for
+        - key: X-Forwarded-Proto
+          value: $scheme
+        - key: X-Content-Type-Options
+          value: nosniff
+        - key: Access-Control-Allow-Origin
+          value: "*"
+      accessLog: false
 ```
 
-### 3. 创建 OpenResty 实例
+### 3. 创建 ServerBlock 实例
+
+```yaml
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: ServerBlock
+metadata:
+  name: serverblock-sample
+spec:
+  listen: "80"
+  locationRefs:
+    - location-sample
+```
+
+### 4. 创建 Upstream 实例
+
+```yaml
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: Upstream
+metadata:
+  name: upstream-sample
+spec:
+  servers:
+    - example.com:80
+    - www.baidu.com:443
+    - invalid.domain.local:8080
+```
+
+### 5. 创建 OpenResty 实例
 
 ```yaml
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: OpenResty
 metadata:
-  name: demo-app
+  name: openresty-sample
 spec:
-  replicas: 2
-  serverRefs:
-    - name: demo-server
+  image: gintonic1glass/openresty:with-prometheus
   http:
-    accessLog: /dev/stdout
+    include:
+      - mime.types
+    logFormat: |
+      $remote_addr - $remote_user [$time_local] "$request" ...
+    clientMaxBodySize: 16m
+    gzip: true
+    extra:
+      - sendfile on;
+      - tcp_nopush on;
+    serverRefs:
+      - serverblock-sample
+    upstreamRefs:
+      - upstream-sample
+  metrics:
+    enable: true
+    listen: "8080"
+    path: "/metrics"
 ```
 
 ## 📈 指标与监控

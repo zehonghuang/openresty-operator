@@ -190,6 +190,14 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	app.Status.Ready = true
 	app.Status.Reason = ""
+	app.Status.AvailableReplicas = *app.Spec.Replicas
+	if err := r.Status().Update(ctx, &app); err != nil {
+		if errors.IsConflict(err) {
+			log.Info("OpenResty status conflict, skipping update")
+		} else {
+			log.Error(err, "Failed to update OpenResty status")
+		}
+	}
 
 	return ctrl.Result{}, nil
 }

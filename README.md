@@ -1,3 +1,10 @@
+<p align="center">
+  <img src="./docs/images/logo-tight.png" alt="OpenResty Operator Logo">
+</p>
+<p align="center">
+  <b>A lightweight Kubernetes Operator for managing OpenResty as an internal API gateway.</b>
+</p>
+
 # OpenResty Operator
 
 ![Test](https://img.shields.io/badge/status-passed-brightgreen)

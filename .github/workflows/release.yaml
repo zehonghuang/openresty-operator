@@ -27,7 +27,7 @@ jobs:
       - name: Package Helm chart
         run: |
           helm package charts/openresty-operator --destination ./chart-dist
-          helm repo index ./chart-dist --url https://zehonghuang.github.io/openresty-operator
+          helm repo index ./chart-dist --url https://huangzehong.me/openresty-operator
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

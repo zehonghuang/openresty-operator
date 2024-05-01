@@ -10,8 +10,7 @@
 
 ![Test](https://img.shields.io/badge/status-passed-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-![Release](https://img.shields.io/badge/release-v0.2.9-blue)
-
+![GitHub release (latest by tag)](https://img.shields.io/github/v/tag/zehonghuang/openresty-operator?label=release)
 
 **OpenResty Operator** 是一个基于 Kubernetes 的轻量级控制器，用于自动管理和部署 OpenResty 实例，通过声明式方式组织 location、upstream、server 配置，实现统一的第三方 API 网关能力。
 

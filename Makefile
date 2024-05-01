@@ -322,3 +322,15 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+VERSION ?= $(shell git describe --tags --abbrev=0)
+
+release:
+	@echo "🚀 Releasing version $(VERSION)"
+	sed -i '' 's/^version: .*/version: $(VERSION)/' charts/openresty-operator/Chart.yaml
+	sed -i '' 's/^appVersion: .*/appVersion: $(VERSION)/' charts/openresty-operator/Chart.yaml
+	git add charts/openresty-operator/Chart.yaml
+	git commit -m "chore: bump version to $(VERSION)"
+	git tag v$(VERSION)
+	git push osc main --tags
+

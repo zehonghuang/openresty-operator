@@ -9,9 +9,10 @@ English | [中文](./README.zh-CN.md)
 
 # OpenResty Operator
 
+![GitHub release (latest by tag)](https://img.shields.io/github/v/tag/zehonghuang/openresty-operator?label=release)
 ![Test](https://img.shields.io/badge/status-passed-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-![GitHub release (latest by tag)](https://img.shields.io/github/v/tag/zehonghuang/openresty-operator?label=release)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/openresty-operator)](https://artifacthub.io/packages/search?repo=openresty-operator)
 
 **OpenResty Operator** is a lightweight Kubernetes controller for managing and deploying OpenResty instances in a declarative way. It organizes configurations like `location`, `upstream`, and `server` through CRDs, enabling unified proxy control for third-party APIs.
 

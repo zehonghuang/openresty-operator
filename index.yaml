@@ -8,6 +8,7 @@ entries:
       Server, Location, Upstream, RateLimitPolicy)
     digest: 4e26cee485c8b0d185339fe00ab06f6f7c9971a107d51e8c5947b1276fed1606
     home: https://github.com/huangzehong/openresty-operator
+    icon: https://raw.githubusercontent.com/zehonghuang/openresty-operator/main/logo.png
     keywords:
     - openresty
     - operator

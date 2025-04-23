@@ -42,7 +42,6 @@ openresty:
     listen: "9090"
     path: /metrics
 
-
 upstreams:
   - name: etherscan-api
     servers:
@@ -106,3 +105,13 @@ locations:
         extra:
           - "proxy_redirect off;"
           - "proxy_ssl_server_name on;"
+
+reloadAgent:
+  config:
+    reloadPolicies:
+      - window: 5
+        maxEvents: 3
+      - window: 60
+        maxEvents: 10
+      - window: 300
+        maxEvents: 1

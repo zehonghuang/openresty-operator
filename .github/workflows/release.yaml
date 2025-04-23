@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (source)
         uses: actions/checkout@v4
 
       - name: Set up Helm
@@ -24,17 +24,34 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Copy previous index
+      - name: Package Helm chart
         run: |
-          cp gh-pages/index.yaml ./chart-dist/index.yaml || echo "No existing index"
+          mkdir -p chart-dist
+          helm package charts/openresty-operator --destination chart-dist
 
-      - name: Re-generate Helm index (merge mode)
+      - name: Checkout gh-pages branch (for previous index)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copy previous index.yaml if exists
         run: |
-          helm repo index ./chart-dist --url https://huangzehong.me/openresty-operator --merge ./chart-dist/index.yaml
+          if [ -f gh-pages/index.yaml ]; then
+            cp gh-pages/index.yaml chart-dist/index.yaml
+          else
+            echo "No previous index.yaml found, creating a new one"
+          fi
 
-      - name: Deploy to GitHub Pages
+      - name: Generate or merge Helm index.yaml
+        run: |
+          helm repo index chart-dist \
+            --url https://huangzehong.me/openresty-operator \
+            --merge chart-dist/index.yaml || true
+
+      - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./chart-dist
+          publish_dir: chart-dist

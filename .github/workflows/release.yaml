@@ -24,10 +24,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Package Helm chart
+      - name: Copy previous index
         run: |
-          helm package charts/openresty-operator --destination ./chart-dist
-          helm repo index ./chart-dist --url https://huangzehong.me/openresty-operator
+          cp gh-pages/index.yaml ./chart-dist/index.yaml || echo "No existing index"
+
+      - name: Re-generate Helm index (merge mode)
+        run: |
+          helm repo index ./chart-dist --url https://huangzehong.me/openresty-operator --merge ./chart-dist/index.yaml
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

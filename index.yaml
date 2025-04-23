@@ -23,6 +23,6 @@ entries:
     - https://github.com/huangzehong/openresty-operator
     type: application
     urls:
-    - https://zehonghuang.github.io/openresty-operator/charts/openresty-operator-0.2.0.tgz
+    - https://zehonghuang.github.io/openresty-operator/openresty-operator-0.2.0.tgz
     version: 0.2.0
 generated: "2025-04-23T08:19:32.085069+08:00"

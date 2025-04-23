@@ -332,5 +332,5 @@ release:
 	git add charts/openresty-operator/Chart.yaml
 	git commit -m "chore: bump version to $(VERSION)"
 	git tag v$(VERSION)
-	git push osc main --tags
+	git push origin main --tags
 

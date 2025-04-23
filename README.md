@@ -10,7 +10,7 @@ English | [中文](./README.zh-CN.md)
 # OpenResty Operator
 
 ![GitHub release (latest by tag)](https://img.shields.io/github/v/tag/zehonghuang/openresty-operator?label=release)
-![Test](https://img.shields.io/badge/status-passed-brightgreen)
+![Release](https://github.com/zehonghuang/openresty-operator/actions/workflows/release.yaml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/openresty-operator)](https://artifacthub.io/packages/search?repo=openresty-operator)
 

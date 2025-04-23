@@ -328,7 +328,6 @@ VERSION ?= $(shell git describe --tags --abbrev=0)
 release:
 	@echo "🚀 Releasing version $(VERSION)"
 	git add charts/openresty-operator/Chart.yaml
-	git commit -m "chore: bump version to $(VERSION)"
 	git tag v$(VERSION)
 	git push origin main --tags
 

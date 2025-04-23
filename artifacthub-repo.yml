@@ -1,3 +1,5 @@
+# Artifact Hub repository metadata file
+# Used to become verified publisher and more - https://artifacthub.io/docs/topics/repositories/#verified-publisher
 repositoryID: 016ad6e9-2038-4436-9ca7-0678bb529ef4
 owners:
   - name: zehonghuang

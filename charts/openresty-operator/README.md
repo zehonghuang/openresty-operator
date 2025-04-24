@@ -25,36 +25,61 @@ helm repo add openresty-operator https://zehonghuang.github.io/openresty-operato
 helm install openresty-operator openresty-operator/openresty-operator
 ```
 
-## Values
+## Parameters
 
-| Key                                | Default                                    | Description                        |
-|------------------------------------|--------------------------------------------|------------------------------------|
-| `replicaCount`                     | `1`                                        | Number of Operator pods            |
-| `image.repository`                 | `gintonic1glass/openresty`                 | Operator image repository          |
-| `image.tag`                        | `with-prometheus`                          | Image tag                          |
-| `image.pullPolicy`                 | `IfNotPresent`                             | Image pull policy                  |
-| `serviceAccount.create`            | `true`                                     | Whether to create a ServiceAccount |
-| `serviceAccount.name`              | `""`                                       | Name override for ServiceAccount   |
-| `rbac.create`                      | `true`                                     | Whether to create RBAC resources   |
-| `resources`                        | `{}`                                       | Pod resource requests/limits       |
-| `nodeSelector`                     | `{}`                                       | Node selector                      |
-| `tolerations`                      | `[]`                                       | Tolerations                        |
-| `affinity`                         | `{}`                                       | Affinity rules                     |
-| `openresty.name`                   | "openresty-sample"                         | Name of OpenResty custom resource  |
-| `openresty.replicas`               | 1                                          | Number of OpenResty replicas       |
-| `openresty.image`                  | "gintonic1glass/openresty:with-prometheus" | OpenResty image to deploy          |
-| `openresty.http.include`           | []                                         | Additional include directives      |
-| `openresty.http.logFormat`         | ""                                         | Log format string                  |
-| `openresty.http.accessLog`         | "/dev/stdout"                              | Access log path                    |
-| `openresty.http.errorLog`          | "/dev/stderr"                              | Error log path                     |
-| `openresty.http.clientMaxBodySize` | "16m"                                      | Maximum client body size           |
-| `openresty.http.gzip`              | true                                       | Enable gzip                        |
-| `openresty.http.extra`             | []                                         | Additional raw nginx directives    |
-| `openresty.http.serverRefs`        | []                                         | Referenced ServerBlock names       |
-| `openresty.http.upstreamRefs`      | []                                         | Referenced Upstream names          |
-| `openresty.metrics.enable`         | true                                       | Enable Prometheus metrics server   |
-| `openresty.metrics.listen`         | "9090"                                     | Metrics server listen port         |
-| `openresty.metrics.path`           | "/metrics"                                 | Path to expose metrics             |
+### ⚙️ Common Parameters
+
+| Name                     | Description                                                      | Value                               |
+|--------------------------|------------------------------------------------------------------|-------------------------------------|
+| `installCRDs`            | Install CRDs when installing the chart                           | `true`                              |
+| `replicaCount`           | Number of operator controller replicas                           | `1`                                 |
+| `image.repository`       | Operator image repository                                        | `gintonic1glass/openresty-operator` |
+| `image.tag`              | Operator image tag                                               | `"v0.3.2"`                          |
+| `image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                      |
+| `imagePullSecrets`       | List of image pull secrets                                       | `[]`                                |
+| `nameOverride`           | Partially override chart name                                    | `""`                                |
+| `fullnameOverride`       | Fully override release name                                      | `""`                                |
+
+### 👤 RBAC and ServiceAccount
+
+| Name                        | Description                                      | Value    |
+|-----------------------------|--------------------------------------------------|----------|
+| `serviceAccount.create`     | Create a dedicated ServiceAccount                | `true`   |
+| `serviceAccount.name`       | Name of the ServiceAccount to use                | `""`     |
+| `rbac.create`               | Create required RBAC roles and bindings          | `true`   |
+
+### 📦 Pod Deployment
+
+| Name             | Description                           | Value |
+|------------------|---------------------------------------|-------|
+| `resources`       | Pod resource requests and limits      | `{}`  |
+| `nodeSelector`    | Node selector rules                   | `{}`  |
+| `tolerations`     | Pod tolerations                       | `[]`  |
+| `affinity`        | Pod affinity                          | `{}`  |
+
+### 🚀 OpenResty Instance
+
+| Name                               | Description                                                     | Value                                      |
+|------------------------------------|-----------------------------------------------------------------|--------------------------------------------|
+| `openresty.name`                   | Name of the OpenResty instance                                  | `openresty-app`                            |
+| `openresty.image`                  | OpenResty image with Prometheus support                         | `gintonic1glass/openresty:with-prometheus` |
+| `openresty.replicas`               | Number of OpenResty pods                                        | `1`                                        |
+| `openresty.http.accessLog`         | Access log output path                                          | `/dev/stdout`                              |
+| `openresty.http.errorLog`          | Error log output path                                           | `/dev/stderr`                              |
+| `openresty.http.gzip`              | Enable gzip compression                                         | `true`                                     |
+| `openresty.http.serverRefs`        | Referenced ServerBlock names                                    | `[...]`                                    |
+| `openresty.http.upstreamRefs`      | Referenced Upstream names                                       | `[...]`                                    |
+| `openresty.metrics.enable`         | Enable Prometheus metrics endpoint                              | `true`                                     |
+| `openresty.metrics.listen`         | Metrics listening port                                          | `"9090"`                                   |
+| `openresty.metrics.path`           | Metrics endpoint path                                           | `"/metrics"`                               |
+| `openresty.serviceMonitor.enabled` | Create a ServiceMonitor resource (requires Prometheus Operator) | `true`                                     |
+
+### 🔁 Reload Agent
+
+| Name                             | Description                                          | Value  |
+|----------------------------------|------------------------------------------------------|--------|
+| `reloadAgent.policies.window`    | Time window for evaluating reload trigger (seconds ) | `90`   |
+| `reloadAgent.policies.maxEvents` | Max file changes within window to trigger reload     | `12`   |
 
 ## Example Usage
 

@@ -110,5 +110,5 @@ locations:
 
 reloadAgent:
   policies:
-    window: 5
-    maxEvents: 3
+    window: 90
+    maxEvents: 12

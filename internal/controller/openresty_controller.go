@@ -437,7 +437,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		},
 		{
 			Name:  "reload-agent",
-			Image: "gintonic1glass/reload-agent:v0.1.4-test",
+			Image: "gintonic1glass/reload-agent:v0.1.5",
 			Ports: []corev1.ContainerPort{
 				{
 					Name:          "metrics",

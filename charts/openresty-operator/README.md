@@ -74,6 +74,35 @@ helm install openresty-operator openresty-operator/openresty-operator
 | `openresty.metrics.path`           | Metrics endpoint path                                           | `"/metrics"`                               |
 | `openresty.serviceMonitor.enabled` | Create a ServiceMonitor resource (requires Prometheus Operator) | `true`                                     |
 
+### 🔗 `upstreams`
+
+| Name                  | Description                                        | Value   |
+|-----------------------|----------------------------------------------------|---------|
+| `upstreams`           | List of upstream definitions                       | `[...]` |
+| `upstreams[].name`    | Name of the upstream (referenced in `proxyPass`)   | `""`    |
+| `upstreams[].servers` | List of backend servers in `host:port` format      | `[]`    |
+
+### 🌐 `servers` (ServerBlock)
+
+| Name                     | Description                                      | Value     |
+|--------------------------|--------------------------------------------------|-----------|
+| `servers`                | List of `ServerBlock` definitions                | `[...]`   |
+| `servers[].name`         | Unique server name (used as `server_name`)       | `""`      |
+| `servers[].listen`       | Listen port (string)                             | `"80"`    |
+| `servers[].locationRefs` | List of location names to include                | `[""]`    |
+
+### 📍 `locations`
+
+| Name                                          | Description                                                           | Value   |
+|-----------------------------------------------|-----------------------------------------------------------------------|---------|
+| `locations`                                   | List of location configurations                                       | `[...]` |
+| `locations[].name`                            | Unique name for this location resource                                | `""`    |
+| `locations[].entries[].path`                  | URL path prefix to match (must start with `/`)                        | `""`    |
+| `locations[].entries[].proxyPass`             | Backend URL or upstream name (e.g. `http://svc`, `https://upstream/`) | `""`    |
+| `locations[].entries[].enableUpstreamMetrics` | Enable Prometheus metrics for this path                               | `true`  |
+| `locations[].entries[].accessLog`             | Enable access log (default: true)                                     | `false` |
+| `locations[].entries[].extra`                 | List of additional raw Nginx directives                               | `[""]`  |
+
 ### 🔁 Reload Agent
 
 | Name                             | Description                                          | Value  |

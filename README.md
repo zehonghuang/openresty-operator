@@ -165,7 +165,9 @@ OpenResty Operator metrics can be visualized via Grafana. Below is an example pa
 
 ![OpenResty Operator Grafana Dashboard](./docs/images/grafana-dashboard-01.png)
 
-> A downloadable Grafana dashboard template will be published in a future release.
+> 📊 An official Grafana dashboard is available for monitoring OpenResty Operator via Prometheus.  
+> You can download it from: [Grafana Labs Dashboard #23321](https://grafana.com/grafana/dashboards/23321)
+
 
 ## License
 

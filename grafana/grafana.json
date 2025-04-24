@@ -1,4 +1,47 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "gauge",
+      "name": "Gauge",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.5.1"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -18,7 +61,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 7,
+  "id": null,
   "links": [],
   "panels": [
     {
@@ -37,7 +80,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -95,7 +138,11 @@
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
         }
       ],
       "title": "OpenResty CRs",
@@ -104,7 +151,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -162,7 +209,11 @@
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
         }
       ],
       "title": "ServerBlocks",
@@ -171,7 +222,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -229,7 +280,11 @@
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
         }
       ],
       "title": "Locations",
@@ -238,7 +293,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -296,7 +351,11 @@
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
         }
       ],
       "title": "Upstreams",
@@ -305,7 +364,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -466,7 +525,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "aef063snpzytcf"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -525,7 +584,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -585,7 +644,11 @@
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
         }
       ],
       "title": "Upstream DNS Health",
@@ -594,7 +657,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -716,7 +779,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "aef063snpzytcf"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -803,7 +866,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "aef063snpzytcf"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -987,7 +1050,11 @@
           "format": "table",
           "legendFormat": "__auto",
           "range": true,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
         }
       ],
       "title": "OpenResty Ref Overview",
@@ -1047,7 +1114,8 @@
     },
     {
       "datasource": {
-        "uid": "aef063snpzytcf"
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1173,7 +1241,11 @@
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
         }
       ],
       "title": "Recent Warnings",
@@ -1218,7 +1290,6 @@
       "type": "row"
     }
   ],
-  "preload": false,
   "refresh": "",
   "schemaVersion": 40,
   "tags": [],
@@ -1226,7 +1297,7 @@
     "list": []
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},

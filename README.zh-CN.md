@@ -164,6 +164,8 @@ OpenResty Operator 导出的指标可以通过 Grafana 进行可视化。以下�
 
 ![OpenResty Operator Grafana Dashboard](./docs/images/grafana-dashboard-01.png)
 
+> 📊 官方 Grafana Dashboard 已上线，用于配合 Prometheus 监控 OpenResty Operator。  
+> 查看或导入地址：[Dashboard #23321](https://grafana.com/grafana/dashboards/23321)
 
 ## 许可证
 

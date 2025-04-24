@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -366,6 +367,13 @@ func (in *OpenRestySpec) DeepCopyInto(out *OpenRestySpec) {
 		in, out := &in.MetricsServer, &out.MetricsServer
 		*out = new(MetricsServer)
 		**out = **in
+	}
+	if in.ReloadAgentEnv != nil {
+		in, out := &in.ReloadAgentEnv, &out.ReloadAgentEnv
+		*out = make([]v1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 

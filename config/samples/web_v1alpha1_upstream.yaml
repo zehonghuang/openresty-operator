@@ -4,9 +4,10 @@ metadata:
   labels:
     app.kubernetes.io/name: openresty-operator
     app.kubernetes.io/managed-by: kustomize
-  name: upstream-sample
+  name: etherscan-api
 spec:
   servers:
-    - example.com:80
-    - www.baidu.com:443
-    - invalid.domain.local:8080
+    - api.etherscan.io:443
+    - api.bscscan.com:443
+    - api.polygonscan.com:443
+    - api.ftmscan1.com:443

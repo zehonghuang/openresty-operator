@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -40,6 +41,8 @@ type OpenRestySpec struct {
 	// MetricsServer defines an optional Prometheus metrics endpoint
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Metrics Server",xDescriptors="urn:alm:descriptor:com.tectonic.ui:object"
 	MetricsServer *MetricsServer `json:"metrics,omitempty"`
+
+	ReloadAgentEnv []corev1.EnvVar `json:"reloadAgentEnv,omitempty"`
 }
 
 type HttpBlock struct {

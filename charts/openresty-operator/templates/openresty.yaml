@@ -17,3 +17,6 @@ spec:
     enable: {{ .Values.openresty.metrics.enable }}
     listen: {{ .Values.openresty.metrics.listen | quote }}
     path: {{ .Values.openresty.metrics.path | quote }}
+  reloadAgentEnv:
+    - name: RELOAD_POLICY
+      value: '{{ .Values.reloadAgent.policies | toJson }}'

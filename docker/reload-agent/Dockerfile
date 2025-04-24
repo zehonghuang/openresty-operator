@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM --platform=linux/amd64 golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN apk add --no-cache ca-certificates tzdata
 
 COPY --from=builder /app/reload-agent /usr/local/bin/reload-agent
 
-EXPOSE 8080
+EXPOSE 19091
 
 WORKDIR /app
 ENTRYPOINT ["reload-agent"]

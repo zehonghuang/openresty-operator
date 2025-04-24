@@ -6,6 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: openresty-sample
 spec:
+  replicas: 1
   image: gintonic1glass/openresty:with-prometheus
   http:
     include:
@@ -20,8 +21,11 @@ spec:
     serverRefs:
       - serverblock-sample
     upstreamRefs:
-      - upstream-sample
+      - etherscan-api
   metrics:
     enable: true
     listen: "8080"
     path: "/metrics"
+  reloadAgentEnv:
+    - name: RELOAD_POLICY
+      value: '{"window":60,"maxEvents":20}'

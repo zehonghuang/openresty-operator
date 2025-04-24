@@ -11,25 +11,25 @@ import (
 	"time"
 )
 
-type Config struct {
-	ReloadPolicies []ReloadPolicy `yaml:"reloadPolicies"`
-}
-
 type ReloadPolicy struct {
 	Window    int `yaml:"window"`
 	MaxEvents int `yaml:"maxEvents"`
 }
 
 type ReloadAgent struct {
-	mu       sync.Mutex
-	events   []time.Time
-	policies []ReloadPolicy
+	mu             sync.Mutex
+	events         []time.Time
+	window         time.Duration
+	maxEvents      int
+	lastReloadTime time.Time
 }
 
-func NewReloadAgent(policies []ReloadPolicy) *ReloadAgent {
+func NewReloadAgent(windowSeconds int, maxEvents int) *ReloadAgent {
 	return &ReloadAgent{
-		policies: policies,
-		events:   make([]time.Time, 0),
+		events:         make([]time.Time, 0),
+		window:         time.Duration(windowSeconds) * time.Second,
+		maxEvents:      maxEvents,
+		lastReloadTime: time.Now(),
 	}
 }
 
@@ -40,48 +40,41 @@ func (r *ReloadAgent) RecordChange() {
 	now := time.Now()
 	r.events = append(r.events, now)
 
-	// 清理过期事件（保留最长窗口期内的事件）
-	cutoff := now.Add(-r.maxWindow())
-	valid := make([]time.Time, 0, len(r.events))
-	for _, t := range r.events {
-		if t.After(cutoff) {
-			valid = append(valid, t)
-		}
-	}
-	r.events = valid
-
-	// 判断是否满足任一策略
-	for _, policy := range r.policies {
-		threshold := now.Add(-time.Duration(policy.Window) * time.Second)
-		count := 0
-		for _, t := range r.events {
-			if t.After(threshold) {
-				count++
-			}
-		}
-		if count >= policy.MaxEvents {
-			fmt.Println("[reload-agent] triggering nginx reload")
-			err := sendReloadSignalToNginx()
-			if err != nil {
-				// TODO: 错误处理、metrics、日志
-			} else {
-
-			}
-			r.events = nil
-			return
-		}
+	// 🔥 满足 maxEvents，立即触发
+	if len(r.events) >= r.maxEvents {
+		fmt.Printf("[reload-agent] 🔥 event threshold met (%d events), reloading early\n", len(r.events))
+		r.reload(now)
 	}
 }
 
-func (r *ReloadAgent) maxWindow() time.Duration {
-	_max := time.Second
-	for _, p := range r.policies {
-		w := time.Duration(p.Window) * time.Second
-		if w > _max {
-			_max = w
+func (r *ReloadAgent) StartTicker() {
+	ticker := time.NewTicker(1 * time.Second)
+	go func() {
+		for range ticker.C {
+			r.mu.Lock()
+			now := time.Now()
+
+			// ⏳ 超过 window，强制判断（即使事件不够）
+			if now.Sub(r.lastReloadTime) >= r.window && len(r.events) > 0 {
+				fmt.Printf("[reload-agent] ⏳ window elapsed (%.0fs), checking\n", r.window.Seconds())
+				r.reload(now)
+			}
+			r.mu.Unlock()
 		}
+	}()
+}
+
+func (r *ReloadAgent) reload(now time.Time) {
+	fmt.Printf("[reload-agent] ✅ triggering nginx reload (events=%d in %.0fs)\n",
+		len(r.events), now.Sub(r.lastReloadTime).Seconds())
+
+	if err := sendReloadSignalToNginx(); err != nil {
+		fmt.Printf("[reload-agent] ❌ reload failed: %v\n", err)
+		return
 	}
-	return _max
+	// 清空 & 重置窗口
+	r.lastReloadTime = now
+	r.events = nil
 }
 
 func sendReloadSignalToNginx() error {

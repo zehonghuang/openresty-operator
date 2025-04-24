@@ -340,7 +340,7 @@ RELOAD_AGENT_DIR := docker/reload-agent
 
 .PHONY: reload-agent
 reload-agent:
-	docker build -t $(RELOAD_AGENT_IMAGE):$(RELOAD_AGENT_TAG) $(RELOAD_AGENT_DIR)
+	docker build --platform linux/amd64 -t $(RELOAD_AGENT_IMAGE):$(RELOAD_AGENT_TAG) $(RELOAD_AGENT_DIR)
 
 .PHONY: reload-agent-push
 reload-agent-push:

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 
@@ -14,34 +13,31 @@ import (
 func main() {
 	fmt.Println("[reload-agent] starting")
 
-	jsonData := os.Getenv("RELOAD_POLICIES")
-	var policies []agent.ReloadPolicy
-	if err := json.Unmarshal([]byte(jsonData), &policies); err != nil {
-		log.Fatalf("invalid RELOAD_POLICIES: %v", err)
+	jsonData := os.Getenv("RELOAD_POLICY")
+	var policy agent.ReloadPolicy
+
+	if err := json.Unmarshal([]byte(jsonData), &policy); err != nil {
+		log.Fatalf("invalid RELOAD_POLICY: %v", err)
 	}
 
-	r := agent.NewReloadAgent(policies)
+	r := agent.NewReloadAgent(policy.Window, policy.MaxEvents)
+	r.StartTicker()
 
-	err := watcher.WatchDirectory("/etc/nginx/conf.d", func() {
-		r.RecordChange()
-	})
-
+	dirs, err := watcher.DiscoverWatchDirs("/etc/nginx/conf.d")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "[reload-agent] error:", err)
-		os.Exit(1)
+		log.Fatalf("failed to discover watch dirs: %v", err)
 	}
-}
-
-func loadConfig(path string) (*agent.Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read config error: %w", err)
-	}
-
-	var cfg agent.Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parse yaml error: %w", err)
+	for _, dir := range dirs {
+		dir := dir
+		go func() {
+			err := watcher.WatchDirectory(dir, func() {
+				r.RecordChange()
+			})
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "[reload-agent] failed to watch %s: %v\n", dir, err)
+			}
+		}()
 	}
 
-	return &cfg, nil
+	select {}
 }

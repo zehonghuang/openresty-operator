@@ -9,9 +9,9 @@ appVersion: "v0.3.5"
 type: application
 
 icon: https://raw.githubusercontent.com/zehonghuang/openresty-operator/main/logo.png
-home: https://github.com/huangzehong/openresty-operator
+home: https://huangzehong.me/openresty-operator
 sources:
-  - https://github.com/huangzehong/openresty-operator
+  - https://github.com/zehonghuang/openresty-operator
 license: Apache-2.0
 
 keywords:

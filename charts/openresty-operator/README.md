@@ -21,7 +21,7 @@ helm install openresty-operator ./charts/openresty-operator
 ### (Optional) Add from Helm Repo (for hosted charts)
 
 ```bash
-helm repo add openresty-operator https://zehonghuang.github.io/openresty-operator/charts
+helm repo add openresty-operator https://huangzehong.me/openresty-operator
 helm install openresty-operator openresty-operator/openresty-operator
 ```
 

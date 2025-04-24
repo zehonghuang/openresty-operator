@@ -1,0 +1,5 @@
+reloadPolicies:
+  - window: 5
+    maxEvents: 3
+  - window: 60
+    maxEvents: 10

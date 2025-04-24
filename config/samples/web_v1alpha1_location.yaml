@@ -8,36 +8,19 @@ metadata:
 spec:
   entries:
     - path: /api-1/
-      proxyPass: http://upstream-sample
+      proxyPass: https://etherscan-api/
       enableUpstreamMetrics: true
-      headers:
-        - key: Host
-          value: $host
-        - key: X-Real-IP
-          value: $remote_addr
-        - key: X-Forwarded-For
-          value: $proxy_add_x_forwarded_for
-        - key: X-Forwarded-Proto
-          value: $scheme
-        - key: X-Content-Type-Options
-          value: nosniff
-        - key: Access-Control-Allow-Origin
-          value: "*"
-      timeout:
-        connect: 5s
-        send: 10s
-        read: 10s
       accessLog: false
-      gzip:
-        enable: true
-        types:
-          - text/plain
-          - application/json
-      lua:
-        access: |
-          if not ngx.var.arg_token then
-              return ngx.exit(401)
-          end
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+    - path: /api-2/
+      proxyPass: https://etherscan-api/
+      enableUpstreamMetrics: true
+      accessLog: false
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
 ---
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
@@ -48,34 +31,31 @@ metadata:
   name: location-sample-02
 spec:
   entries:
-    - path: /api-2/
-      proxyPass: http://upstream-sample
+    - path: /api-3/
+      proxyPass: https://etherscan-api/
       enableUpstreamMetrics: true
-      headers:
-        - key: Host
-          value: $host
-        - key: X-Real-IP
-          value: $remote_addr
-        - key: X-Forwarded-For
-          value: $proxy_add_x_forwarded_for
-        - key: X-Forwarded-Proto
-          value: $scheme
-        - key: X-Content-Type-Options
-          value: nosniff
-        - key: Access-Control-Allow-Origin
-          value: "*"
-      timeout:
-        connect: 5s
-        send: 10s
-        read: 10s
       accessLog: false
-      gzip:
-        enable: true
-        types:
-          - text/plain
-          - application/json
-      lua:
-        access: |
-          if not ngx.var.arg_token then
-              return ngx.exit(401)
-          end
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+    - path: /api-4/
+      proxyPass: https://etherscan-api/
+      enableUpstreamMetrics: true
+      accessLog: false
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+    - path: /api-0545210-c32e3/
+      proxyPass: https://etherscan-api/
+      enableUpstreamMetrics: true
+      accessLog: false
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+    - path: /api-7/
+      proxyPass: https://etherscan-api/
+      enableUpstreamMetrics: true
+      accessLog: false
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"

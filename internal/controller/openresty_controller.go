@@ -437,13 +437,15 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		},
 		{
 			Name:  "reload-agent",
-			Image: "gintonic1glass/reload-agent:latest",
-			Env: []corev1.EnvVar{
+			Image: "gintonic1glass/reload-agent:v0.1.5",
+			Ports: []corev1.ContainerPort{
 				{
-					Name:  "WATCH_PATHS",
-					Value: utils.NginxConfDir,
+					Name:          "metrics",
+					ContainerPort: 19091,
+					Protocol:      corev1.ProtocolTCP,
 				},
 			},
+			Env:          app.Spec.ReloadAgentEnv,
 			VolumeMounts: mounts[1:], // 不挂主配置
 		},
 	}

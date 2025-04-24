@@ -41,7 +41,8 @@ openresty:
     enable: true
     listen: "9090"
     path: /metrics
-
+  serviceMonitor:
+    enabled: true
 
 upstreams:
   - name: etherscan-api
@@ -76,7 +77,7 @@ locations:
         extra:
           - "proxy_redirect off;"
           - "proxy_ssl_server_name on;"
-      - path: /api-1/
+      - path: /api-2/
         proxyPass: https://etherscan-api/
         enableUpstreamMetrics: true
         accessLog: false
@@ -85,13 +86,6 @@ locations:
           - "proxy_ssl_server_name on;"
   - name: api-02
     entries:
-      - path: /api-2/
-        proxyPass: https://etherscan-api/
-        enableUpstreamMetrics: true
-        accessLog: false
-        extra:
-          - "proxy_redirect off;"
-          - "proxy_ssl_server_name on;"
       - path: /api-3/
         proxyPass: https://etherscan-api/
         enableUpstreamMetrics: true
@@ -99,10 +93,22 @@ locations:
         extra:
           - "proxy_redirect off;"
           - "proxy_ssl_server_name on;"
-      - path: api-2/
+      - path: /api-4/
         proxyPass: https://etherscan-api/
         enableUpstreamMetrics: true
         accessLog: false
         extra:
           - "proxy_redirect off;"
           - "proxy_ssl_server_name on;"
+      - path: api-5/
+        proxyPass: https://etherscan-api/
+        enableUpstreamMetrics: true
+        accessLog: false
+        extra:
+          - "proxy_redirect off;"
+          - "proxy_ssl_server_name on;"
+
+reloadAgent:
+  policies:
+    window: 5
+    maxEvents: 3

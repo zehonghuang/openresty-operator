@@ -331,3 +331,17 @@ release:
 	git tag v$(VERSION)
 	git push origin main --tags
 
+# 默认镜像名称和 tag
+RELOAD_AGENT_IMAGE ?= gintonic1glass/reload-agent
+RELOAD_AGENT_TAG ?= latest
+
+# 镜像构建上下文目录
+RELOAD_AGENT_DIR := docker/reload-agent
+
+.PHONY: reload-agent
+reload-agent:
+	docker build --platform linux/amd64 -t $(RELOAD_AGENT_IMAGE):$(RELOAD_AGENT_TAG) $(RELOAD_AGENT_DIR)
+
+.PHONY: reload-agent-push
+reload-agent-push:
+	docker push $(RELOAD_AGENT_IMAGE):$(RELOAD_AGENT_TAG)

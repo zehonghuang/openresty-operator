@@ -40,8 +40,8 @@ spec:
             description: UpstreamSpec defines the desired state of Upstream
             properties:
               servers:
-                description: Foo is an example field of Upstream. Edit upstream_types.go
-                  to remove/update
+                description: Servers is a list of backend server addresses (can be
+                  IP:Port or domain names)
                 items:
                   type: string
                 type: array
@@ -64,8 +64,12 @@ spec:
                 items:
                   properties:
                     address:
+                      description: Address is the full address of the upstream server
+                        (e.g., "example.com:80")
                       type: string
                     alive:
+                      description: Alive indicates whether the server is reachable
+                        and responsive
                       type: boolean
                   required:
                   - address

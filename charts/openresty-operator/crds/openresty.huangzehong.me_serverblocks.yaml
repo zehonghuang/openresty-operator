@@ -40,14 +40,22 @@ spec:
             description: ServerBlockSpec defines the desired state of ServerBlock
             properties:
               accessLog:
+                description: AccessLog specifies the path and format of the access
+                  log (e.g., "/var/log/nginx/access.log main")
                 type: string
               errorLog:
+                description: ErrorLog specifies the path and log level of the error
+                  log (e.g., "/var/log/nginx/error.log warn")
                 type: string
               extra:
+                description: Extra contains raw Nginx directives for advanced configuration
+                  (e.g., custom error_page rules)
                 items:
                   type: string
                 type: array
               headers:
+                description: Headers defines additional headers to include using the
+                  `add_header` directive
                 items:
                   properties:
                     key:
@@ -60,10 +68,12 @@ spec:
                   type: object
                 type: array
               listen:
-                description: Foo is an example field of ServerBlock. Edit serverblock_types.go
-                  to remove/update
+                description: Listen specifies the address and port that this server
+                  block listens on (e.g., "80", "443 ssl")
                 type: string
               locationRefs:
+                description: LocationRefs is a list of referenced Location resource
+                  names included in this server block
                 items:
                   type: string
                 type: array

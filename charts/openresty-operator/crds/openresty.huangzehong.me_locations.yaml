@@ -40,30 +40,45 @@ spec:
             description: LocationSpec defines the desired state of Location
             properties:
               entries:
-                description: Foo is an example field of Location. Edit location_types.go
-                  to remove/update
+                description: Entries is a list of individual location configuration
+                  entries
                 items:
+                  description: LocationEntry defines a single Nginx `location` block
+                    and its behavior
                   properties:
                     accessLog:
+                      description: AccessLog enables or disables access logging for
+                        this location
                       type: boolean
                     cache:
+                      description: Cache defines caching configuration for the location
                       properties:
                         valid:
+                          description: Valid defines cache duration per status code
+                            (e.g., "200 1m")
                           type: string
                         zone:
+                          description: Zone specifies the cache zone name
                           type: string
                       type: object
                     enableUpstreamMetrics:
+                      description: EnableUpstreamMetrics enables automatic Prometheus
+                        metrics collection for upstream requests
                       type: boolean
                     extra:
+                      description: Extra allows defining custom raw Nginx directives
                       items:
                         type: string
                       type: array
                     gzip:
+                      description: Gzip enables gzip compression for specific content
+                        types
                       properties:
                         enable:
+                          description: Enable toggles gzip compression
                           type: boolean
                         types:
+                          description: Types lists MIME types to compress
                           items:
                             type: string
                           type: array
@@ -71,6 +86,8 @@ spec:
                       - enable
                       type: object
                     headers:
+                      description: Headers defines a list of headers to set via proxy_set_header
+                        or add_header
                       items:
                         properties:
                           key:
@@ -83,25 +100,44 @@ spec:
                         type: object
                       type: array
                     limitReq:
+                      description: LimitReq applies request rate limiting (e.g., "zone=api
+                        burst=10 nodelay")
                       type: string
                     lua:
+                      description: Lua allows embedding custom Lua logic via access/content
+                        phases
                       properties:
                         access:
+                          description: Access contains Lua code to execute during
+                            access phase
                           type: string
                         content:
+                          description: Content contains Lua code to execute during
+                            content phase
                           type: string
                       type: object
                     path:
+                      description: Path is the location match path (e.g., "/", "/api",
+                        etc.)
                       type: string
                     proxyPass:
+                      description: ProxyPass sets the backend address to proxy traffic
+                        to
                       type: string
                     timeout:
+                      description: Timeout configures upstream timeout values (connect/send/read)
                       properties:
                         connect:
+                          description: Connect is the maximum time to establish a
+                            connection
                           type: string
                         read:
+                          description: Read is the timeout for reading a response
+                            from the upstream
                           type: string
                         send:
+                          description: Send is the timeout for sending a request to
+                            the upstream
                           type: string
                       type: object
                   required:

@@ -2,6 +2,31 @@ apiVersion: v1
 entries:
   openresty-operator:
   - apiVersion: v2
+    appVersion: v0.3.6
+    created: "2025-04-24T07:42:47.331999005Z"
+    description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenResty,
+      Server, Location, Upstream, RateLimitPolicy)
+    digest: e5d86784e7b2931ca85a29404af69edb4992a4a13fe64a68ed4800c247f907a2
+    home: https://huangzehong.me/openresty-operator
+    icon: https://raw.githubusercontent.com/zehonghuang/openresty-operator/main/logo.png
+    keywords:
+    - openresty
+    - operator
+    - kubernetes
+    - crd
+    - nginx
+    - metrics
+    maintainers:
+    - email: zehong.hongframe.huang@gmail.com
+      name: zehong.huang
+    name: openresty-operator
+    sources:
+    - https://github.com/zehonghuang/openresty-operator
+    type: application
+    urls:
+    - https://huangzehong.me/openresty-operator/openresty-operator-v0.3.6.tgz
+    version: v0.3.6
+  - apiVersion: v2
     appVersion: v0.3.5
     created: "2025-04-24T06:41:36.296037986Z"
     description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenResty,
@@ -101,4 +126,4 @@ entries:
     urls:
     - https://huangzehong.me/openresty-operator/openresty-operator-0.3.0.tgz
     version: 0.3.0
-generated: "2025-04-24T06:41:36.295230387Z"
+generated: "2025-04-24T07:42:47.331179958Z"

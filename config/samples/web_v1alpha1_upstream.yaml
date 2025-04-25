@@ -11,3 +11,18 @@ spec:
     - api.bscscan.com:443
     - api.polygonscan.com:443
     - api.ftmscan1.com:443
+
+---
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: Upstream
+metadata:
+  labels:
+    app.kubernetes.io/name: openresty-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: eth-api
+spec:
+  type: FullURL
+  servers:
+    - https://1polished-light-patina.quiknode1.pro/8a8fa639a616be15a3ecc9bfe432c496247b435f/
+    - https://lingering-fittest-aura.quiknode.pro/686fd962051ab278314084685b54e525d18645ad/
+    - https://skilled-serene-emerald.quiknode.pro/d657cfb25c62ce1b08341728205f8da710a4249b/

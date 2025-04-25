@@ -43,6 +43,11 @@ type LocationEntry struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ProxyPass"
 	ProxyPass string `json:"proxyPass,omitempty"`
 
+	// ProxyPassIsFullURL determines whether the proxyPass value should be interpreted as a full URL.
+	// If set to true, the proxy_pass will point to a dynamic Lua upstream generated from an Upstream
+	// resource of type "FullURL". This is typically used in combination with UpstreamTypeFullURL.
+	ProxyPassIsFullURL bool `json:"proxyPassIsFullURL,omitempty"`
+
 	// Headers defines a list of headers to set via proxy_set_header or add_header
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Headers"
 	Headers []NginxKV `json:"headers,omitempty"`

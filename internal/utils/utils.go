@@ -46,3 +46,11 @@ func SetFrom[T comparable](items []T) map[T]struct{} {
 	}
 	return result
 }
+
+func DrainChan[T any](ch <-chan T) []T {
+	var result []T
+	for v := range ch {
+		result = append(result, v)
+	}
+	return result
+}

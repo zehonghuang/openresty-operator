@@ -124,6 +124,12 @@ spec:
                       description: ProxyPass sets the backend address to proxy traffic
                         to
                       type: string
+                    proxyPassIsFullURL:
+                      description: |-
+                        ProxyPassIsFullURL determines whether the proxyPass value should be interpreted as a full URL.
+                        If set to true, the proxy_pass will point to a dynamic Lua upstream generated from an Upstream
+                        resource of type "FullURL". This is typically used in combination with UpstreamTypeFullURL.
+                      type: boolean
                     timeout:
                       description: Timeout configures upstream timeout values (connect/send/read)
                       properties:

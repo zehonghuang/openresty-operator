@@ -25,8 +25,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"net/url"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
+	"regexp"
 	"strings"
 	"time"
 
@@ -165,7 +167,21 @@ func renderLocationEntries(entries []webv1alpha1.LocationEntry) string {
 	var b strings.Builder
 	for _, e := range entries {
 		b.WriteString(fmt.Sprintf("location %s {\n", e.Path))
-		b.WriteString(fmt.Sprintf("    proxy_pass %s;\n", e.ProxyPass))
+
+		if e.ProxyPassIsFullURL {
+			if e.Lua != nil && e.Lua.Content != "" {
+				b.WriteString("    content_by_lua_block {\n")
+				b.WriteString(e.Lua.Content)
+				b.WriteString("    }\n")
+			} else {
+				b.WriteString("    content_by_lua_block {\n")
+				b.WriteString(fmt.Sprintf("        ngx.var.target = require(\"upstreams/%s\"):pick() .. ngx.var.request_uri\n", safeName(e.ProxyPass)))
+				b.WriteString("    }\n")
+			}
+			b.WriteString("    proxy_pass $target;\n")
+		} else if e.ProxyPass != "" {
+			b.WriteString(fmt.Sprintf("    proxy_pass %s;\n", e.ProxyPass))
+		}
 
 		for _, h := range e.Headers {
 			b.WriteString(fmt.Sprintf("    proxy_set_header %s %s;\n", h.Key, h.Value))
@@ -231,6 +247,31 @@ func renderLocationEntries(entries []webv1alpha1.LocationEntry) string {
 	}
 
 	return b.String()
+}
+
+func safeName(proxyPass string) string {
+	u, err := url.Parse(proxyPass)
+	if err != nil || u.Host == "" {
+		return "invalid-proxypass"
+	}
+
+	host := u.Host
+
+	// 将 host 中的非法字符替换成 "-"
+	host = strings.ToLower(host)
+	host = strings.ReplaceAll(host, ".", "-")
+	host = strings.ReplaceAll(host, ":", "-")
+
+	// 确保只包含合法字符
+	reg := regexp.MustCompile(`[^a-z0-9\-]`)
+	host = reg.ReplaceAllString(host, "")
+
+	// 最长限制 63 字符（K8s 对象名规范）
+	if len(host) > 63 {
+		host = host[:63]
+	}
+
+	return host
 }
 
 func indentLua(code, prefix string) string {

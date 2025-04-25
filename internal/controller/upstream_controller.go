@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -55,6 +56,24 @@ var DnsCache = struct {
 	Data map[string][]string
 }{
 	Data: make(map[string][]string),
+}
+
+const (
+	// 文件扩展名
+	UpstreamRenderTypeConf = ".conf"
+	UpstreamRenderTypeLua  = ".lua"
+)
+
+var UpstreamRenderTypeMap = map[webv1alpha1.UpstreamType]string{
+	webv1alpha1.UpstreamTypeAddress: UpstreamRenderTypeConf,
+	webv1alpha1.UpstreamTypeFullURL: UpstreamRenderTypeLua,
+}
+
+type serverResult struct {
+	Address string
+	Config  string
+	Alive   bool
+	Index   int
 }
 
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams,verbs=get;list;watch;create;update;patch;delete
@@ -84,37 +103,31 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	const maxConcurrentChecks = 10
 
-	type result struct {
-		Address string
-		Config  string
-		Alive   bool
-	}
-
 	var (
-		wg      sync.WaitGroup
-		sem     = make(chan struct{}, maxConcurrentChecks)
-		results = make(chan result, len(upstream.Spec.Servers))
+		wg          sync.WaitGroup
+		sem         = make(chan struct{}, maxConcurrentChecks)
+		resultsChan = make(chan serverResult, len(upstream.Spec.Servers))
 	)
 
-	for _, addr := range upstream.Spec.Servers {
+	for i, addr := range upstream.Spec.Servers {
 		wg.Add(1)
 		sem <- struct{}{}
 
-		go func(addr string) {
+		go func(addr string, i int) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
 			host, port, err := splitHostPort(addr)
 			if err != nil {
 				log.Error(err, "Invalid format", "server", addr)
-				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // invalid format", addr)}
+				resultsChan <- serverResult{Index: i, Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // invalid format", addr)}
 				return
 			}
 
 			ips, err := net.LookupHost(host)
 			if err != nil {
 				r.Recorder.Eventf(&upstream, corev1.EventTypeWarning, "DNSError", "Failed to resolve host %s: %v", host, err)
-				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // DNS error", addr)}
+				resultsChan <- serverResult{Index: i, Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // DNS error", addr)}
 				metrics.Recorder(upstream.Kind, upstream.Namespace, upstream.Name, corev1.EventTypeWarning, fmt.Sprintf("# server %s;  // DNS error", addr))
 				return
 			} else {
@@ -125,26 +138,38 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 			alive, err := testTCP(host, port)
 			if alive {
-				results <- result{Address: addr, Alive: true, Config: fmt.Sprintf("server %s;", addr)}
+				resultsChan <- serverResult{Index: i, Address: addr, Alive: true, Config: fmt.Sprintf("server %s;", addr)}
 			} else {
 				reason := "dead"
 				if err != nil {
 					reason = err.Error()
 				}
-				results <- result{Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // %s", addr, reason)}
+				r.Recorder.Eventf(
+					&upstream,
+					corev1.EventTypeWarning,
+					"ConnectionError",
+					"TCP test failed for host %s: %v",
+					host, err,
+				)
+				resultsChan <- serverResult{Index: i, Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // %s", addr, reason)}
 			}
-		}(addr)
+		}(addr, i)
 	}
 
 	wg.Wait()
-	close(results)
+	close(resultsChan)
+
+	results := utils.DrainChan(resultsChan)
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Index < results[j].Index
+	})
 
 	var (
 		configLines []string
 		statusList  []webv1alpha1.UpstreamServerStatus
 	)
 
-	for r := range results {
+	for _, r := range results {
 		configLines = append(configLines, r.Config)
 		statusList = append(statusList, webv1alpha1.UpstreamServerStatus{
 			Address: r.Address,
@@ -157,8 +182,14 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 	}
 
+	nginxConfig := ""
+	if upstream.Spec.Type == webv1alpha1.UpstreamTypeAddress {
+		nginxConfig = renderNginxUpstreamBlock(utils.SanitizeName(upstream.Name), configLines)
+	}
+	if upstream.Spec.Type == webv1alpha1.UpstreamTypeFullURL {
+		nginxConfig = renderNginxUpstreamLua(utils.SanitizeName(upstream.Name), statusList)
+	}
 	// 写入 ConfigMap
-	nginxConfig := renderNginxUpstreamBlock(utils.SanitizeName(upstream.Name), configLines)
 	allDown := false
 	if len(nginxConfig) > 0 {
 		if err := r.createOrUpdateConfigMap(ctx, &upstream, nginxConfig, log); err != nil {
@@ -182,7 +213,7 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstream *webv1alpha1.Upstream, config string, log logr.Logger) error {
 	name := "upstream-" + upstream.Name
-	dataName := upstream.Name + ".conf"
+	dataName := upstream.Name + UpstreamRenderTypeMap[upstream.Spec.Type]
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -210,15 +241,24 @@ func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstre
 		return err
 	}
 
+	needsUpdate := false
 	if existing.Data[dataName] != config {
+		needsUpdate = true
+	}
+	if _, ok := existing.Data[dataName]; !ok {
+		needsUpdate = true
+	}
+
+	if needsUpdate {
 		log.Info("Updating ConfigMap", "name", name)
-		existing.Data[dataName] = config
+		existing.Data = map[string]string{
+			dataName: config,
+		}
 		existing.Annotations = map[string]string{
 			"openresty.huangzehong.me/generated-from-generation": fmt.Sprintf("%d", upstream.GetGeneration()),
 		}
 		return r.Update(ctx, &existing)
 	}
-
 	return nil
 }
 
@@ -232,6 +272,35 @@ func renderNginxUpstreamBlock(name string, lines []string) string {
 		b.WriteString("    " + line + "\n")
 	}
 	b.WriteString("}\n")
+	return b.String()
+}
+
+func renderNginxUpstreamLua(upstreamName string, rs []webv1alpha1.UpstreamServerStatus) string {
+	var b strings.Builder
+
+	b.WriteString(fmt.Sprintf("-- upstream-%s.lua\n", upstreamName))
+	b.WriteString("local random = require(\"upstreams.random_weighted\")\n\n")
+
+	b.WriteString("local servers = {\n")
+	alives := 0
+	for _, s := range rs {
+		if s.Alive {
+			b.WriteString(fmt.Sprintf("    { address = \"%s\", weight = %d },\n", s.Address, 1)) // 可扩展 weight 字段
+			alives++
+		} else {
+			b.WriteString(fmt.Sprintf("--    { address = \"%s\", weight = %d },\n", s.Address, 1))
+		}
+	}
+	if alives == 0 {
+		return ""
+	}
+	b.WriteString("}\n\n")
+	b.WriteString("random.init(servers)\n\n")
+
+	b.WriteString("return function()\n")
+	b.WriteString("    ngx.var.target = random.pick() .. ngx.var.request_uri\n")
+	b.WriteString("end\n")
+
 	return b.String()
 }
 

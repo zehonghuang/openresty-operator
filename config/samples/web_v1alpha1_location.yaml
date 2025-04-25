@@ -59,3 +59,29 @@ spec:
       extra:
         - "proxy_redirect off;"
         - "proxy_ssl_server_name on;"
+---
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: Location
+metadata:
+  labels:
+    app.kubernetes.io/name: openresty-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: eth-sample
+spec:
+  entries:
+    - path: /eth-api/
+      proxyPass: https://eth-api/
+      proxyPassIsFullURL: true
+      enableUpstreamMetrics: true
+      accessLog: false
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+    - path: /api-2/
+      proxyPass: https://etherscan-api/
+      enableUpstreamMetrics: true
+      accessLog: false
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+---

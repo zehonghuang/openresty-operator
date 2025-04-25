@@ -421,10 +421,17 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 	dep.Spec.Template.Annotations = buildPrometheusAnnotations(app.Spec.MetricsServer)
 	dep.Spec.Template.Spec.ShareProcessNamespace = ptr.To(true)
 	dep.Spec.Template.Spec.Volumes = volumes
+	dep.Spec.Template.Spec.NodeSelector = app.Spec.NodeSelector
+	dep.Spec.Template.Spec.Affinity = app.Spec.Affinity
+	dep.Spec.Template.Spec.Tolerations = app.Spec.Tolerations
+	dep.Spec.Template.Spec.TerminationGracePeriodSeconds = app.Spec.TerminationGracePeriodSeconds
+	dep.Spec.Template.Spec.PriorityClassName = app.Spec.PriorityClassName
+
 	dep.Spec.Template.Spec.Containers = []corev1.Container{
 		{
-			Name:  "openresty",
-			Image: image,
+			Name:      "openresty",
+			Image:     image,
+			Resources: app.Spec.Resources,
 			Ports: []corev1.ContainerPort{
 				{
 					Name:          "http",

@@ -34,6 +34,8 @@ type OpenRestySpec struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Image",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Image string `json:"image,omitempty"`
 
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+
 	// Http contains configuration for the HTTP block of the OpenResty instance
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Http",xDescriptors="urn:alm:descriptor:com.tectonic.ui:object"
 	Http *HttpBlock `json:"http"`
@@ -43,6 +45,21 @@ type OpenRestySpec struct {
 	MetricsServer *MetricsServer `json:"metrics,omitempty"`
 
 	ReloadAgentEnv []corev1.EnvVar `json:"reloadAgentEnv,omitempty"`
+
+	// NodeSelector defines node labels for pod assignment
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+
+	// Tolerations are applied to allow scheduling onto nodes with matching taints
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+
+	// Affinity defines pod scheduling preferences
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
+
+	// PriorityClassName defines the pod priority class
+	PriorityClassName string `json:"priorityClassName,omitempty"`
+
+	// TerminationGracePeriodSeconds defines the duration in seconds the pod needs to terminate gracefully
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 type HttpBlock struct {

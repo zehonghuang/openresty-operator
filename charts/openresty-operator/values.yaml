@@ -26,7 +26,7 @@ affinity: {}
 
 openresty:
   name: openresty-app
-  image: gintonic1glass/openresty:with-prometheus
+  image: gintonic1glass/openresty:alpine-1.1.0
   replicas: 1
   http:
     accessLog: /dev/stdout

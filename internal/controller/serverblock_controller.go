@@ -25,8 +25,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/retry"
 	"openresty-operator/internal/utils"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"strings"
 	"time"
 
@@ -102,14 +103,14 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		msg := fmt.Sprintf("Missing/NotReady Locations: %v %v", missing, notReady)
 		r.Recorder.Eventf(&server, corev1.EventTypeWarning, "InvalidRefs", msg)
 
-		_ = r.updateServerStatus(ctx, req.NamespacedName, false, msg)
+		_ = r.updateServerStatus(ctx, server, false, msg, log)
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
 	if len(duplicatedPaths) > 0 {
 		msg := fmt.Sprintf("Duplicated paths found: %v", duplicatedPaths)
 		r.Recorder.Eventf(&server, corev1.EventTypeWarning, "DuplicatePaths", msg)
-		_ = r.updateServerStatus(ctx, req.NamespacedName, false, msg)
+		_ = r.updateServerStatus(ctx, server, false, msg, log)
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
@@ -118,21 +119,30 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	_ = r.updateServerStatus(ctx, req.NamespacedName, true, "")
+	_ = r.updateServerStatus(ctx, server, true, "", log)
 	return ctrl.Result{RequeueAfter: 60 * time.Second}, nil
 }
 
-func (r *ServerBlockReconciler) updateServerStatus(ctx context.Context, name types.NamespacedName, ready bool, reason string) error {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		var latest webv1alpha1.ServerBlock
-		if err := r.Get(ctx, name, &latest); err != nil {
-			return err
+func (r *ServerBlockReconciler) updateServerStatus(ctx context.Context, srv webv1alpha1.ServerBlock, ready bool, reason string, log logr.Logger) error {
+	srv.Status.Ready = ready
+	srv.Status.Version = fmt.Sprintf("%d", srv.Generation)
+	srv.Status.Reason = reason
+	isTriggerOpenResty := !utils.EqualSlices(srv.Spec.LocationRefs, srv.Status.LocationRef)
+	srv.Status.LocationRef = srv.Spec.LocationRefs
+
+	if err := r.Status().Update(ctx, &srv); err != nil {
+		if errors.IsConflict(err) {
+			log.Info("ServerBlock status conflict, skipping update")
+		} else {
+			log.Error(err, "Failed to update ServerBlock status")
 		}
-		latest = *latest.DeepCopy()
-		latest.Status.Ready = ready
-		latest.Status.Reason = reason
-		return r.Status().Update(ctx, &latest)
-	})
+	}
+
+	if ready && isTriggerOpenResty {
+		return r.updateOpenResty(ctx, &srv)
+	}
+
+	return nil
 }
 
 func renderServerBlock(s *webv1alpha1.ServerBlock) string {
@@ -197,10 +207,42 @@ func (r *ServerBlockReconciler) createOrUpdateConfigMap(ctx context.Context, sb 
 	return nil
 }
 
+func (r *ServerBlockReconciler) updateOpenResty(ctx context.Context, sb *webv1alpha1.ServerBlock) error {
+	var appList webv1alpha1.OpenRestyList
+	if err := r.List(ctx, &appList,
+		client.MatchingFields{"spec.http.serverRefs": fmt.Sprintf("%s/%s", sb.Namespace, sb.Name)},
+	); err != nil {
+		return err
+	}
+
+	for _, app := range appList.Items {
+		_ = r.triggerReconcile(ctx, &app)
+	}
+
+	return nil
+}
+
+func (r *ServerBlockReconciler) triggerReconcile(ctx context.Context, app *webv1alpha1.OpenResty) error {
+	patched := app.DeepCopy()
+
+	if patched.Annotations == nil {
+		patched.Annotations = map[string]string{}
+	}
+
+	patched.Annotations["openresty.huangzehong.me/trigger-hash"] = fmt.Sprintf("%d", time.Now().UnixNano())
+
+	return r.Patch(ctx, patched, client.MergeFrom(app))
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *ServerBlockReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&webv1alpha1.ServerBlock{}).
 		Owns(&corev1.ConfigMap{}).
+		WithEventFilter(predicate.Funcs{
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				return utils.IsSpecChanged(e.ObjectOld, e.ObjectNew)
+			},
+		}).
 		Complete(r)
 }

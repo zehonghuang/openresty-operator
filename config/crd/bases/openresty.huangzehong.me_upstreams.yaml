@@ -45,8 +45,14 @@ spec:
                 items:
                   type: string
                 type: array
+              type:
+                default: Address
+                description: UpstreamType defines how upstreams are resolved and rendered
+                  in OpenResty
+                type: string
             required:
             - servers
+            - type
             type: object
           status:
             description: UpstreamStatus defines the observed state of Upstream

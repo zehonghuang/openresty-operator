@@ -23,6 +23,17 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// UpstreamType defines how upstreams are resolved and rendered in OpenResty
+type UpstreamType string
+
+const (
+	// UpstreamTypeAddress Address mode uses host:port entries rendered as standard Nginx upstream servers
+	UpstreamTypeAddress UpstreamType = "Address"
+
+	// UpstreamTypeFullURL FullURL mode uses complete URLs (e.g., https://foo.com/api), rendered into Lua logic
+	UpstreamTypeFullURL UpstreamType = "FullURL"
+)
+
 // UpstreamSpec defines the desired state of Upstream
 type UpstreamSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -31,6 +42,9 @@ type UpstreamSpec struct {
 	// Servers is a list of backend server addresses (can be IP:Port or domain names)
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Servers"
 	Servers []string `json:"servers"`
+
+	// +kubebuilder:default=Address
+	Type UpstreamType `json:"type"`
 }
 
 type UpstreamServerStatus struct {

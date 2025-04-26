@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: gintonic1glass/openresty-operator
-  tag: "v0.3.6"
+  tag: "v0.4.0"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -26,7 +26,7 @@ affinity: {}
 
 openresty:
   name: openresty-app
-  image: gintonic1glass/openresty:with-prometheus
+  image: gintonic1glass/openresty:alpine-1.1.0
   replicas: 1
   http:
     accessLog: /dev/stdout

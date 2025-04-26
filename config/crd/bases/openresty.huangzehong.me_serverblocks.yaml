@@ -84,12 +84,18 @@ spec:
           status:
             description: ServerBlockStatus defines the observed state of ServerBlock
             properties:
+              locationRef:
+                items:
+                  type: string
+                type: array
               ready:
                 description: |-
                   INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
                   Important: Run "make" to regenerate code after modifying this file
                 type: boolean
               reason:
+                type: string
+              version:
                 type: string
             required:
             - ready

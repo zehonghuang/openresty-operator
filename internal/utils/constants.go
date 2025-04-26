@@ -8,10 +8,15 @@ const (
 	NginxServerConfigDir   = NginxConfDir + "/servers"
 	NginxLocationConfigDir = NginxConfDir + "/locations"
 	NginxUpstreamConfigDir = NginxConfDir + "/upstreams"
+	NginxLuaLibDir         = "/usr/local/openresty/lualib"
+	NginxLuaLibUpstreamDir = NginxLuaLibDir + "/upstreams"
 	NginxTemplate          = `
 worker_processes auto;
 events { worker_connections 1024; }
 http {
+	
+    resolver kube-dns.kube-system.svc.cluster.local valid=30s;
+	
     lua_shared_dict prometheus_metrics 10M;
     init_worker_by_lua_block {
 {{ indent .InitLua 8 }}

@@ -10,3 +10,4 @@ spec:
   locationRefs:
     - location-sample-01
     - location-sample-02
+    - eth-sample

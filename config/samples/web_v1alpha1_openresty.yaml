@@ -7,7 +7,7 @@ metadata:
   name: openresty-sample
 spec:
   replicas: 1
-  image: gintonic1glass/openresty:with-prometheus
+  image: gintonic1glass/openresty:alpine-1.1.0
   http:
     include:
       - mime.types
@@ -22,6 +22,7 @@ spec:
       - serverblock-sample
     upstreamRefs:
       - etherscan-api
+      - eth-api
   metrics:
     enable: true
     listen: "8080"

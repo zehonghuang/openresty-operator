@@ -57,8 +57,10 @@ type ServerBlockSpec struct {
 type ServerBlockStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Ready  bool   `json:"ready"`
-	Reason string `json:"reason,omitempty"`
+	Ready       bool     `json:"ready"`
+	Version     string   `json:"version,omitempty"` // 对应 generation
+	Reason      string   `json:"reason,omitempty"`
+	LocationRef []string `json:"locationRef,omitempty"`
 }
 
 // +kubebuilder:object:root=true

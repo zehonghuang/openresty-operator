@@ -1,6 +1,9 @@
 package utils
 
 import (
+	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 	"strings"
 )
@@ -45,4 +48,46 @@ func SetFrom[T comparable](items []T) map[T]struct{} {
 		result[item] = struct{}{}
 	}
 	return result
+}
+
+func DrainChan[T any](ch <-chan T) []T {
+	var result []T
+	for v := range ch {
+		result = append(result, v)
+	}
+	return result
+}
+
+func IsSpecChanged(oldObj, newObj client.Object) bool {
+	oldSpec, ok1 := extractSpec(oldObj)
+	newSpec, ok2 := extractSpec(newObj)
+	if !ok1 || !ok2 {
+		return true
+	}
+	return !reflect.DeepEqual(oldSpec, newSpec)
+}
+
+func extractSpec(obj client.Object) (interface{}, bool) {
+	switch o := obj.(type) {
+	case *webv1alpha1.OpenResty:
+		return o.Spec, true
+	case *webv1alpha1.ServerBlock:
+		return o.Spec, true
+	case *webv1alpha1.Location:
+		return o.Spec, true
+	default:
+		return nil, false
+	}
+}
+
+func EqualSlices[T comparable](a, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

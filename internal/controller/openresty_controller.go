@@ -108,6 +108,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	var missingUpstreams, notReadyUpstreams, missingUpstreamCMs []string
+	upstreamsType := map[string]webv1alpha1.UpstreamType{}
 	for _, name := range app.Spec.Http.UpstreamRefs {
 		var ups webv1alpha1.Upstream
 		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: app.Namespace}, &ups); err != nil {
@@ -122,6 +123,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			continue
 		}
 		cmName := "upstream-" + name
+		upstreamsType[name] = ups.Spec.Type
 		var cm corev1.ConfigMap
 		if err := r.Get(ctx, types.NamespacedName{Name: cmName, Namespace: app.Namespace}, &cm); err != nil {
 			if errors.IsNotFound(err) {
@@ -160,8 +162,10 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			fmt.Sprintf("include %s/%s/%s.conf;", utils.NginxServerConfigDir, name, name))
 	}
 	for _, name := range app.Spec.Http.UpstreamRefs {
-		includeLines = append(includeLines,
-			fmt.Sprintf("include %s/%s/%s.conf;", utils.NginxUpstreamConfigDir, name, name))
+		if upstreamsType[name] == webv1alpha1.UpstreamTypeAddress {
+			includeLines = append(includeLines,
+				fmt.Sprintf("include %s/%s/%s.conf;", utils.NginxUpstreamConfigDir, name, name))
+		}
 	}
 
 	nginxConf := renderNginxConf(app.Spec.Http, app.Spec.MetricsServer, includeLines)
@@ -172,7 +176,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	if err := r.deployOpenResty(ctx, &app, []corev1.Volume{}, []corev1.VolumeMount{}, log); err != nil {
+	if err := r.deployOpenResty(ctx, &app, upstreamsType, log); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -300,7 +304,11 @@ func renderNginxConf(http *webv1alpha1.HttpBlock, metrics *webv1alpha1.MetricsSe
 }
 
 func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alpha1.OpenResty,
-	volumes []corev1.Volume, mounts []corev1.VolumeMount, log logr.Logger) error {
+	upstreamsType map[string]webv1alpha1.UpstreamType,
+	log logr.Logger) error {
+
+	var volumes []corev1.Volume
+	var mounts []corev1.VolumeMount
 
 	name := "openresty-" + app.Name
 	replicas := int32(1)
@@ -308,7 +316,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 		replicas = *app.Spec.Replicas
 	}
 
-	image := "gintonic1glass/openresty:with-prometheus"
+	image := "gintonic1glass/openresty:alpine-1.1.0"
 	if app.Spec.Image != "" {
 		image = app.Spec.Image
 	}
@@ -381,10 +389,18 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 				},
 			},
 		})
+
+		Path := ""
+		if upstreamsType[upstreamName] == webv1alpha1.UpstreamTypeAddress {
+			Path = utils.NginxUpstreamConfigDir + "/" + upstreamName
+		} else {
+			Path = utils.NginxLuaLibUpstreamDir + "/" + upstreamName
+		}
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      "upstream-" + upstreamName,
-			MountPath: utils.NginxUpstreamConfigDir + "/" + upstreamName,
+			MountPath: Path,
 		})
+
 	}
 
 	var metricsPort corev1.ContainerPort
@@ -419,6 +435,9 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 	}
 	dep.Spec.Template.ObjectMeta.Labels = map[string]string{"app": name}
 	dep.Spec.Template.Annotations = buildPrometheusAnnotations(app.Spec.MetricsServer)
+	if v, ok := app.Annotations["openresty.huangzehong.me/trigger-hash"]; ok {
+		dep.Spec.Template.Annotations["openresty.huangzehong.me/trigger-hash"] = v
+	}
 	dep.Spec.Template.Spec.ShareProcessNamespace = ptr.To(true)
 	dep.Spec.Template.Spec.Volumes = volumes
 	dep.Spec.Template.Spec.Containers = []corev1.Container{
@@ -471,7 +490,7 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 
 func buildPrometheusAnnotations(metrics *webv1alpha1.MetricsServer) map[string]string {
 	if metrics == nil || !metrics.Enable {
-		return nil
+		return map[string]string{}
 	}
 	port := defaultOr(metrics.Listen, "9091")
 	path := defaultOr(metrics.Path, "/metrics")
@@ -530,6 +549,24 @@ func (r *OpenRestyReconciler) createOrUpdateService(ctx context.Context, app *we
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *OpenRestyReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(),
+		&webv1alpha1.OpenResty{},
+		"spec.http.serverRefs",
+		func(obj client.Object) []string {
+			app := obj.(*webv1alpha1.OpenResty)
+			var keys []string
+			if app.Spec.Http != nil {
+				for _, serverRef := range app.Spec.Http.ServerRefs {
+					keys = append(keys, fmt.Sprintf("%s/%s", app.Namespace, serverRef))
+				}
+			}
+			return keys
+		},
+	); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&webv1alpha1.OpenResty{}).
 		Owns(&appsv1.Deployment{}).

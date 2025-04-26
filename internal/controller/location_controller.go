@@ -174,8 +174,11 @@ func renderLocationEntries(entries []webv1alpha1.LocationEntry) string {
 				b.WriteString(e.Lua.Content)
 				b.WriteString("    }\n")
 			} else {
-				b.WriteString("    content_by_lua_block {\n")
-				b.WriteString(fmt.Sprintf("        ngx.var.target = require(\"upstreams/%s\"):pick() .. ngx.var.request_uri\n", safeName(e.ProxyPass)))
+				b.WriteString("    set $target \"\";\n")
+				b.WriteString(fmt.Sprintf("    set $location_prefix \"%s\";\n", e.Path))
+
+				b.WriteString("    rewrite_by_lua_block {\n")
+				b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\")()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
 				b.WriteString("    }\n")
 			}
 			b.WriteString("    proxy_pass $target;\n")

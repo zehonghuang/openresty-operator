@@ -298,7 +298,24 @@ func renderNginxUpstreamLua(upstreamName string, rs []webv1alpha1.UpstreamServer
 	b.WriteString("random.init(servers)\n\n")
 
 	b.WriteString("return function()\n")
-	b.WriteString("    ngx.var.target = random.pick() .. ngx.var.request_uri\n")
+	b.WriteString("    local picked = random.pick()\n")
+	b.WriteString("    local uri = ngx.var.uri or \"/\"\n")
+	b.WriteString("    local prefix = ngx.var.location_prefix or \"/\"\n\n")
+
+	b.WriteString("    if prefix:sub(1,1) == \"^\" then\n")
+	b.WriteString("        prefix = prefix:sub(2)\n")
+	b.WriteString("    end\n\n")
+
+	b.WriteString("    local from, to = ngx.re.find(uri, \"^\" .. prefix, \"jo\")\n")
+	b.WriteString("    if from == 1 and to then\n")
+	b.WriteString("        uri = \"/\" .. uri:sub(to + 1)\n")
+	b.WriteString("    end\n\n")
+
+	b.WriteString("    if picked:sub(-1) == \"/\" and uri:sub(1,1) == \"/\" then\n")
+	b.WriteString("        picked = picked:sub(1, -2)\n")
+	b.WriteString("    end\n\n")
+
+	b.WriteString("    ngx.var.target = picked .. uri\n")
 	b.WriteString("end\n")
 
 	return b.String()

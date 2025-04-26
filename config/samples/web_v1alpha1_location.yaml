@@ -77,11 +77,4 @@ spec:
       extra:
         - "proxy_redirect off;"
         - "proxy_ssl_server_name on;"
-    - path: /api-2/
-      proxyPass: https://etherscan-api/
-      enableUpstreamMetrics: true
-      accessLog: false
-      extra:
-        - "proxy_redirect off;"
-        - "proxy_ssl_server_name on;"
 ---

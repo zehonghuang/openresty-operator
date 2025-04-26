@@ -1004,6 +1004,14 @@ spec:
               image:
                 description: Image specifies the Docker image for OpenResty
                 type: string
+              logVolume:
+                properties:
+                  persistentVolumeClaim:
+                    type: string
+                  type:
+                    default: EmptyDir
+                    type: string
+                type: object
               metrics:
                 description: MetricsServer defines an optional Prometheus metrics
                   endpoint

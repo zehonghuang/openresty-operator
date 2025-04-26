@@ -20,3 +20,6 @@ spec:
   reloadAgentEnv:
     - name: RELOAD_POLICY
       value: '{{ .Values.reloadAgent.policies | toJson }}'
+  logVolume:
+{{ toYaml .Values.openresty.logVolume | indent 6 }}
+

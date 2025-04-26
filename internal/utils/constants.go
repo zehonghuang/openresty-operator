@@ -10,6 +10,7 @@ const (
 	NginxUpstreamConfigDir = NginxConfDir + "/upstreams"
 	NginxLuaLibDir         = "/usr/local/openresty/lualib"
 	NginxLuaLibUpstreamDir = NginxLuaLibDir + "/upstreams"
+	NginxLogDir            = "/var/log/nginx"
 	NginxTemplate          = `
 worker_processes auto;
 events { worker_connections 1024; }

@@ -400,7 +400,24 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 			Name:      "upstream-" + upstreamName,
 			MountPath: Path,
 		})
+	}
 
+	if app.Spec.LogVolume.Type == webv1alpha1.LogVolumeTypeEmptyDir {
+		volumes = append(volumes, corev1.Volume{
+			Name: "nginx-logs",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+	} else {
+		volumes = append(volumes, corev1.Volume{
+			Name: "nginx-logs",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: app.Spec.LogVolume.PersistentVolumeClaim,
+				},
+			},
+		})
 	}
 
 	var metricsPort corev1.ContainerPort
@@ -459,7 +476,10 @@ func (r *OpenRestyReconciler) deployOpenResty(ctx context.Context, app *webv1alp
 				},
 				metricsPort,
 			},
-			VolumeMounts: mounts,
+			VolumeMounts: append(mounts, corev1.VolumeMount{
+				Name:      "nginx-logs",
+				MountPath: utils.NginxLogDir,
+			}),
 		},
 		{
 			Name:  "reload-agent",

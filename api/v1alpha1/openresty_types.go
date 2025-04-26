@@ -60,7 +60,24 @@ type OpenRestySpec struct {
 
 	// TerminationGracePeriodSeconds defines the duration in seconds the pod needs to terminate gracefully
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+
+	LogVolume LogVolumeSpec `json:"logVolume,omitempty"`
 }
+
+type LogVolumeSpec struct {
+	// +kubebuilder:default=EmptyDir
+	// Type of volume mounted at /var/log/nginx. EmptyDir uses ephemeral storage (logs lost after pod deletion); PVC uses a PersistentVolumeClaim for persistent storage.
+	Type LogVolumeType `json:"type,omitempty"`
+	// Name of the PersistentVolumeClaim to use when type is PVC. Only required if type: PVC.
+	PersistentVolumeClaim string `json:"persistentVolumeClaim,omitempty"`
+}
+
+type LogVolumeType string
+
+const (
+	LogVolumeTypeEmptyDir LogVolumeType = "EmptyDir"
+	LogVolumeTypePVC      LogVolumeType = "PVC"
+)
 
 type HttpBlock struct {
 	// Include is a list of additional Nginx include files (e.g., mime.types)

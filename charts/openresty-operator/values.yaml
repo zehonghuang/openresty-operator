@@ -43,6 +43,9 @@ openresty:
     path: /metrics
   serviceMonitor:
     enabled: true
+  logVolume:
+    type: EmptyDir
+    persistentVolumeClaim: ""
 
 upstreams:
   - name: etherscan-api

@@ -25,10 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	"net/url"
+	"openresty-operator/internal/handler"
 	"openresty-operator/internal/metrics"
-	"openresty-operator/internal/utils"
-	"regexp"
 	"strings"
 	"time"
 
@@ -47,6 +45,8 @@ type LocationReconciler struct {
 	Recorder record.EventRecorder
 }
 
+const DefaultRequeue = 30 * time.Second
+
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=locations,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=locations/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=locations/finalizers,verbs=update
@@ -63,61 +63,32 @@ type LocationReconciler struct {
 func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("location", req.NamespacedName)
 
-	var location webv1alpha1.Location
-	if err := r.Get(ctx, req.NamespacedName, &location); err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("Location resource not found, likely deleted")
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, err
+	location, err := r.fetchLocation(ctx, req)
+	if err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// 校验 location 合法性以及是否重复
-	pathSeen := make(map[string]struct{})
-	var invalidPaths []string
-	var duplicatePaths []string
-
-	for _, entry := range location.Spec.Entries {
-		path := entry.Path
-		valid, reason := utils.ValidateLocationPath(path)
-		if !valid {
-			invalidPaths = append(invalidPaths, fmt.Sprintf("%s (%s)", path, reason))
-		}
-		if _, exists := pathSeen[path]; exists {
-			duplicatePaths = append(duplicatePaths, path)
-		} else {
-			pathSeen[path] = struct{}{}
-		}
-	}
-
-	if len(invalidPaths) > 0 || len(duplicatePaths) > 0 {
-		var allProblems []string
-		if len(invalidPaths) > 0 {
-			allProblems = append(allProblems, fmt.Sprintf("Invalid paths: %s", strings.Join(invalidPaths, ", ")))
-		}
-		if len(duplicatePaths) > 0 {
-			allProblems = append(allProblems, fmt.Sprintf("Duplicate paths: %s", strings.Join(duplicatePaths, ", ")))
-		}
-
-		msg := strings.Join(allProblems, " | ")
+	valid, problems := handler.ValidateLocationEntries(location.Spec.Entries)
+	if !valid {
+		msg := strings.Join(problems, " | ")
 		log.Error(nil, "Path validation failed", "details", msg)
-		r.Recorder.Eventf(&location, corev1.EventTypeWarning, "InvalidPath", msg)
+		r.Recorder.Eventf(location, corev1.EventTypeWarning, "InvalidPath", msg)
 		metrics.Recorder(location.Kind, location.Namespace, location.Name, corev1.EventTypeWarning, msg)
 
 		r.updateLocationStatus(ctx, location, false, msg, log)
+		return ctrl.Result{RequeueAfter: DefaultRequeue}, nil
 
-		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
-	conf := renderLocationEntries(location.Spec.Entries)
+	conf := handler.GenerateLocationConfig(location.Spec.Entries)
 
-	if err := r.createOrUpdateConfigMap(ctx, &location, conf, log); err != nil {
+	if err := r.createOrUpdateConfigMap(ctx, location, conf, log); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	r.updateLocationStatus(ctx, location, true, "", log)
 
-	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	return ctrl.Result{RequeueAfter: DefaultRequeue}, nil
 
 }
 
@@ -163,131 +134,9 @@ func (r *LocationReconciler) createOrUpdateConfigMap(ctx context.Context, loc *w
 	return nil
 }
 
-func renderLocationEntries(entries []webv1alpha1.LocationEntry) string {
-	var b strings.Builder
-	for _, e := range entries {
-		b.WriteString(fmt.Sprintf("location %s {\n", e.Path))
-
-		if e.ProxyPassIsFullURL {
-			if e.Lua != nil && e.Lua.Content != "" {
-				b.WriteString("    content_by_lua_block {\n")
-				b.WriteString(e.Lua.Content)
-				b.WriteString("    }\n")
-			} else {
-				b.WriteString("    set $target \"\";\n")
-				b.WriteString(fmt.Sprintf("    set $location_prefix \"%s\";\n", e.Path))
-
-				b.WriteString("    rewrite_by_lua_block {\n")
-				b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\")()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
-				b.WriteString("    }\n")
-			}
-			b.WriteString("    proxy_pass $target;\n")
-		} else if e.ProxyPass != "" {
-			b.WriteString(fmt.Sprintf("    proxy_pass %s;\n", e.ProxyPass))
-		}
-
-		for _, h := range e.Headers {
-			b.WriteString(fmt.Sprintf("    proxy_set_header %s %s;\n", h.Key, h.Value))
-		}
-
-		if e.Timeout != nil {
-			if e.Timeout.Connect != "" {
-				b.WriteString(fmt.Sprintf("    proxy_connect_timeout %s;\n", e.Timeout.Connect))
-			}
-			if e.Timeout.Send != "" {
-				b.WriteString(fmt.Sprintf("    proxy_send_timeout %s;\n", e.Timeout.Send))
-			}
-			if e.Timeout.Read != "" {
-				b.WriteString(fmt.Sprintf("    proxy_read_timeout %s;\n", e.Timeout.Read))
-			}
-		}
-
-		if e.AccessLog != nil && !*e.AccessLog {
-			b.WriteString("    access_log off;\n")
-		}
-
-		if e.LimitReq != nil {
-			b.WriteString(fmt.Sprintf("    limit_req %s;\n", *e.LimitReq))
-		}
-
-		if e.Gzip != nil && e.Gzip.Enable {
-			b.WriteString("    gzip on;\n")
-			if len(e.Gzip.Types) > 0 {
-				b.WriteString(fmt.Sprintf("    gzip_types %s;\n", strings.Join(e.Gzip.Types, " ")))
-			}
-		}
-
-		if e.Cache != nil {
-			if e.Cache.Zone != "" {
-				b.WriteString(fmt.Sprintf("    proxy_cache %s;\n", e.Cache.Zone))
-			}
-			if e.Cache.Valid != "" {
-				b.WriteString(fmt.Sprintf("    proxy_cache_valid %s;\n", e.Cache.Valid))
-			}
-		}
-
-		if e.Lua != nil && e.Lua.Access != "" {
-			b.WriteString("    access_by_lua_block {\n")
-			b.WriteString(indentLua(e.Lua.Access, "        "))
-			b.WriteString("    }\n")
-		}
-
-		for _, extra := range e.Extra {
-			b.WriteString(fmt.Sprintf("    %s\n", extra))
-		}
-
-		if e.EnableUpstreamMetrics {
-			b.WriteString("    log_by_lua_block {\n")
-			b.WriteString("        local addr = (ngx.var.upstream_addr or \"unknown\"):match(\"^[^,]+\")\n")
-			b.WriteString("        local status = ngx.var.status\n")
-			b.WriteString("        local latency = tonumber(ngx.var.upstream_response_time) or 0\n")
-			b.WriteString("        metric_upstream_latency:observe(latency, {addr})\n")
-			b.WriteString("        metric_upstream_total:inc(1, {addr, status})\n")
-			b.WriteString("    }\n")
-		}
-
-		b.WriteString("}\n\n")
-	}
-
-	return b.String()
-}
-
-func safeName(proxyPass string) string {
-	u, err := url.Parse(proxyPass)
-	if err != nil || u.Host == "" {
-		return "invalid-proxypass"
-	}
-
-	host := u.Host
-
-	// 将 host 中的非法字符替换成 "-"
-	host = strings.ToLower(host)
-	host = strings.ReplaceAll(host, ".", "-")
-	host = strings.ReplaceAll(host, ":", "-")
-
-	// 确保只包含合法字符
-	reg := regexp.MustCompile(`[^a-z0-9\-]`)
-	host = reg.ReplaceAllString(host, "")
-
-	// 最长限制 63 字符（K8s 对象名规范）
-	if len(host) > 63 {
-		host = host[:63]
-	}
-
-	return host
-}
-
-func indentLua(code, prefix string) string {
-	lines := strings.Split(code, "\n")
-	for i, line := range lines {
-		lines[i] = prefix + line
-	}
-	return strings.Join(lines, "\n") + "\n"
-}
-
 func (r *LocationReconciler) updateLocationStatus(
 	ctx context.Context,
-	current webv1alpha1.Location,
+	current *webv1alpha1.Location,
 	ready bool,
 	reason string,
 	log logr.Logger,
@@ -296,13 +145,21 @@ func (r *LocationReconciler) updateLocationStatus(
 	current.Status.Version = fmt.Sprintf("%d", current.Generation)
 	current.Status.Reason = reason
 
-	if err := r.Status().Update(ctx, &current); err != nil {
+	if err := r.Status().Update(ctx, current); err != nil {
 		if errors.IsConflict(err) {
 			log.Info("Location status conflict, skipping update")
 		} else {
 			log.Error(err, "Failed to update Location status")
 		}
 	}
+}
+
+func (r *LocationReconciler) fetchLocation(ctx context.Context, req ctrl.Request) (*webv1alpha1.Location, error) {
+	var location webv1alpha1.Location
+	if err := r.Get(ctx, req.NamespacedName, &location); err != nil {
+		return nil, err
+	}
+	return &location, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -122,7 +122,9 @@ func GenerateUpstreamConfig(upstream *webv1alpha1.Upstream, results []ServerResu
 func buildConfigLines(results []ServerResult) []string {
 	var lines []string
 	for _, r := range results {
-		lines = append(lines, r.Comment)
+		if r.Alive {
+			lines = append(lines, r.Comment)
+		}
 	}
 	return lines
 }

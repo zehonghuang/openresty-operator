@@ -1007,9 +1007,14 @@ spec:
               logVolume:
                 properties:
                   persistentVolumeClaim:
+                    description: 'Name of the PersistentVolumeClaim to use when type
+                      is PVC. Only required if type: PVC.'
                     type: string
                   type:
                     default: EmptyDir
+                    description: Type of volume mounted at /var/log/nginx. EmptyDir
+                      uses ephemeral storage (logs lost after pod deletion); PVC uses
+                      a PersistentVolumeClaim for persistent storage.
                     type: string
                 type: object
               metrics:

@@ -25,16 +25,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	"net"
-	"net/url"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/handler"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sort"
-	"strings"
 	"sync"
 	"time"
 
@@ -92,107 +89,38 @@ type serverResult struct {
 func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("upstream", req.NamespacedName)
 
-	var upstream webv1alpha1.Upstream
-	if err := r.Get(ctx, req.NamespacedName, &upstream); err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("Upstream resource not found")
-			return ctrl.Result{}, nil
+	upstream, err := r.fetchUpstream(ctx, req)
+	if err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	var statusList []webv1alpha1.UpstreamServerStatus
+	results := handler.ProbeUpstreamServers(ctx, upstream)
+	for _, res := range results {
+		if !res.Alive {
+			r.Recorder.Eventf(
+				upstream,
+				corev1.EventTypeWarning,
+				res.Reason,
+				res.Comment,
+			)
 		}
-		return ctrl.Result{}, err
-	}
-
-	const maxConcurrentChecks = 10
-
-	var (
-		wg          sync.WaitGroup
-		sem         = make(chan struct{}, maxConcurrentChecks)
-		resultsChan = make(chan serverResult, len(upstream.Spec.Servers))
-	)
-
-	for i, addr := range upstream.Spec.Servers {
-		wg.Add(1)
-		sem <- struct{}{}
-
-		go func(addr string, i int) {
-			defer wg.Done()
-			defer func() { <-sem }()
-
-			host, port, err := splitHostPort(addr)
-			if err != nil {
-				log.Error(err, "Invalid format", "server", addr)
-				resultsChan <- serverResult{Index: i, Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // invalid format", addr)}
-				return
-			}
-
-			ips, err := net.LookupHost(host)
-			if err != nil {
-				r.Recorder.Eventf(&upstream, corev1.EventTypeWarning, "DNSError", "Failed to resolve host %s: %v", host, err)
-				resultsChan <- serverResult{Index: i, Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // DNS error", addr)}
-				metrics.Recorder(upstream.Kind, upstream.Namespace, upstream.Name, corev1.EventTypeWarning, fmt.Sprintf("# server %s;  // DNS error", addr))
-				return
-			} else {
-				DnsCache.Lock()
-				DnsCache.Data[host] = ips
-				DnsCache.Unlock()
-			}
-
-			alive, err := testTCP(host, port)
-			if alive {
-				resultsChan <- serverResult{Index: i, Address: addr, Alive: true, Config: fmt.Sprintf("server %s;", addr)}
-			} else {
-				reason := "dead"
-				if err != nil {
-					reason = err.Error()
-				}
-				r.Recorder.Eventf(
-					&upstream,
-					corev1.EventTypeWarning,
-					"ConnectionError",
-					"TCP test failed for host %s: %v",
-					host, err,
-				)
-				resultsChan <- serverResult{Index: i, Address: addr, Alive: false, Config: fmt.Sprintf("# server %s;  // %s", addr, reason)}
-			}
-		}(addr, i)
-	}
-
-	wg.Wait()
-	close(resultsChan)
-
-	results := utils.DrainChan(resultsChan)
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].Index < results[j].Index
-	})
-
-	var (
-		configLines []string
-		statusList  []webv1alpha1.UpstreamServerStatus
-	)
-
-	for _, r := range results {
-		configLines = append(configLines, r.Config)
+		for _, ip := range res.IPs {
+			metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, res.Address, ip, res.Alive)
+		}
+		metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, res.Address, "ALL", res.Alive)
 		statusList = append(statusList, webv1alpha1.UpstreamServerStatus{
-			Address: r.Address,
-			Alive:   r.Alive,
+			Address: res.Address,
+			Alive:   res.Alive,
 		})
-		metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, r.Address, "ALL", r.Alive)
-		host, _, _ := splitHostPort(r.Address)
-		for _, ip := range DnsCache.Data[host] {
-			metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, r.Address, ip, r.Alive)
-		}
 	}
 
-	nginxConfig := ""
-	if upstream.Spec.Type == webv1alpha1.UpstreamTypeAddress {
-		nginxConfig = renderNginxUpstreamBlock(utils.SanitizeName(upstream.Name), configLines)
-	}
-	if upstream.Spec.Type == webv1alpha1.UpstreamTypeFullURL {
-		nginxConfig = renderNginxUpstreamLua(utils.SanitizeName(upstream.Name), statusList)
-	}
+	nginxConfig := handler.GenerateUpstreamConfig(upstream, results)
+
 	// 写入 ConfigMap
 	allDown := false
 	if len(nginxConfig) > 0 {
-		if err := r.createOrUpdateConfigMap(ctx, &upstream, nginxConfig, log); err != nil {
+		if err := r.createOrUpdateConfigMap(ctx, upstream, nginxConfig, log); err != nil {
 			log.Error(err, "Failed to update ConfigMap")
 			return ctrl.Result{}, err
 		}
@@ -202,10 +130,10 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// 更新 Status
 	if allDown {
-		r.updateLocationStatus(ctx, upstream, false, nginxConfig, statusList, "All servers unavailable or DNS failed", log)
+		r.updateStatus(ctx, upstream, false, nginxConfig, statusList, "All servers unavailable or DNS failed", log)
 
 	} else {
-		r.updateLocationStatus(ctx, upstream, true, nginxConfig, statusList, "", log)
+		r.updateStatus(ctx, upstream, true, nginxConfig, statusList, "", log)
 	}
 
 	return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
@@ -262,111 +190,9 @@ func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstre
 	return nil
 }
 
-func renderNginxUpstreamBlock(name string, lines []string) string {
-	if len(lines) == 0 {
-		return ""
-	}
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("upstream %s {\n", name))
-	for _, line := range lines {
-		b.WriteString("    " + line + "\n")
-	}
-	b.WriteString("}\n")
-	return b.String()
-}
-
-func renderNginxUpstreamLua(upstreamName string, rs []webv1alpha1.UpstreamServerStatus) string {
-	var b strings.Builder
-
-	b.WriteString(fmt.Sprintf("-- upstream-%s.lua\n", upstreamName))
-	b.WriteString("local random = require(\"upstreams.random_weighted\")\n\n")
-
-	b.WriteString("local servers = {\n")
-	alives := 0
-	for _, s := range rs {
-		if s.Alive {
-			b.WriteString(fmt.Sprintf("    { address = \"%s\", weight = %d },\n", s.Address, 1)) // 可扩展 weight 字段
-			alives++
-		} else {
-			b.WriteString(fmt.Sprintf("--    { address = \"%s\", weight = %d },\n", s.Address, 1))
-		}
-	}
-	if alives == 0 {
-		return ""
-	}
-	b.WriteString("}\n\n")
-	b.WriteString("random.init(servers)\n\n")
-
-	b.WriteString("return function()\n")
-	b.WriteString("    local picked = random.pick()\n")
-	b.WriteString("    local uri = ngx.var.uri or \"/\"\n")
-	b.WriteString("    local prefix = ngx.var.location_prefix or \"/\"\n\n")
-
-	b.WriteString("    if prefix:sub(1,1) == \"^\" then\n")
-	b.WriteString("        prefix = prefix:sub(2)\n")
-	b.WriteString("    end\n\n")
-
-	b.WriteString("    local from, to = ngx.re.find(uri, \"^\" .. prefix, \"jo\")\n")
-	b.WriteString("    if from == 1 and to then\n")
-	b.WriteString("        uri = \"/\" .. uri:sub(to + 1)\n")
-	b.WriteString("    end\n\n")
-
-	b.WriteString("    if picked:sub(-1) == \"/\" and uri:sub(1,1) == \"/\" then\n")
-	b.WriteString("        picked = picked:sub(1, -2)\n")
-	b.WriteString("    end\n\n")
-
-	b.WriteString("    ngx.var.target = picked .. uri\n")
-	b.WriteString("end\n")
-
-	return b.String()
-}
-
-func splitHostPort(input string) (string, string, error) {
-	// 处理带 http/https schema 的 URL
-	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
-		u, err := url.Parse(input)
-		if err != nil {
-			return "", "", fmt.Errorf("invalid URL: %v", err)
-		}
-
-		host := u.Hostname()
-		port := u.Port()
-		if port == "" {
-			if u.Scheme == "http" {
-				port = "80"
-			} else if u.Scheme == "https" {
-				port = "443"
-			}
-		}
-		return host, port, nil
-	}
-
-	// 处理 host:port 的格式
-	if strings.Contains(input, ":") {
-		host, port, err := net.SplitHostPort(input)
-		if err == nil {
-			return host, port, nil
-		}
-		// 可能是域名中带冒号但格式不合法，比如 IPv6 缺 []
-		return "", "", fmt.Errorf("invalid host:port format: %v", err)
-	}
-
-	// fallback，只有 host 没有端口
-	return input, "80", nil
-}
-
-func testTCP(ip, port string) (bool, error) {
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(ip, port), 1*time.Second)
-	if err != nil {
-		return false, err
-	}
-	conn.Close()
-	return true, nil
-}
-
-func (r *UpstreamReconciler) updateLocationStatus(
+func (r *UpstreamReconciler) updateStatus(
 	ctx context.Context,
-	current webv1alpha1.Upstream,
+	current *webv1alpha1.Upstream,
 	ready bool,
 	nginxConfig string,
 	statusList []webv1alpha1.UpstreamServerStatus,
@@ -379,13 +205,21 @@ func (r *UpstreamReconciler) updateLocationStatus(
 	current.Status.Version = fmt.Sprintf("%d", current.Generation)
 	current.Status.Reason = reason
 
-	if err := r.Status().Update(ctx, &current); err != nil {
+	if err := r.Status().Update(ctx, current); err != nil {
 		if errors.IsConflict(err) {
 			log.Info("Location status conflict, skipping update")
 		} else {
 			log.Error(err, "Failed to update Location status")
 		}
 	}
+}
+
+func (r *UpstreamReconciler) fetchUpstream(ctx context.Context, req ctrl.Request) (*webv1alpha1.Upstream, error) {
+	var upstream webv1alpha1.Upstream
+	if err := r.Get(ctx, req.NamespacedName, &upstream); err != nil {
+		return nil, err
+	}
+	return &upstream, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -398,7 +232,7 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				if obj, ok := e.Object.(*webv1alpha1.Upstream); ok {
 					for _, server := range obj.Spec.Servers {
-						host, _, _ := splitHostPort(server)
+						host, _, _ := utils.SplitHostPort(server)
 						metrics.UpstreamDNSResolvable.DeleteLabelValues(obj.Namespace, obj.Name, host)
 					}
 				}

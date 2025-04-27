@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"fmt"
+	"net"
+	"net/url"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -90,4 +93,38 @@ func EqualSlices[T comparable](a, b []T) bool {
 		}
 	}
 	return true
+}
+
+func SplitHostPort(input string) (string, string, error) {
+	// 处理带 http/https schema 的 URL
+	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
+		u, err := url.Parse(input)
+		if err != nil {
+			return "", "", fmt.Errorf("invalid URL: %v", err)
+		}
+
+		host := u.Hostname()
+		port := u.Port()
+		if port == "" {
+			if u.Scheme == "http" {
+				port = "80"
+			} else if u.Scheme == "https" {
+				port = "443"
+			}
+		}
+		return host, port, nil
+	}
+
+	// 处理 host:port 的格式
+	if strings.Contains(input, ":") {
+		host, port, err := net.SplitHostPort(input)
+		if err == nil {
+			return host, port, nil
+		}
+		// 可能是域名中带冒号但格式不合法，比如 IPv6 缺 []
+		return "", "", fmt.Errorf("invalid host:port format: %v", err)
+	}
+
+	// fallback，只有 host 没有端口
+	return input, "80", nil
 }

@@ -1,0 +1,184 @@
+package handler
+
+import (
+	"context"
+	"fmt"
+	"net"
+	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/utils"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+)
+
+type ServerResult struct {
+	Address string
+	IPs     []string
+	Comment string
+	Alive   bool
+	Reason  string
+	Index   int
+}
+
+func ProbeUpstreamServers(ctx context.Context, upstream *webv1alpha1.Upstream) []ServerResult {
+	const maxConcurrentChecks = 10
+
+	var (
+		wg          sync.WaitGroup
+		sem         = make(chan struct{}, maxConcurrentChecks)
+		resultsChan = make(chan ServerResult, len(upstream.Spec.Servers))
+	)
+
+	for i, addr := range upstream.Spec.Servers {
+		wg.Add(1)
+		sem <- struct{}{}
+
+		go func(addr string, index int) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			host, port, err := utils.SplitHostPort(addr)
+			if err != nil {
+				resultsChan <- ServerResult{
+					Index:   index,
+					Address: addr,
+					Alive:   false,
+					Reason:  "INVALID_FORMAT",
+					Comment: fmt.Sprintf("# server %s;  // invalid format", addr),
+				}
+				return
+			}
+
+			ips, err := net.LookupHost(host)
+			if err != nil {
+				resultsChan <- ServerResult{
+					Index:   index,
+					Address: addr,
+					Alive:   false,
+					Reason:  "DNS_ERROR",
+					Comment: fmt.Sprintf("# server %s;  // DNS error", addr),
+				}
+				return
+			}
+
+			alive, _ := testTCP(host, port)
+			if alive {
+				resultsChan <- ServerResult{
+					Index:   index,
+					Address: addr,
+					IPs:     ips,
+					Alive:   true,
+					Comment: fmt.Sprintf("server %s;", addr),
+				}
+			} else {
+				resultsChan <- ServerResult{
+					Index:   index,
+					Address: addr,
+					IPs:     ips,
+					Alive:   false,
+					Reason:  "TCP_FAIL",
+					Comment: fmt.Sprintf("# server %s;  // tcp unreachable", addr),
+				}
+			}
+		}(addr, i)
+	}
+
+	wg.Wait()
+	close(resultsChan)
+
+	results := utils.DrainChan(resultsChan)
+
+	// 保持原始顺序
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Index < results[j].Index
+	})
+
+	return results
+}
+
+func testTCP(ip, port string) (bool, error) {
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(ip, port), 1*time.Second)
+	if err != nil {
+		return false, err
+	}
+	conn.Close()
+	return true, nil
+}
+
+func GenerateUpstreamConfig(upstream *webv1alpha1.Upstream, results []ServerResult) string {
+	name := utils.SanitizeName(upstream.Name)
+
+	switch upstream.Spec.Type {
+	case webv1alpha1.UpstreamTypeAddress:
+		return renderNginxUpstreamBlock(name, buildConfigLines(results))
+	case webv1alpha1.UpstreamTypeFullURL:
+		return renderNginxUpstreamLua(name, results)
+	default:
+		return ""
+	}
+}
+
+func buildConfigLines(results []ServerResult) []string {
+	var lines []string
+	for _, r := range results {
+		lines = append(lines, r.Comment)
+	}
+	return lines
+}
+
+func renderNginxUpstreamBlock(name string, lines []string) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("upstream %s {\n", name))
+	for _, line := range lines {
+		b.WriteString("    " + line + "\n")
+	}
+	b.WriteString("}\n")
+	return b.String()
+}
+
+func renderNginxUpstreamLua(name string, results []ServerResult) string {
+	var b strings.Builder
+
+	b.WriteString(fmt.Sprintf("-- upstream-%s.lua\n", name))
+	b.WriteString("local random = require(\"upstreams.random_weighted\")\n\n")
+
+	alives := 0
+	b.WriteString("local servers = {\n")
+	for _, s := range results {
+		if s.Alive {
+			b.WriteString(fmt.Sprintf("    { address = \"%s\", weight = 1 },\n", s.Address))
+			alives++
+		} else {
+			b.WriteString(fmt.Sprintf("--    { address = \"%s\", weight = 1 },\n", s.Address))
+		}
+	}
+	b.WriteString("}\n\n")
+
+	if alives == 0 {
+		return ""
+	}
+
+	b.WriteString("random.init(servers)\n\n")
+	b.WriteString("return function()\n")
+	b.WriteString("    local picked = random.pick()\n")
+	b.WriteString("    local uri = ngx.var.uri or \"/\"\n")
+	b.WriteString("    local prefix = ngx.var.location_prefix or \"/\"\n\n")
+	b.WriteString("    if prefix:sub(1,1) == \"^\" then\n")
+	b.WriteString("        prefix = prefix:sub(2)\n")
+	b.WriteString("    end\n\n")
+	b.WriteString("    local from, to = ngx.re.find(uri, \"^\" .. prefix, \"jo\")\n")
+	b.WriteString("    if from == 1 and to then\n")
+	b.WriteString("        uri = \"/\" .. uri:sub(to + 1)\n")
+	b.WriteString("    end\n\n")
+	b.WriteString("    if picked:sub(-1) == \"/\" and uri:sub(1,1) == \"/\" then\n")
+	b.WriteString("        picked = picked:sub(1, -2)\n")
+	b.WriteString("    end\n\n")
+	b.WriteString("    ngx.var.target = picked .. uri\n")
+	b.WriteString("end\n")
+
+	return b.String()
+}

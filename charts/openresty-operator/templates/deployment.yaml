@@ -33,6 +33,7 @@ spec:
           args:
             - "--metrics-bind-address=0.0.0.0:8080"
             - "--health-probe-bind-address=0.0.0.0:8081"
+            - "--leader-elect=true"
           ports:
             - name: metrics
               containerPort: 8080

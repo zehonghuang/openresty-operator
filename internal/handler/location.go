@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/url"
 	"openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/utils"
@@ -120,6 +124,55 @@ func GenerateLocationConfig(entries []v1alpha1.LocationEntry) string {
 	}
 
 	return b.String()
+}
+
+func GenerateSecretFromLocations(ctx context.Context, location *v1alpha1.Location, getSecretFunc func(ns, name string) (*corev1.Secret, error)) (*corev1.Secret, error) {
+	data := make(map[string]string)
+
+	for _, entry := range location.Spec.Entries {
+		if len(entry.HeadersFromSecret) == 0 {
+			continue
+		}
+
+		for _, h := range entry.HeadersFromSecret {
+			secret, err := getSecretFunc(location.Namespace, h.SecretName)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get secret %s/%s: %w", location.Namespace, h.SecretName, err)
+			}
+
+			val, ok := secret.Data[h.SecretKey]
+			if !ok {
+				return nil, fmt.Errorf("key %s not found in secret %s/%s", h.SecretKey, location.Namespace, h.SecretName)
+			}
+
+			key := fmt.Sprintf("%s/%s%s/%s", location.Namespace, location.Name, entry.Path, h.HeaderName)
+			data[key] = string(val)
+		}
+	}
+
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal headers JSON: %w", err)
+	}
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("secret-headers-%s", location.Name),
+			Namespace: location.Namespace, // 你可以自定义
+			Labels: map[string]string{
+				"managed-by": "openresty-operator",
+			},
+			Annotations: map[string]string{
+				"openresty.huangzehong.me/secret-headers": fmt.Sprintf("%s/%s", location.Namespace, location.Name),
+			},
+		},
+		Type: corev1.SecretTypeOpaque,
+		Data: map[string][]byte{
+			"keys.json": jsonBytes,
+		},
+	}
+
+	return secret, nil
 }
 
 func safeName(proxyPass string) string {

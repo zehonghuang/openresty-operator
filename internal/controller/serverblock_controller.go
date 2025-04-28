@@ -1,5 +1,5 @@
 /*
-Copyright 2025.
+Copyright 2023.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"openresty-operator/internal/handler"
+	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -62,75 +64,54 @@ type ServerBlockReconciler struct {
 func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("serverblock", req.NamespacedName)
 
-	var server webv1alpha1.ServerBlock
-	if err := r.Get(ctx, req.NamespacedName, &server); err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("ServerBlock not found")
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, err
+	server, err := r.fetchServerBlock(ctx, req)
+	if err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var missing []string
-	var notReady []string
-
-	pathSeen := map[string]string{}
-	var duplicatedPaths []string
+	allLocations := make(map[string]*webv1alpha1.Location)
 
 	for _, ref := range server.Spec.LocationRefs {
 		var loc webv1alpha1.Location
-		err := r.Get(ctx, types.NamespacedName{Name: ref, Namespace: server.Namespace}, &loc)
-		if err != nil {
+		if err := r.Get(ctx, types.NamespacedName{Name: ref, Namespace: server.Namespace}, &loc); err != nil {
 			if errors.IsNotFound(err) {
-				missing = append(missing, ref)
+				allLocations[ref] = nil
 			} else {
 				return ctrl.Result{}, err
 			}
-		} else if !loc.Status.Ready {
-			notReady = append(notReady, ref)
-		}
-
-		for _, entry := range loc.Spec.Entries {
-			if otherRef, exists := pathSeen[entry.Path]; exists && otherRef != ref {
-				duplicatedPaths = append(duplicatedPaths, entry.Path)
-			} else {
-				pathSeen[entry.Path] = ref
-			}
+		} else {
+			allLocations[ref] = &loc
 		}
 	}
 
-	if len(missing)+len(notReady) > 0 {
-		msg := fmt.Sprintf("Missing/NotReady Locations: %v %v", missing, notReady)
-		r.Recorder.Eventf(&server, corev1.EventTypeWarning, "InvalidRefs", msg)
+	valid, problems := handler.ValidateLocationRefs(allLocations, server.Spec.LocationRefs)
 
+	if !valid {
+		msg := strings.Join(problems, " | ")
+		r.Recorder.Eventf(server, corev1.EventTypeWarning, "InvalidRefs", msg)
+		metrics.Recorder(server.Kind, server.Namespace, server.Name, corev1.EventTypeWarning, msg)
 		_ = r.updateServerStatus(ctx, server, false, msg, log)
-		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+		return ctrl.Result{RequeueAfter: DefaultRequeue}, nil
 	}
 
-	if len(duplicatedPaths) > 0 {
-		msg := fmt.Sprintf("Duplicated paths found: %v", duplicatedPaths)
-		r.Recorder.Eventf(&server, corev1.EventTypeWarning, "DuplicatePaths", msg)
-		_ = r.updateServerStatus(ctx, server, false, msg, log)
-		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
-	}
+	conf := handler.GenerateServerBlockConfig(server)
 
-	conf := renderServerBlock(&server)
-	if err := r.createOrUpdateConfigMap(ctx, &server, conf, log); err != nil {
+	if err := r.createOrUpdateConfigMap(ctx, server, conf, log); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	_ = r.updateServerStatus(ctx, server, true, "", log)
-	return ctrl.Result{RequeueAfter: 60 * time.Second}, nil
+	return ctrl.Result{RequeueAfter: DefaultRequeue}, nil
 }
 
-func (r *ServerBlockReconciler) updateServerStatus(ctx context.Context, srv webv1alpha1.ServerBlock, ready bool, reason string, log logr.Logger) error {
+func (r *ServerBlockReconciler) updateServerStatus(ctx context.Context, srv *webv1alpha1.ServerBlock, ready bool, reason string, log logr.Logger) error {
 	srv.Status.Ready = ready
 	srv.Status.Version = fmt.Sprintf("%d", srv.Generation)
 	srv.Status.Reason = reason
 	isTriggerOpenResty := !utils.EqualSlices(srv.Spec.LocationRefs, srv.Status.LocationRef)
 	srv.Status.LocationRef = srv.Spec.LocationRefs
 
-	if err := r.Status().Update(ctx, &srv); err != nil {
+	if err := r.Status().Update(ctx, srv); err != nil {
 		if errors.IsConflict(err) {
 			log.Info("ServerBlock status conflict, skipping update")
 		} else {
@@ -139,36 +120,10 @@ func (r *ServerBlockReconciler) updateServerStatus(ctx context.Context, srv webv
 	}
 
 	if ready && isTriggerOpenResty {
-		return r.updateOpenResty(ctx, &srv)
+		return r.updateOpenResty(ctx, srv)
 	}
 
 	return nil
-}
-
-func renderServerBlock(s *webv1alpha1.ServerBlock) string {
-	var b strings.Builder
-
-	b.WriteString("server {\n")
-	b.WriteString(fmt.Sprintf("    listen %s;\n", s.Spec.Listen))
-
-	serverName := fmt.Sprintf("%s.%s.svc.cluster.local", s.Name, s.Namespace)
-	b.WriteString(fmt.Sprintf("    server_name %s;\n", serverName))
-
-	for _, ref := range s.Spec.LocationRefs {
-		includePath := fmt.Sprintf(utils.NginxLocationConfigDir+"/%s/%s.conf", ref, ref)
-		b.WriteString(fmt.Sprintf("    include %s;\n", includePath))
-	}
-
-	for _, h := range s.Spec.Headers {
-		b.WriteString(fmt.Sprintf("    add_header %s %s;\n", h.Key, h.Value))
-	}
-
-	for _, line := range s.Spec.Extra {
-		b.WriteString("    " + line + "\n")
-	}
-
-	b.WriteString("}\n")
-	return b.String()
 }
 
 func (r *ServerBlockReconciler) createOrUpdateConfigMap(ctx context.Context, sb *webv1alpha1.ServerBlock, content string, log logr.Logger) error {
@@ -232,6 +187,14 @@ func (r *ServerBlockReconciler) triggerReconcile(ctx context.Context, app *webv1
 	patched.Annotations["openresty.huangzehong.me/trigger-hash"] = fmt.Sprintf("%d", time.Now().UnixNano())
 
 	return r.Patch(ctx, patched, client.MergeFrom(app))
+}
+
+func (r *ServerBlockReconciler) fetchServerBlock(ctx context.Context, req ctrl.Request) (*webv1alpha1.ServerBlock, error) {
+	var server webv1alpha1.ServerBlock
+	if err := r.Get(ctx, req.NamespacedName, &server); err != nil {
+		return nil, err
+	}
+	return &server, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -1,10 +1,10 @@
 apiVersion: v2
 name: openresty-operator
 description: Kubernetes Operator for managing OpenResty with custom CRDs (OpenResty, Server, Location, Upstream, RateLimitPolicy)
-version: v0.4.2
+version: v0.4.3
 
 # App (controller) version
-appVersion: "v0.4.2"
+appVersion: "v0.4.3"
 
 type: application
 

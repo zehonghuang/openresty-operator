@@ -10,6 +10,7 @@ const (
 	NginxUpstreamConfigDir = NginxConfDir + "/upstreams"
 	NginxLuaLibDir         = "/usr/local/openresty/lualib"
 	NginxLuaLibUpstreamDir = NginxLuaLibDir + "/upstreams"
+	NginxLuaLibSecretDir   = NginxLuaLibDir + "/secrets"
 	NginxLogDir            = "/var/log/nginx"
 	NginxTemplate          = `
 worker_processes auto;
@@ -18,8 +19,10 @@ http {
 	
     resolver kube-dns.kube-system.svc.cluster.local valid=30s;
 	
+	lua_shared_dict secrets_store 10m;
     lua_shared_dict prometheus_metrics 10M;
     init_worker_by_lua_block {
+		require("secrets.secrets_loader").reload()
 {{ indent .InitLua 8 }}
     }
 {{- if .EnableMetrics }}

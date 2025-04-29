@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"openresty-operator/internal/utils"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -45,23 +46,11 @@ func CreateOrUpdateConfigMap(
 		return err
 	}
 
-	if !deepEqual(existing.Data, cm.Data) {
+	if !utils.DeepEqual(existing.Data, cm.Data) {
 		log.Info("Updating ConfigMap", "name", name)
 		existing.Data = cm.Data
 		return c.Update(ctx, &existing)
 	}
 
 	return nil
-}
-
-func deepEqual(a, b map[string]string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for k, v := range a {
-		if bv, ok := b[k]; !ok || v != bv {
-			return false
-		}
-	}
-	return true
 }

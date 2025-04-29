@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"openresty-operator/internal/handler"
 	"openresty-operator/internal/metrics"
+	"openresty-operator/internal/utils"
 	"strings"
 	"time"
 
@@ -82,15 +83,18 @@ func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	secret, err := handler.GenerateSecretFromLocations(ctx, location, func(ns, name string) (*corev1.Secret, error) {
 		s := corev1.Secret{}
-		if err := r.Get(ctx, req.NamespacedName, &s); err != nil {
-			return nil, client.IgnoreNotFound(err)
+		if err := r.Get(ctx, types.NamespacedName{Namespace: ns, Name: name}, &s); err != nil {
+			return nil, err
 		}
 		return &s, nil
 	})
+	if secret != nil {
+		if err := r.createOrUpdateSecret(ctx, secret); err != nil {
+			return ctrl.Result{}, client.IgnoreNotFound(err)
+		}
+	}
 
-	r.createOrUpdateSecret(secret)
-
-	conf := handler.GenerateLocationConfig(location.Spec.Entries)
+	conf := handler.GenerateLocationConfig(location.Name, location.Spec.Entries)
 
 	if err := r.createOrUpdateConfigMap(ctx, location, conf, log); err != nil {
 		return ctrl.Result{}, err
@@ -144,8 +148,36 @@ func (r *LocationReconciler) createOrUpdateConfigMap(ctx context.Context, loc *w
 	return nil
 }
 
-func (r *LocationReconciler) createOrUpdateSecret(secret *corev1.Secret) {
+func (r *LocationReconciler) createOrUpdateSecret(ctx context.Context, secret *corev1.Secret) error {
+	var existing corev1.Secret
+	err := r.Get(ctx, types.NamespacedName{
+		Name:      secret.Name,
+		Namespace: secret.Namespace,
+	}, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return r.Create(ctx, secret)
+		}
+		return err
+	}
 
+	needUpdate := false
+
+	if !utils.DeepEqualMapStringByteSlice(existing.Data, secret.Data) {
+		existing.Data = secret.Data
+		needUpdate = true
+	}
+
+	if !utils.DeepEqual(existing.Annotations, secret.Annotations) {
+		existing.Annotations = secret.Annotations
+		needUpdate = true
+	}
+
+	if needUpdate {
+		return r.Update(ctx, &existing)
+	}
+
+	return nil
 }
 
 func (r *LocationReconciler) updateLocationStatus(
@@ -178,22 +210,6 @@ func (r *LocationReconciler) fetchLocation(ctx context.Context, req ctrl.Request
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *LocationReconciler) SetupWithManager(mgr ctrl.Manager) error {
-
-	if err := mgr.GetFieldIndexer().IndexField(
-		context.Background(),
-		&corev1.Secret{},
-		"metadata.annotations.openresty.huangzehong.me/secret-headers",
-		func(obj client.Object) []string {
-			secret := obj.(*corev1.Secret)
-			var keys []string
-			if v, ok := secret.Annotations["openresty.huangzehong.me/secret-headers"]; ok {
-				return strings.Split(v, ",")
-			}
-			return keys
-		},
-	); err != nil {
-		return err
-	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&webv1alpha1.Location{}).

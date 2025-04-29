@@ -37,29 +37,53 @@ func ValidateLocationEntries(entries []v1alpha1.LocationEntry) (bool, []string) 
 	return len(problems) == 0, problems
 }
 
-func GenerateLocationConfig(entries []v1alpha1.LocationEntry) string {
+func GenerateLocationConfig(name string, entries []v1alpha1.LocationEntry) string {
 	var b strings.Builder
 	for _, e := range entries {
 		b.WriteString(fmt.Sprintf("location %s {\n", e.Path))
 
-		if e.ProxyPassIsFullURL {
-			if e.Lua != nil && e.Lua.Content != "" {
-				b.WriteString("    content_by_lua_block {\n")
-				b.WriteString(e.Lua.Content)
-				b.WriteString("    }\n")
-			} else {
-				b.WriteString("    set $target \"\";\n")
-				b.WriteString(fmt.Sprintf("    set $location_prefix \"%s\";\n", e.Path))
+		needRewrite := e.ProxyPassIsFullURL || len(e.HeadersFromSecret) > 0
 
-				b.WriteString("    rewrite_by_lua_block {\n")
-				b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\")()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
-				b.WriteString("    }\n")
+		if needRewrite {
+			if !e.ProxyPassIsFullURL {
+				b.WriteString("    set $target \"\";\n")
 			}
+			b.WriteString(fmt.Sprintf("    set $location_prefix \"%s\";\n", e.Path))
+			b.WriteString("    rewrite_by_lua_block {\n")
+
+			if len(e.HeadersFromSecret) > 0 {
+				b.WriteString("        local namespace = ngx.var.namespace or \"default\"\n")
+				b.WriteString(fmt.Sprintf("        local locationName = \"%s\"\n", name))
+				b.WriteString(fmt.Sprintf("        local path = \"%s\"\n", e.Path))
+				b.WriteString("        local headers = {\n")
+				for _, h := range e.HeadersFromSecret {
+					b.WriteString(fmt.Sprintf("            \"%s\",\n", h.HeaderName))
+				}
+				b.WriteString("        }\n")
+				b.WriteString("        for _, headerName in ipairs(headers) do\n")
+				b.WriteString("            local key = namespace .. \"/\" .. locationName .. \"/\" .. path .. \"/\" .. headerName\n")
+				b.WriteString("            local value = ngx.shared.secrets_store:get(key)\n")
+				b.WriteString("            if value then\n")
+				b.WriteString("                ngx.req.set_header(headerName, value)\n")
+				b.WriteString("            end\n")
+				b.WriteString("        end\n")
+			}
+
+			// FullURL upstream动态分流
+			if e.ProxyPassIsFullURL {
+				b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\")()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
+			}
+
+			b.WriteString("    }\n")
+		}
+
+		if e.ProxyPassIsFullURL {
 			b.WriteString("    proxy_pass $target;\n")
 		} else if e.ProxyPass != "" {
 			b.WriteString(fmt.Sprintf("    proxy_pass %s;\n", e.ProxyPass))
 		}
 
+		// 明文 Headers
 		for _, h := range e.Headers {
 			b.WriteString(fmt.Sprintf("    proxy_set_header %s %s;\n", h.Key, h.Value))
 		}
@@ -122,7 +146,6 @@ func GenerateLocationConfig(entries []v1alpha1.LocationEntry) string {
 
 		b.WriteString("}\n\n")
 	}
-
 	return b.String()
 }
 
@@ -145,9 +168,13 @@ func GenerateSecretFromLocations(ctx context.Context, location *v1alpha1.Locatio
 				return nil, fmt.Errorf("key %s not found in secret %s/%s", h.SecretKey, location.Namespace, h.SecretName)
 			}
 
-			key := fmt.Sprintf("%s/%s%s/%s", location.Namespace, location.Name, entry.Path, h.HeaderName)
+			key := fmt.Sprintf("%s/%s/%s/%s", location.Namespace, location.Name, entry.Path, h.HeaderName)
 			data[key] = string(val)
 		}
+	}
+
+	if len(data) == 0 {
+		return nil, nil
 	}
 
 	jsonBytes, err := json.Marshal(data)
@@ -158,12 +185,12 @@ func GenerateSecretFromLocations(ctx context.Context, location *v1alpha1.Locatio
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("secret-headers-%s", location.Name),
-			Namespace: location.Namespace, // 你可以自定义
+			Namespace: location.Namespace,
 			Labels: map[string]string{
 				"managed-by": "openresty-operator",
 			},
 			Annotations: map[string]string{
-				"openresty.huangzehong.me/secret-headers": fmt.Sprintf("%s/%s", location.Namespace, location.Name),
+				"openresty.huangzehong.me/secret-headers": fmt.Sprintf("%s", location.Name),
 			},
 		},
 		Type: corev1.SecretTypeOpaque,

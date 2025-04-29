@@ -176,6 +176,29 @@ func BuildVolumesAndMounts(ctx context.Context, c client.Client, app *webv1alpha
 		})
 	}
 
+	var secretList corev1.SecretList
+	if err := c.List(ctx, &secretList, client.MatchingLabels{
+		"managed-by": "openresty-operator",
+	}); err != nil {
+		return nil, err
+	}
+	for _, secret := range secretList.Items {
+		volumes = append(volumes, corev1.Volume{
+			Name: "secret-" + secret.Name,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: secret.Name,
+				},
+			},
+		})
+
+		locName := secret.Annotations["openresty.huangzehong.me/secret-headers"]
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      "secret-" + secret.Name,
+			MountPath: utils.NginxLuaLibSecretDir + "/" + locName,
+		})
+	}
+
 	// --- Mount Logs ---
 	if app.Spec.LogVolume.Type == webv1alpha1.LogVolumeTypeEmptyDir {
 		volumes = append(volumes, corev1.Volume{

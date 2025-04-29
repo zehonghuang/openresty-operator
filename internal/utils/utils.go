@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"net/url"
@@ -127,4 +128,32 @@ func SplitHostPort(input string) (string, string, error) {
 
 	// fallback，只有 host 没有端口
 	return input, "80", nil
+}
+
+func DeepEqual[K comparable, V comparable](a, b map[K]V) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		if bv, ok := b[k]; !ok || v != bv {
+			return false
+		}
+	}
+	return true
+}
+
+func DeepEqualMapStringByteSlice(a, b map[string][]byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		bv, ok := b[k]
+		if !ok {
+			return false
+		}
+		if !bytes.Equal(v, bv) {
+			return false
+		}
+	}
+	return true
 }

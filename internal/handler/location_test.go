@@ -115,7 +115,7 @@ func TestGenerateLocationConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GenerateLocationConfig(tt.entries)
+			got := GenerateLocationConfig("test", tt.entries)
 
 			for _, expect := range tt.wantContains {
 				assert.Contains(t, got, expect, "expected rendered config to contain %q", expect)

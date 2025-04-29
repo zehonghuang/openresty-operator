@@ -9,7 +9,8 @@ RUN apk add --no-cache curl bash perl && \
 # 可选：暴露 Nginx 默认端口
 EXPOSE 80
 
-COPY lua/ /usr/local/openresty/lualib/upstreams/
+COPY lua/upstreams/ /usr/local/openresty/lualib/upstreams/
+COPY lua/secrets/ /usr/local/openresty/lualib/secrets/
 
 # 可选：设置工作目录
 WORKDIR /usr/local/openresty/nginx

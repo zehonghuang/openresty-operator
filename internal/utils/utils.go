@@ -128,3 +128,10 @@ func SplitHostPort(input string) (string, string, error) {
 	// fallback，只有 host 没有端口
 	return input, "80", nil
 }
+
+func MergeMaps(dst, src map[string]string) map[string]string {
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}

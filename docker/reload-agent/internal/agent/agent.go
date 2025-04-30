@@ -22,6 +22,7 @@ type ReloadAgent struct {
 	window         time.Duration
 	maxEvents      int
 	lastReloadTime time.Time
+	OnReload       func()
 }
 
 func NewReloadAgent(windowSeconds int, maxEvents int) *ReloadAgent {
@@ -67,6 +68,8 @@ func (r *ReloadAgent) StartTicker() {
 func (r *ReloadAgent) reload(now time.Time) {
 	fmt.Printf("[reload-agent] ✅ triggering nginx reload (events=%d in %.0fs)\n",
 		len(r.events), now.Sub(r.lastReloadTime).Seconds())
+
+	r.OnReload()
 
 	if err := sendReloadSignalToNginx(); err != nil {
 		fmt.Printf("[reload-agent] ❌ reload failed: %v\n", err)

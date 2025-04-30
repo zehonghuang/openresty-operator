@@ -44,6 +44,10 @@ type OpenRestySpec struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Metrics Server",xDescriptors="urn:alm:descriptor:com.tectonic.ui:object"
 	MetricsServer *MetricsServer `json:"metrics,omitempty"`
 
+	// ServiceMonitor controls whether to automatically create a Prometheus ServiceMonitor for OpenResty metrics
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable ServiceMonitor",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	ServiceMonitor *ServiceMonitor `json:"serviceMonitor,omitempty"`
+
 	ReloadAgentEnv []corev1.EnvVar `json:"reloadAgentEnv,omitempty"`
 
 	// NodeSelector defines node labels for pod assignment
@@ -62,6 +66,16 @@ type OpenRestySpec struct {
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 
 	LogVolume LogVolumeSpec `json:"logVolume,omitempty"`
+}
+
+type ServiceMonitor struct {
+
+	// +kubebuilder:default=false
+	Enable bool `json:"enable,omitempty"`
+
+	Labels map[string]string `json:"labels,omitempty"`
+
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type LogVolumeSpec struct {
@@ -123,10 +137,12 @@ type MetricsServer struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	Enable bool `json:"enable,omitempty"`
 
+	// +kubebuilder:default="9090"
 	// Listen specifies the port to expose Prometheus metrics on (default: "8080")
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Listen",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Listen string `json:"listen,omitempty"`
 
+	// +kubebuilder:default=/metrics
 	// Path defines the HTTP path for Prometheus metrics (default: "/metrics")
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Path",xDescriptors="urn:alm:descriptor:com.tectonic.ui:text"
 	Path string `json:"path,omitempty"`

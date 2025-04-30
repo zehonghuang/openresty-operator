@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"openresty-operator/internal/httpapi"
 	"openresty-operator/internal/metrics"
 	"os"
@@ -200,6 +201,8 @@ func main() {
 
 	server := httpapi.NewServer(mgr)
 	server.RegisterHandler(&httpapi.MetricsDNSCacheHandler{})
+
+	_ = monitoringv1.AddToScheme(scheme)
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

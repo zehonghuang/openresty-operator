@@ -5,24 +5,26 @@ import (
 	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/utils"
 	ctrl "sigs.k8s.io/controller-runtime"
-
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func DeployOpenRestyPod(ctx context.Context, c client.Client, scheme *runtime.Scheme, app *webv1alpha1.OpenResty, upstreamsType map[string]webv1alpha1.UpstreamType, log logr.Logger) error {
+func DeployOpenRestyPod(ctx context.Context, c client.Client, scheme *runtime.Scheme, app *webv1alpha1.OpenResty, upstreamsType map[string]webv1alpha1.UpstreamType, log logr.Logger) (error, *appsv1.Deployment) {
 	vmResult, err := BuildVolumesAndMounts(ctx, c, app, upstreamsType)
 	if err != nil {
-		return err
+		return err, nil
 	}
 
 	defaulted := &appsv1.Deployment{}
@@ -40,7 +42,7 @@ func CreateOrUpdateDeployment(
 	app *webv1alpha1.OpenResty,
 	deployment *appsv1.Deployment,
 	log logr.Logger,
-) error {
+) (error, *appsv1.Deployment) {
 	existing := &appsv1.Deployment{}
 	err := c.Get(ctx, types.NamespacedName{
 		Name:      deployment.Name,
@@ -51,11 +53,11 @@ func CreateOrUpdateDeployment(
 		if errors.IsNotFound(err) {
 			log.Info("Creating Deployment", "name", deployment.Name)
 			if err := ctrl.SetControllerReference(app, deployment, scheme); err != nil {
-				return err
+				return err, nil
 			}
-			return c.Create(ctx, deployment)
+			return c.Create(ctx, deployment), deployment
 		}
-		return fmt.Errorf("failed to get Deployment: %w", err)
+		return fmt.Errorf("failed to get Deployment: %w", err), nil
 	}
 
 	if !cmp.Equal(existing.Spec, deployment.Spec) {
@@ -65,14 +67,14 @@ func CreateOrUpdateDeployment(
 		existing.Spec = deployment.Spec
 
 		if err := ctrl.SetControllerReference(app, existing, scheme); err != nil {
-			return err
+			return err, nil
 		}
 		log.Info("Updating Deployment", "name", existing.Name)
-		return c.Update(ctx, existing)
+		return c.Update(ctx, existing), existing
 	}
 
 	log.V(4).Info("Deployment up-to-date", "name", existing.Name)
-	return nil
+	return nil, existing
 }
 
 type VolumeMountResult struct {
@@ -244,7 +246,7 @@ func BuildDeploymentSpec(app *webv1alpha1.OpenResty, defaulted *appsv1.Deploymen
 	dep.Spec.Template.ObjectMeta.Labels = map[string]string{
 		"app": name,
 	}
-	dep.Spec.Template.Annotations = buildPrometheusAnnotations(app.Spec.MetricsServer)
+	// dep.Spec.Template.Annotations = buildPrometheusAnnotations(app.Spec.MetricsServer)
 
 	if v, ok := app.Annotations["openresty.huangzehong.me/trigger-hash"]; ok {
 		if dep.Spec.Template.Annotations == nil {
@@ -285,10 +287,10 @@ func BuildDeploymentSpec(app *webv1alpha1.OpenResty, defaulted *appsv1.Deploymen
 
 	reloadAgentContainer := corev1.Container{
 		Name:  "reload-agent",
-		Image: "gintonic1glass/reload-agent:v0.1.5",
+		Image: "gintonic1glass/reload-agent:v0.1.6",
 		Ports: []corev1.ContainerPort{
 			{
-				Name:          "metrics",
+				Name:          "reload-metrics",
 				ContainerPort: 19091,
 				Protocol:      corev1.ProtocolTCP,
 			},
@@ -317,4 +319,119 @@ func buildPrometheusAnnotations(metrics *webv1alpha1.MetricsServer) map[string]s
 		"prometheus.io/port":   port,
 		"prometheus.io/path":   path,
 	}
+}
+
+func CreateOrUpdateServiceMonitor(ctx context.Context, c client.Client, scheme *runtime.Scheme, owner metav1.Object, labels, annotations map[string]string, log logr.Logger) error {
+
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      owner.GetName(),
+			Namespace: owner.GetNamespace(),
+			Labels: utils.MergeMaps(map[string]string{
+				"app.kubernetes.io/name":      "openresty",
+				"app.kubernetes.io/instance":  owner.GetName(),
+				"openresty.huangzehong.me/cr": owner.GetName(),
+			}, labels),
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": owner.GetName(),
+				},
+			},
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{owner.GetNamespace()},
+			},
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					Port:     "metrics",
+					Path:     "/metrics",
+					Interval: "30s",
+				},
+				{
+					Port:     "reload-metrics",
+					Path:     "/metrics",
+					Interval: "30s",
+				},
+			},
+		},
+	}
+
+	var existing monitoringv1.ServiceMonitor
+	err := c.Get(ctx, types.NamespacedName{Name: owner.GetName(), Namespace: owner.GetNamespace()}, &existing)
+	if errors.IsNotFound(err) {
+		if err := controllerutil.SetControllerReference(owner, sm, scheme); err != nil {
+			return err
+		}
+		return c.Create(ctx, sm)
+	} else if err != nil {
+		return err
+	}
+
+	if !cmp.Equal(existing.Spec, sm.Spec) {
+		diff := cmp.Diff(existing.Spec, sm.Spec)
+		log.V(4).Info("ServiceMonitor spec changed", "diff", diff)
+
+		existing.Spec = sm.Spec
+
+		if err := ctrl.SetControllerReference(sm, &existing, scheme); err != nil {
+			return err
+		}
+		log.Info("Updating ServiceMonitor", "name", existing.Name)
+		return c.Update(ctx, &existing)
+	}
+	return nil
+}
+
+func CreateOrUpdateMetricsService(
+	ctx context.Context,
+	c client.Client,
+	scheme *runtime.Scheme,
+	app *webv1alpha1.OpenResty,
+) error {
+	name := app.Name + "-metrics"
+	labels := map[string]string{
+		"app": "openresty-" + app.Name,
+	}
+
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: app.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "metrics",
+					Port:       9090,
+					TargetPort: intstr.Parse(app.Spec.MetricsServer.Listen),
+				},
+				{
+					Name:       "reload-metrics",
+					Port:       19091,
+					TargetPort: intstr.FromInt32(19091),
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(app, svc, scheme); err != nil {
+		return err
+	}
+
+	var existing corev1.Service
+	err := c.Get(ctx, types.NamespacedName{Name: name, Namespace: app.Namespace}, &existing)
+	if errors.IsNotFound(err) {
+		return c.Create(ctx, svc)
+	} else if err != nil {
+		return err
+	}
+
+	// Apply changes to existing Service
+	existing.Spec.Selector = svc.Spec.Selector
+	existing.Spec.Ports = svc.Spec.Ports
+	return c.Update(ctx, &existing)
 }

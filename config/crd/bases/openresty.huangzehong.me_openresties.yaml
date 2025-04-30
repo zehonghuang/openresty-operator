@@ -1026,10 +1026,12 @@ spec:
                       exposed
                     type: boolean
                   listen:
+                    default: "9090"
                     description: 'Listen specifies the port to expose Prometheus metrics
                       on (default: "8080")'
                     type: string
                   path:
+                    default: /metrics
                     description: 'Path defines the HTTP path for Prometheus metrics
                       (default: "/metrics")'
                     type: string
@@ -1220,6 +1222,22 @@ spec:
                       If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
                       otherwise to an implementation-defined value. Requests cannot exceed Limits.
                       More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                    type: object
+                type: object
+              serviceMonitor:
+                description: ServiceMonitor controls whether to automatically create
+                  a Prometheus ServiceMonitor for OpenResty metrics
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  enable:
+                    default: false
+                    type: boolean
+                  labels:
+                    additionalProperties:
+                      type: string
                     type: object
                 type: object
               terminationGracePeriodSeconds:

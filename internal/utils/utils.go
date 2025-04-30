@@ -157,3 +157,10 @@ func DeepEqualMapStringByteSlice(a, b map[string][]byte) bool {
 	}
 	return true
 }
+
+func MergeMaps(dst, src map[string]string) map[string]string {
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}

@@ -24,6 +24,9 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
+serviceMonitor:
+  enabled: false
+
 openresty:
   name: openresty-app
   image: gintonic1glass/openresty:alpine-1.1.0

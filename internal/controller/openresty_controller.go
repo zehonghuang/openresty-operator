@@ -87,13 +87,24 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		log); err != nil {
 		return ctrl.Result{}, err
 	}
-
-	if err := handler.DeployOpenRestyPod(ctx, r.Client, r.Scheme, app, upstreamStatus.UpstreamsType, log); err != nil {
+	var dep *appsv1.Deployment
+	if err, dep = handler.DeployOpenRestyPod(ctx, r.Client, r.Scheme, app, upstreamStatus.UpstreamsType, log); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if err := handler.DeployServerBlockServices(ctx, r.Client, r.Scheme, app, log); err != nil {
 		return ctrl.Result{}, err
+	}
+
+	if app.Spec.ServiceMonitor.Enable {
+		if err := handler.CreateOrUpdateMetricsService(ctx, r.Client, r.Scheme, app); err != nil {
+			log.Error(err, "Failed to create or update MetricsService")
+			return ctrl.Result{}, err
+		}
+		if err := handler.CreateOrUpdateServiceMonitor(ctx, r.Client, r.Scheme, dep, app.Spec.ServiceMonitor.Labels, app.Spec.ServiceMonitor.Annotations, log); err != nil {
+			log.Error(err, "Failed to create or update ServiceMonitor")
+			return ctrl.Result{}, err
+		}
 	}
 
 	app.Status.Ready = true

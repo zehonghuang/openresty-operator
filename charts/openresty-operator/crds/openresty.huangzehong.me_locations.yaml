@@ -99,6 +99,21 @@ spec:
                         - value
                         type: object
                       type: array
+                    headersFromSecret:
+                      items:
+                        properties:
+                          headerName:
+                            type: string
+                          secretKey:
+                            type: string
+                          secretName:
+                            type: string
+                        required:
+                        - headerName
+                        - secretKey
+                        - secretName
+                        type: object
+                      type: array
                     limitReq:
                       description: LimitReq applies request rate limiting (e.g., "zone=api
                         burst=10 nodelay")

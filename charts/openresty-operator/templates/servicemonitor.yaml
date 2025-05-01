@@ -5,6 +5,9 @@ metadata:
   name: {{ include "openresty-operator.fullname" . }}
   labels:
     release: {{ .Release.Name }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   selector:
     matchLabels:

@@ -20,12 +20,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"openresty-operator/internal/constants"
 	"openresty-operator/internal/handler"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
@@ -90,7 +90,7 @@ func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return &s, nil
 	})
 	if secret != nil {
-		if err := r.createOrUpdateSecret(ctx, secret); err != nil {
+		if err := r.createOrUpdateSecret(ctx, location, secret); err != nil {
 			return ctrl.Result{}, client.IgnoreNotFound(err)
 		}
 	}
@@ -114,8 +114,9 @@ func (r *LocationReconciler) createOrUpdateConfigMap(ctx context.Context, loc *w
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: loc.Namespace,
+			Labels:    constants.BuildCommonLabels(loc, "configmap"),
 			Annotations: map[string]string{
-				"openresty.huangzehong.me/generated-from-generation": fmt.Sprintf("%d", loc.GetGeneration()),
+				constants.AnnotationGeneratedFromGeneration: fmt.Sprintf("%d", loc.GetGeneration()),
 			},
 		},
 		Data: map[string]string{
@@ -141,7 +142,7 @@ func (r *LocationReconciler) createOrUpdateConfigMap(ctx context.Context, loc *w
 		log.Info("Updating ConfigMap", "name", name)
 		existing.Data[dataName] = conf
 		existing.Annotations = map[string]string{
-			"openresty.huangzehong.me/generated-from-generation": fmt.Sprintf("%d", loc.GetGeneration()),
+			constants.AnnotationGeneratedFromGeneration: fmt.Sprintf("%d", loc.GetGeneration()),
 		}
 		return r.Update(ctx, &existing)
 	}
@@ -149,7 +150,7 @@ func (r *LocationReconciler) createOrUpdateConfigMap(ctx context.Context, loc *w
 	return nil
 }
 
-func (r *LocationReconciler) createOrUpdateSecret(ctx context.Context, secret *corev1.Secret) error {
+func (r *LocationReconciler) createOrUpdateSecret(ctx context.Context, loc *webv1alpha1.Location, secret *corev1.Secret) error {
 	var existing corev1.Secret
 	err := r.Get(ctx, types.NamespacedName{
 		Name:      secret.Name,
@@ -157,6 +158,9 @@ func (r *LocationReconciler) createOrUpdateSecret(ctx context.Context, secret *c
 	}, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			if err := ctrl.SetControllerReference(loc, secret, r.Scheme); err != nil {
+				return err
+			}
 			return r.Create(ctx, secret)
 		}
 		return err
@@ -175,6 +179,9 @@ func (r *LocationReconciler) createOrUpdateSecret(ctx context.Context, secret *c
 	}
 
 	if needUpdate {
+		if err := ctrl.SetControllerReference(loc, secret, r.Scheme); err != nil {
+			return err
+		}
 		return r.Update(ctx, &existing)
 	}
 
@@ -214,7 +221,6 @@ func (r *LocationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&webv1alpha1.Location{}).
 		Owns(&corev1.ConfigMap{}).
-		Owns(&monitoringv1.ServiceMonitor{}).
 		Owns(&corev1.Secret{}).
 		Complete(r)
 }

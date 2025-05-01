@@ -44,6 +44,7 @@ type OpenRestySpec struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Metrics Server",xDescriptors="urn:alm:descriptor:com.tectonic.ui:object"
 	MetricsServer *MetricsServer `json:"metrics,omitempty"`
 
+	// +kubebuilder:default:={enable:true}
 	// ServiceMonitor controls whether to automatically create a Prometheus ServiceMonitor for OpenResty metrics
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable ServiceMonitor",xDescriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
 	ServiceMonitor *ServiceMonitor `json:"serviceMonitor,omitempty"`
@@ -65,6 +66,7 @@ type OpenRestySpec struct {
 	// TerminationGracePeriodSeconds defines the duration in seconds the pod needs to terminate gracefully
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 
+	// +kubebuilder:default:={type:EmptyDir}
 	LogVolume LogVolumeSpec `json:"logVolume,omitempty"`
 }
 
@@ -79,7 +81,6 @@ type ServiceMonitor struct {
 }
 
 type LogVolumeSpec struct {
-	// +kubebuilder:default=EmptyDir
 	// Type of volume mounted at /var/log/nginx. EmptyDir uses ephemeral storage (logs lost after pod deletion); PVC uses a PersistentVolumeClaim for persistent storage.
 	Type LogVolumeType `json:"type,omitempty"`
 	// Name of the PersistentVolumeClaim to use when type is PVC. Only required if type: PVC.

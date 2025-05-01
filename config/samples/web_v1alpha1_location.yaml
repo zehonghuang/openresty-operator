@@ -1,9 +1,6 @@
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
 metadata:
-  labels:
-    app.kubernetes.io/name: openresty-operator
-    app.kubernetes.io/managed-by: kustomize
   name: location-sample-01
 spec:
   entries:
@@ -11,6 +8,10 @@ spec:
       proxyPass: https://etherscan-api/
       enableUpstreamMetrics: true
       accessLog: false
+      headersFromSecret:
+        - headerName: apiKey
+          secretName: apikey
+          secretKey: apikey
       extra:
         - "proxy_redirect off;"
         - "proxy_ssl_server_name on;"
@@ -25,9 +26,6 @@ spec:
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
 metadata:
-  labels:
-    app.kubernetes.io/name: openresty-operator
-    app.kubernetes.io/managed-by: kustomize
   name: location-sample-02
 spec:
   entries:
@@ -63,9 +61,6 @@ spec:
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
 metadata:
-  labels:
-    app.kubernetes.io/name: openresty-operator
-    app.kubernetes.io/managed-by: kustomize
   name: eth-sample
 spec:
   entries:

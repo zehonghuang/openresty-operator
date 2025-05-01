@@ -1,9 +1,6 @@
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: RateLimitPolicy
 metadata:
-  labels:
-    app.kubernetes.io/name: openresty-operator
-    app.kubernetes.io/managed-by: kustomize
   name: ratelimitpolicy-sample
 spec:
   zoneName: login_zone

@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/constants"
 	"openresty-operator/internal/utils"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -179,9 +180,11 @@ func BuildVolumesAndMounts(ctx context.Context, c client.Client, app *webv1alpha
 	}
 
 	var secretList corev1.SecretList
-	if err := c.List(ctx, &secretList, client.MatchingLabels{
-		"managed-by": "openresty-operator",
-	}); err != nil {
+	if err := c.List(ctx, &secretList, client.InNamespace(app.Namespace),
+		client.MatchingLabels{
+			constants.LabelComponent: "secret",
+			constants.LabelManagedBy: "openresty-operator",
+		}); err != nil {
 		return nil, err
 	}
 	for _, secret := range secretList.Items {
@@ -194,7 +197,7 @@ func BuildVolumesAndMounts(ctx context.Context, c client.Client, app *webv1alpha
 			},
 		})
 
-		locName := secret.Annotations["openresty.huangzehong.me/secret-headers"]
+		locName := secret.Annotations[constants.AnnotationSecretHeaders]
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      "secret-" + secret.Name,
 			MountPath: utils.NginxLuaLibSecretDir + "/" + locName,
@@ -252,30 +255,23 @@ func BuildDeploymentSpec(app *webv1alpha1.OpenResty, defaulted *appsv1.Deploymen
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: app.Namespace,
-			Labels: map[string]string{
-				"app": name,
-			},
+			Labels:    constants.BuildCommonLabels(app, "deployment"),
 		},
-		Spec: defaulted.Spec, // deep copy Default
+		Spec: defaulted.Spec,
 	}
 
-	// 填充业务逻辑字段
 	dep.Spec.Replicas = ptr.To(replicas)
 	dep.Spec.Selector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"app": name,
-		},
+		MatchLabels: constants.BuildSelectorLabels(app),
 	}
-	dep.Spec.Template.ObjectMeta.Labels = map[string]string{
-		"app": name,
-	}
+	dep.Spec.Template.ObjectMeta.Labels = constants.BuildCommonLabels(app, "pod")
 	// dep.Spec.Template.Annotations = buildPrometheusAnnotations(app.Spec.MetricsServer)
 
-	if v, ok := app.Annotations["openresty.huangzehong.me/trigger-hash"]; ok {
+	if v, ok := app.Annotations[constants.AnnotationTriggerHash]; ok {
 		if dep.Spec.Template.Annotations == nil {
 			dep.Spec.Template.Annotations = make(map[string]string)
 		}
-		dep.Spec.Template.Annotations["openresty.huangzehong.me/trigger-hash"] = v
+		dep.Spec.Template.Annotations[constants.AnnotationTriggerHash] = v
 	}
 
 	dep.Spec.Template.Spec.Volumes = volumes
@@ -298,10 +294,7 @@ func BuildDeploymentSpec(app *webv1alpha1.OpenResty, defaulted *appsv1.Deploymen
 				Protocol:      corev1.ProtocolTCP,
 			},
 		},
-		VolumeMounts: append(mounts, corev1.VolumeMount{
-			Name:      "nginx-logs",
-			MountPath: utils.NginxLogDir,
-		}),
+		VolumeMounts: mounts,
 	}
 
 	if metricsPort != nil {
@@ -344,24 +337,18 @@ func buildPrometheusAnnotations(metrics *webv1alpha1.MetricsServer) map[string]s
 	}
 }
 
-func CreateOrUpdateServiceMonitor(ctx context.Context, c client.Client, scheme *runtime.Scheme, owner metav1.Object, labels, annotations map[string]string, log logr.Logger) error {
+func CreateOrUpdateServiceMonitor(ctx context.Context, c client.Client, scheme *runtime.Scheme, owner client.Object, labels, annotations map[string]string, log logr.Logger) error {
 
 	sm := &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      owner.GetName(),
-			Namespace: owner.GetNamespace(),
-			Labels: utils.MergeMaps(map[string]string{
-				"app.kubernetes.io/name":      "openresty",
-				"app.kubernetes.io/instance":  owner.GetName(),
-				"openresty.huangzehong.me/cr": owner.GetName(),
-			}, labels),
+			Name:        owner.GetName(),
+			Namespace:   owner.GetNamespace(),
+			Labels:      utils.MergeMaps(constants.BuildCommonLabels(owner, "service-monitor"), labels),
 			Annotations: annotations,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": owner.GetName(),
-				},
+				MatchLabels: constants.BuildSelectorLabels(owner),
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{
 				MatchNames: []string{owner.GetNamespace()},
@@ -414,18 +401,15 @@ func CreateOrUpdateMetricsService(
 	app *webv1alpha1.OpenResty,
 ) error {
 	name := app.Name + "-metrics"
-	labels := map[string]string{
-		"app": "openresty-" + app.Name,
-	}
 
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: app.Namespace,
-			Labels:    labels,
+			Labels:    constants.BuildCommonLabels(app, "service"),
 		},
 		Spec: corev1.ServiceSpec{
-			Selector: labels,
+			Selector: constants.BuildSelectorLabels(app),
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "metrics",

@@ -1005,13 +1005,14 @@ spec:
                 description: Image specifies the Docker image for OpenResty
                 type: string
               logVolume:
+                default:
+                  type: EmptyDir
                 properties:
                   persistentVolumeClaim:
                     description: 'Name of the PersistentVolumeClaim to use when type
                       is PVC. Only required if type: PVC.'
                     type: string
                   type:
-                    default: EmptyDir
                     description: Type of volume mounted at /var/log/nginx. EmptyDir
                       uses ephemeral storage (logs lost after pod deletion); PVC uses
                       a PersistentVolumeClaim for persistent storage.
@@ -1225,6 +1226,8 @@ spec:
                     type: object
                 type: object
               serviceMonitor:
+                default:
+                  enable: true
                 description: ServiceMonitor controls whether to automatically create
                   a Prometheus ServiceMonitor for OpenResty metrics
                 properties:

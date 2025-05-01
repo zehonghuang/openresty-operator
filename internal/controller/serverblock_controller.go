@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"openresty-operator/internal/constants"
 	"openresty-operator/internal/handler"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
@@ -133,6 +134,7 @@ func (r *ServerBlockReconciler) createOrUpdateConfigMap(ctx context.Context, sb 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: sb.Namespace,
+			Labels:    constants.BuildCommonLabels(sb, "configmap"),
 		},
 		Data: map[string]string{
 			dataName: content,
@@ -184,7 +186,7 @@ func (r *ServerBlockReconciler) triggerReconcile(ctx context.Context, app *webv1
 		patched.Annotations = map[string]string{}
 	}
 
-	patched.Annotations["openresty.huangzehong.me/trigger-hash"] = fmt.Sprintf("%d", time.Now().UnixNano())
+	patched.Annotations[constants.AnnotationTriggerHash] = fmt.Sprintf("%d", time.Now().UnixNano())
 
 	return r.Patch(ctx, patched, client.MergeFrom(app))
 }

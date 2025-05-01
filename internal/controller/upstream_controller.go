@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/constants"
 	"openresty-operator/internal/handler"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
@@ -64,13 +65,6 @@ const (
 var UpstreamRenderTypeMap = map[webv1alpha1.UpstreamType]string{
 	webv1alpha1.UpstreamTypeAddress: UpstreamRenderTypeConf,
 	webv1alpha1.UpstreamTypeFullURL: UpstreamRenderTypeLua,
-}
-
-type serverResult struct {
-	Address string
-	Config  string
-	Alive   bool
-	Index   int
 }
 
 // +kubebuilder:rbac:groups=openresty.huangzehong.me,resources=upstreams,verbs=get;list;watch;create;update;patch;delete
@@ -146,8 +140,9 @@ func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstre
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: upstream.Namespace,
+			Labels:    constants.BuildCommonLabels(upstream, "configmap"),
 			Annotations: map[string]string{
-				"openresty.huangzehong.me/generated-from-generation": fmt.Sprintf("%d", upstream.GetGeneration()),
+				constants.AnnotationGeneratedFromGeneration: fmt.Sprintf("%d", upstream.GetGeneration()),
 			},
 		},
 		Data: map[string]string{
@@ -183,7 +178,7 @@ func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstre
 			dataName: config,
 		}
 		existing.Annotations = map[string]string{
-			"openresty.huangzehong.me/generated-from-generation": fmt.Sprintf("%d", upstream.GetGeneration()),
+			constants.AnnotationGeneratedFromGeneration: fmt.Sprintf("%d", upstream.GetGeneration()),
 		}
 		return r.Update(ctx, &existing)
 	}

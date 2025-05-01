@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/constants"
 	"openresty-operator/internal/utils"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,15 +39,10 @@ func generateServiceForServer(app *webv1alpha1.OpenResty, server *webv1alpha1.Se
 		ObjectMeta: ctrl.ObjectMeta{
 			Name:      server.Name,
 			Namespace: app.Namespace,
-			Labels: map[string]string{
-				"app":  "openresty-" + app.Name,
-				"type": "server-service",
-			},
+			Labels:    constants.BuildCommonLabels(server, "service"),
 		},
 		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": "openresty-" + app.Name,
-			},
+			Selector: constants.BuildSelectorLabels(app),
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "http",

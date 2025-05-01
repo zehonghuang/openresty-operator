@@ -20,12 +20,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/constants"
 	"openresty-operator/internal/handler"
 	"openresty-operator/internal/metrics"
 	"openresty-operator/internal/utils"
@@ -82,13 +84,13 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		ctx, r.Client, r.Scheme, app,
 		"openresty-"+app.Name+"-main",
 		app.Namespace,
-		map[string]string{"app": app.Name},
+		constants.BuildCommonLabels(app, "configmap"),
 		map[string]string{"nginx.conf": nginxConf},
 		log); err != nil {
 		return ctrl.Result{}, err
 	}
-	var dep *appsv1.Deployment
-	if err, dep = handler.DeployOpenRestyPod(ctx, r.Client, r.Scheme, app, upstreamStatus.UpstreamsType, log); err != nil {
+
+	if err, _ = handler.DeployOpenRestyPod(ctx, r.Client, r.Scheme, app, upstreamStatus.UpstreamsType, log); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -101,7 +103,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Error(err, "Failed to create or update MetricsService")
 			return ctrl.Result{}, err
 		}
-		if err := handler.CreateOrUpdateServiceMonitor(ctx, r.Client, r.Scheme, dep, app.Spec.ServiceMonitor.Labels, app.Spec.ServiceMonitor.Annotations, log); err != nil {
+		if err := handler.CreateOrUpdateServiceMonitor(ctx, r.Client, r.Scheme, app, app.Spec.ServiceMonitor.Labels, app.Spec.ServiceMonitor.Annotations, log); err != nil {
 			log.Error(err, "Failed to create or update ServiceMonitor")
 			return ctrl.Result{}, err
 		}
@@ -170,6 +172,7 @@ func (r *OpenRestyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{}).
+		Owns(&monitoringv1.ServiceMonitor{}).
 		WithEventFilter(predicate.Funcs{
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				if obj, ok := e.Object.(*webv1alpha1.OpenResty); ok {

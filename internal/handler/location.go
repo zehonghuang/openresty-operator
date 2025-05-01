@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/url"
 	"openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/constants"
 	"openresty-operator/internal/utils"
 	"regexp"
 	"strings"
@@ -186,11 +187,9 @@ func GenerateSecretFromLocations(ctx context.Context, location *v1alpha1.Locatio
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("secret-headers-%s", location.Name),
 			Namespace: location.Namespace,
-			Labels: map[string]string{
-				"managed-by": "openresty-operator",
-			},
+			Labels:    constants.BuildCommonLabels(location, "secret"),
 			Annotations: map[string]string{
-				"openresty.huangzehong.me/secret-headers": fmt.Sprintf("%s", location.Name),
+				constants.AnnotationSecretHeaders: fmt.Sprintf("%s", location.Name),
 			},
 		},
 		Type: corev1.SecretTypeOpaque,

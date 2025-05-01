@@ -11,6 +11,7 @@ EXPOSE 80
 
 COPY lua/upstreams/ /usr/local/openresty/lualib/upstreams/
 COPY lua/secrets/ /usr/local/openresty/lualib/secrets/
+COPY lua/metrics/ /usr/local/openresty/lualib/
 
 # 可选：设置工作目录
 WORKDIR /usr/local/openresty/nginx

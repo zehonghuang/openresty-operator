@@ -82,6 +82,7 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			}
 		} else {
 			allLocations[ref] = &loc
+			metrics.SetCRDRefStatus(server.Namespace, server.Name, loc.Kind, ref, loc.Status.Ready)
 		}
 	}
 

@@ -177,7 +177,10 @@ func (r *OpenRestyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				if obj, ok := e.Object.(*webv1alpha1.OpenResty); ok {
 					for _, serverRef := range obj.Spec.Http.ServerRefs {
-						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(obj.Namespace, obj.Name, serverRef)
+						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(obj.Namespace, obj.Name, webv1alpha1.ServerBlock{}.Kind, serverRef)
+					}
+					for _, upstreamRef := range obj.Spec.Http.UpstreamRefs {
+						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(obj.Namespace, obj.Name, webv1alpha1.Upstream{}.Kind, upstreamRef)
 					}
 				}
 				return false
@@ -194,7 +197,16 @@ func (r *OpenRestyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 				for serverRef := range oldSet {
 					if _, stillPresent := newSet[serverRef]; !stillPresent {
-						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(oldObj.Namespace, oldObj.Name, serverRef)
+						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(oldObj.Namespace, oldObj.Name, webv1alpha1.ServerBlock{}.Kind, serverRef)
+					}
+				}
+
+				oldSet = utils.SetFrom(oldObj.Spec.Http.UpstreamRefs)
+				newSet = utils.SetFrom(newObj.Spec.Http.UpstreamRefs)
+
+				for upstreamRef := range oldSet {
+					if _, stillPresent := newSet[upstreamRef]; !stillPresent {
+						metrics.OpenRestyCRDRefStatus.DeleteLabelValues(oldObj.Namespace, oldObj.Name, webv1alpha1.Upstream{}.Kind, upstreamRef)
 					}
 				}
 				return true

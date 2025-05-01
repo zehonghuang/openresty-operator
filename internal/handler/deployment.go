@@ -283,6 +283,9 @@ func BuildDeploymentSpec(app *webv1alpha1.OpenResty, defaulted *appsv1.Deploymen
 	dep.Spec.Template.Spec.PriorityClassName = app.Spec.PriorityClassName
 
 	// 注入 containers
+	if len(app.Spec.Image) == 0 {
+		app.Spec.Image = "gintonic1glass/openresty:alpine-1.1.2"
+	}
 	openrestyContainer := corev1.Container{
 		Name:      "openresty",
 		Image:     app.Spec.Image,

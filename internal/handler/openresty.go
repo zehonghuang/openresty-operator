@@ -92,6 +92,7 @@ func ValidateUpstreamRefs(get GetFunc, app *webv1alpha1.OpenResty) UpstreamRefsS
 		}
 
 		status.UpstreamsType[name] = ups.Spec.Type
+		metrics.SetCRDRefStatus(app.Namespace, app.Name, ups.Kind, ups.Name, ups.Status.Ready)
 
 		if !ups.Status.Ready {
 			status.NotReadyUpstreams = append(status.NotReadyUpstreams, name)

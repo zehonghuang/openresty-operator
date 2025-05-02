@@ -162,7 +162,8 @@ OpenResty Operator 导出的指标可以通过 Grafana 进行可视化。以下�
 - Upstream 的 DNS 健康度和响应情况；
 - 近期配置异常与告警事件（如路径冲突、域名无法解析等）
 
-![OpenResty Operator Grafana Dashboard](./docs/images/grafana-dashboard-01.png)
+![OpenResty Operator Grafana Dashboard](./docs/images/grafana-dashboard-02.png)
+![OpenResty Operator Grafana Dashboard](./docs/images/grafana-dashboard-03.png)
 
 > 📊 官方 Grafana Dashboard 已上线，用于配合 Prometheus 监控 OpenResty Operator。  
 > 查看或导入地址：[Dashboard #23321](https://grafana.com/grafana/dashboards/23321)

@@ -40,6 +40,12 @@
       "id": "table",
       "name": "Table",
       "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
     }
   ],
   "annotations": {
@@ -204,7 +210,7 @@
         {
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count(openresty_crd_ref_status{crd_kind=\"ServerBlock\"})by()",
+          "expr": "count(openresty_crd_ref_status{kind=\"ServerBlock\"})by()",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -275,7 +281,7 @@
         {
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count(openresty_crd_ref_status{crd_kind=\"ServerBlock\"})by()",
+          "expr": "count(openresty_crd_ref_status{kind=\"Location\"})by()",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -346,7 +352,7 @@
         {
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count(openresty_crd_ref_status{crd_kind=\"ServerBlock\"})by()",
+          "expr": "count(openresty_crd_ref_status{kind=\"Upstream\"})by()",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -368,17 +374,13 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
           "custom": {
-            "align": "left",
+            "align": "auto",
             "cellOptions": {
               "type": "auto"
             },
             "inspect": false
           },
-          "links": [],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -398,47 +400,16 @@
           {
             "matcher": {
               "id": "byName",
+              "options": "server"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
               "options": "Status Code"
             },
             "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "pattern": "5..",
-                      "result": {
-                        "color": "dark-red",
-                        "index": 0,
-                        "text": "5XX"
-                      }
-                    },
-                    "type": "regex"
-                  },
-                  {
-                    "options": {
-                      "pattern": "4..",
-                      "result": {
-                        "color": "dark-yellow",
-                        "index": 1,
-                        "text": "4XX"
-                      }
-                    },
-                    "type": "regex"
-                  },
-                  {
-                    "options": {
-                      "pattern": "2..",
-                      "result": {
-                        "color": "transparent",
-                        "index": 2,
-                        "text": "2XX"
-                      }
-                    },
-                    "type": "regex"
-                  }
-                ]
-              },
               {
                 "id": "custom.cellOptions",
                 "value": {
@@ -447,30 +418,48 @@
                   "type": "color-background",
                   "wrapText": false
                 }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "server"
-            },
-            "properties": [
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "pattern": "2..",
+                      "result": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "2XX"
+                      }
+                    },
+                    "type": "regex"
+                  },
+                  {
+                    "options": {
+                      "pattern": "4..",
+                      "result": {
+                        "color": "yellow",
+                        "index": 1,
+                        "text": "4XX"
+                      }
+                    },
+                    "type": "regex"
+                  },
+                  {
+                    "options": {
+                      "pattern": "5..",
+                      "result": {
+                        "color": "red",
+                        "index": 2,
+                        "text": "5XX"
+                      }
+                    },
+                    "type": "regex"
+                  }
+                ]
+              },
               {
                 "id": "custom.width",
-                "value": 210
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Status Code"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 111
+                "value": 99
               }
             ]
           },
@@ -479,12 +468,7 @@
               "id": "byName",
               "options": "Request Total"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 121
-              }
-            ]
+            "properties": []
           },
           {
             "matcher": {
@@ -494,7 +478,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 177
+                "value": 191
               }
             ]
           }
@@ -661,39 +645,14 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
           "custom": {
-            "align": "left",
+            "align": "auto",
             "cellOptions": {
-              "applyToRow": true,
-              "mode": "gradient",
-              "type": "color-background",
-              "wrapText": false
+              "type": "auto"
             },
-            "filterable": true,
-            "inspect": true
+            "inspect": false
           },
-          "decimals": 3,
-          "fieldMinMax": false,
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "color": "dark-red",
-                  "index": 0,
-                  "text": "NotReady"
-                },
-                "1": {
-                  "color": "dark-green",
-                  "index": 1,
-                  "text": "Ready"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -703,7 +662,7 @@
               },
               {
                 "color": "red",
-                "value": 0
+                "value": 80
               }
             ]
           }
@@ -712,45 +671,59 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value (lastNotNull)"
+              "options": "Is Ready"
             },
-            "properties": []
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "NotReady"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "Ready"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background",
+                  "wrapText": false
+                }
+              }
+            ]
           },
           {
             "matcher": {
               "id": "byName",
               "options": "Server"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 217
-              }
-            ]
+            "properties": []
           },
           {
             "matcher": {
               "id": "byName",
               "options": "Namespace"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 121
-              }
-            ]
+            "properties": []
           },
           {
             "matcher": {
               "id": "byName",
               "options": "UpStream"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 165
-              }
-            ]
+            "properties": []
           }
         ]
       },
@@ -870,34 +843,14 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
           "custom": {
-            "align": "left",
+            "align": "auto",
             "cellOptions": {
               "type": "auto"
             },
-            "filterable": true,
             "inspect": false
           },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "color": "dark-red",
-                  "index": 0,
-                  "text": "NotReady"
-                },
-                "1": {
-                  "color": "dark-green",
-                  "index": 1,
-                  "text": "Ready"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -920,11 +873,8 @@
             },
             "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text",
-                  "wrapText": false
-                }
+                "id": "custom.width",
+                "value": 74
               },
               {
                 "id": "mappings",
@@ -932,12 +882,10 @@
                   {
                     "options": {
                       "0": {
-                        "color": "dark-red",
                         "index": 1,
                         "text": "NotReady"
                       },
                       "1": {
-                        "color": "dark-green",
                         "index": 0,
                         "text": "Ready"
                       }
@@ -953,24 +901,14 @@
               "id": "byName",
               "options": "Namespace"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 110
-              }
-            ]
+            "properties": []
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Openresty"
+              "options": "From"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 118
-              }
-            ]
+            "properties": []
           },
           {
             "matcher": {
@@ -979,14 +917,9 @@
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 107
-              },
-              {
                 "id": "custom.cellOptions",
                 "value": {
                   "applyToRow": true,
-                  "mode": "gradient",
                   "type": "color-background",
                   "wrapText": false
                 }
@@ -996,10 +929,20 @@
                 "value": [
                   {
                     "options": {
-                      "ServerBlock": {
-                        "color": "#7b9617",
+                      "Location": {
+                        "color": "#68e0e5a6",
                         "index": 0,
+                        "text": "Location"
+                      },
+                      "ServerBlock": {
+                        "color": "#3368de99",
+                        "index": 1,
                         "text": "ServerBlock"
+                      },
+                      "Upstream": {
+                        "color": "#7f35a2c2",
+                        "index": 2,
+                        "text": "Upstream"
                       }
                     },
                     "type": "value"
@@ -1011,12 +954,24 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "ServerName"
+              "options": "To"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 123
+                "value": 114
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "From"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 122
               }
             ]
           }
@@ -1077,11 +1032,23 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "from": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "kind": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "namespace": {
                 "aggregations": [],
                 "operation": "groupby"
               },
               "openresty": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "to": {
                 "aggregations": [],
                 "operation": "groupby"
               }
@@ -1095,17 +1062,20 @@
             "includeByName": {},
             "indexByName": {
               "Value (lastNotNull)": 4,
-              "crd_kind": 2,
-              "crd_name": 3,
+              "from": 1,
+              "kind": 2,
               "namespace": 0,
-              "openresty": 1
+              "to": 3
             },
             "renameByName": {
               "Value (lastNotNull)": "Is Ready",
               "crd_kind": "Kind",
               "crd_name": "ServerName",
+              "from": "From",
+              "kind": "Kind",
               "namespace": "Namespace",
-              "openresty": "Openresty"
+              "openresty": "Openresty",
+              "to": "To"
             }
           }
         }
@@ -1119,14 +1089,10 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
           "custom": {
             "align": "auto",
             "cellOptions": {
-              "type": "auto",
-              "wrapText": false
+              "type": "auto"
             },
             "inspect": false
           },
@@ -1149,12 +1115,16 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "kind"
+              "options": "Kind"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 172
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background",
+                  "wrapText": false
+                }
               },
               {
                 "id": "mappings",
@@ -1162,26 +1132,24 @@
                   {
                     "options": {
                       "Location": {
-                        "color": "#6464e1",
+                        "color": "#68e0e5a6",
                         "index": 0,
                         "text": "Location"
                       },
-                      "Upstream": {
-                        "color": "#dfb1f2",
+                      "ServerBlock": {
+                        "color": "#3368de99",
                         "index": 1,
+                        "text": "ServerBlock"
+                      },
+                      "Upstream": {
+                        "color": "#7f35a2c2",
+                        "index": 2,
                         "text": "Upstream"
                       }
                     },
                     "type": "value"
                   }
                 ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "applyToRow": true,
-                  "type": "color-background"
-                }
               }
             ]
           },
@@ -1190,24 +1158,14 @@
               "id": "byName",
               "options": "name"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 169
-              }
-            ]
+            "properties": []
           },
           {
             "matcher": {
               "id": "byName",
               "options": "namespace"
             },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 165
-              }
-            ]
+            "properties": []
           }
         ]
       },
@@ -1272,6 +1230,20 @@
               }
             }
           }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "kind": "Kind",
+              "name": "Name",
+              "namespace": "Namespace",
+              "reason": "Reason"
+            }
+          }
         }
       ],
       "type": "table"
@@ -1288,22 +1260,440 @@
       "panels": [],
       "title": "Openresty",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 22
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "time() - reload_agent_reload_last_timestamp_seconds{namespace=\"${namespace}\", job=\"${Instance}-metrics\"}",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "Last Reload",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(sum by (ip, path) (\n  label_replace(\n    rate(upstream_requests_total{namespace=\"${namespace}\", job=\"${Instance}-metrics\", server=\"${servername}.${namespace}.svc.cluster.local\"}[1m]),\n    \"ip\", \"$1\", \"upstream\", \"^(.*):\\\\d+$\"\n  )\n)\n*\non(ip)\ngroup_left(server)\nmax by (ip, server) (\n  openresty_upstream_dns_resolvable{ip!=\"ALL\"}\n)) by(server, path)",
+          "legendFormat": "{{server}} - {{path}}",
+          "range": true,
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "QPS per Path for ${servername}.${namespace}.svc",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "avg(\n  (\n    label_replace(rate(upstream_latency_seconds_sum{namespace=\"${namespace}\", job=\"${Instance}-metrics\", server=\"${servername}.${namespace}.svc.cluster.local\"}[1m]), \"ip\", \"$1\", \"upstream\", \"^(.*):\\\\d+$\")\n    /\n    label_replace(rate(upstream_latency_seconds_count{namespace=\"${namespace}\", job=\"${Instance}-metrics\", server=\"${servername}.${namespace}.svc.cluster.local\"}[1m]), \"ip\", \"$1\", \"upstream\", \"^(.*):\\\\d+$\")\n  )\n  * on(ip)\n  group_left(server, upstream)\n  openresty_upstream_dns_resolvable{ip!=\"ALL\"}\n) by (server, path)",
+          "legendFormat": "({{server}}){{path}}",
+          "range": true,
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "Average Upstream Latency (1m) for ${servername}.${namespace}.svc",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "avg(histogram_quantile(0.99,\n  sum by (le, ip, path) (\n    label_replace(\n      rate(upstream_latency_seconds_bucket{namespace=\"${namespace}\", job=\"${Instance}-metrics\", server=\"${servername}.${namespace}.svc.cluster.local\"}[5m]),\n      \"ip\", \"$1\", \"upstream\", \"^(.*):\\\\d+$\"\n    )\n  )\n)\n* on(ip)\ngroup_left(server)\navg(openresty_upstream_dns_resolvable{ip!=\"ALL\"})by(ip, server)) by(server, path)",
+          "legendFormat": "{{server}} - {{path}}",
+          "range": true,
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "title": "P99 Upstream Latency for ${servername}.${namespace}.svc",
+      "type": "timeseries"
     }
   ],
   "refresh": "",
   "schemaVersion": 40,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {},
+        "definition": "label_values(openresty_crd_ref_status,namespace)",
+        "label": "Namespace",
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(openresty_crd_ref_status,namespace)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {},
+        "definition": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", namespace=\"$namespace\"},from)",
+        "label": "Instance",
+        "name": "Instance",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", namespace=\"$namespace\"},from)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {},
+        "definition": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", from=\"$Instance\"},to)",
+        "label": "Server",
+        "name": "servername",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", from=\"$Instance\"},to)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Openresty-Operator",
   "uid": "fejh69eovtog0d",
-  "version": 60,
+  "version": 124,
   "weekStart": ""
 }

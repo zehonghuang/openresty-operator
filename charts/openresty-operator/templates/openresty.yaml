@@ -17,6 +17,12 @@ spec:
     enable: {{ .Values.openresty.metrics.enable }}
     listen: {{ .Values.openresty.metrics.listen | quote }}
     path: {{ .Values.openresty.metrics.path | quote }}
+  serviceMonitor:
+    enable: {{ .Values.serviceMonitor.enabled }}
+{{- if .Values.serviceMonitor.labels }}
+    labels:
+{{ toYaml .Values.serviceMonitor.labels | nindent 6 }}
+{{- end }}
   reloadAgentEnv:
     - name: RELOAD_POLICY
       value: '{{ .Values.reloadAgent.policies | toJson }}'

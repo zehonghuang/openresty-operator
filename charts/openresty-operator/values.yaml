@@ -29,7 +29,7 @@ serviceMonitor:
 
 openresty:
   name: openresty-app
-  image: gintonic1glass/openresty:alpine-1.1.0
+  image: gintonic1glass/openresty:alpine-1.1.3
   replicas: 1
   http:
     accessLog: /dev/stdout

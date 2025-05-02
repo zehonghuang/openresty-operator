@@ -23,6 +23,7 @@ http {
     lua_shared_dict prometheus_metrics 10M;
     init_worker_by_lua_block {
 		require("secrets.secrets_loader").reload()
+		require("metrics").init()
 {{ indent .InitLua 8 }}
     }
 {{- if .EnableMetrics }}

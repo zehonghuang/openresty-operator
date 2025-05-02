@@ -44,7 +44,7 @@ func GenerateLocationConfig(name string, entries []v1alpha1.LocationEntry) strin
 		b.WriteString(fmt.Sprintf("location %s {\n", e.Path))
 
 		needRewrite := e.ProxyPassIsFullURL || len(e.HeadersFromSecret) > 0
-
+		b.WriteString(fmt.Sprintf("    set $location_path \"%s\";\n", e.Path))
 		if needRewrite {
 			if !e.ProxyPassIsFullURL {
 				b.WriteString("    set $target \"\";\n")
@@ -137,11 +137,12 @@ func GenerateLocationConfig(name string, entries []v1alpha1.LocationEntry) strin
 
 		if e.EnableUpstreamMetrics {
 			b.WriteString("    log_by_lua_block {\n")
-			b.WriteString("        local addr = (ngx.var.upstream_addr or \"unknown\"):match(\"^[^,]+\")\n")
-			b.WriteString("        local status = ngx.var.status\n")
-			b.WriteString("        local latency = tonumber(ngx.var.upstream_response_time) or 0\n")
-			b.WriteString("        metric_upstream_latency:observe(latency, {addr})\n")
-			b.WriteString("        metric_upstream_total:inc(1, {addr, status})\n")
+			//b.WriteString("        local addr = (ngx.var.upstream_addr or \"unknown\"):match(\"^[^,]+\")\n")
+			//b.WriteString("        local status = ngx.var.status\n")
+			//b.WriteString("        local latency = tonumber(ngx.var.upstream_response_time) or 0\n")
+			//b.WriteString("        metric_upstream_latency:observe(latency, {addr})\n")
+			//b.WriteString("        metric_upstream_total:inc(1, {addr, status})\n")
+			b.WriteString("        require(\"metrics\").record()\n")
 			b.WriteString("    }\n")
 		}
 

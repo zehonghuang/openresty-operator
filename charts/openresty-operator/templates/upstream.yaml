@@ -1,3 +1,4 @@
+{{- if .Values.upstreams }}
 {{- range .Values.upstreams }}
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Upstream
@@ -7,4 +8,5 @@ spec:
   servers:
 {{ toYaml .servers | indent 4 }}
 ---
+{{- end }}
 {{- end }}

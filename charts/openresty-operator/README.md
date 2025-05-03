@@ -48,6 +48,13 @@ helm install openresty-operator openresty-operator/openresty-operator
 | `serviceAccount.name`       | Name of the ServiceAccount to use                | `""`     |
 | `rbac.create`               | Create required RBAC roles and bindings          | `true`   |
 
+### 📡 ServiceMonitor
+
+| Name                       | Description                                                                  | Value                |
+|----------------------------|------------------------------------------------------------------------------|----------------------|
+| `serviceMonitor.enabled`   | Whether to create a ServiceMonitor resource (requires Prometheus Operator)   | `true`               |
+| `serviceMonitor.labels`    | Custom labels added to the ServiceMonitor metadata                           | `{}` (key-value map) |
+
 ### 📦 Pod Deployment
 
 | Name               | Description                           | Value |
@@ -59,30 +66,31 @@ helm install openresty-operator openresty-operator/openresty-operator
 
 ### 🚀 OpenResty Instance
 
-| Name                                        | Description                                                                                                                                                         | Value                                      |
-|---------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| `openresty.name`                            | Name of the OpenResty instance                                                                                                                                      | `openresty-app`                            |
-| `openresty.image`                           | OpenResty image with Prometheus support                                                                                                                             | `gintonic1glass/openresty:with-prometheus` |
-| `openresty.replicas`                        | Number of OpenResty pods                                                                                                                                            | `1`                                        |
-| `openresty.http.accessLog`                  | Access log output path                                                                                                                                              | `/dev/stdout`                              |
-| `openresty.http.errorLog`                   | Error log output path                                                                                                                                               | `/dev/stderr`                              |
-| `openresty.http.gzip`                       | Enable gzip compression                                                                                                                                             | `true`                                     |
-| `openresty.http.serverRefs`                 | Referenced ServerBlock names                                                                                                                                        | `[...]`                                    |
-| `openresty.http.upstreamRefs`               | Referenced Upstream names                                                                                                                                           | `[...]`                                    |
-| `openresty.metrics.enable`                  | Enable Prometheus metrics endpoint                                                                                                                                  | `true`                                     |
-| `openresty.metrics.listen`                  | Metrics listening port                                                                                                                                              | `"9090"`                                   |
-| `openresty.metrics.path`                    | Metrics endpoint path                                                                                                                                               | `"/metrics"`                               |
-| `openresty.serviceMonitor.enabled`          | Create a ServiceMonitor resource (requires Prometheus Operator)                                                                                                     | `true`                                     |
-| `openresty.logVolume.type`                  | Type of volume mounted at /var/log/nginx.  EmptyDir uses ephemeral storage (logs lost after pod deletion); PVC uses a PersistentVolumeClaim for persistent storage. | EmptyDir \| PVC                            |                          
-| `openresty.logVolume.persistentVolumeClaim` | Name of the PersistentVolumeClaim to use when type is PVC.  Only required if type: PVC.                                                                             | String (PVC name)                          |
+| Name                                        | Description                                                                                                                                                                     | Value                                      |
+|---------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| `openresty.enabled`                         | Whether to create a default OpenResty CR instance. Useful for demos or single-cluster setups.                                                                                   | `false`                                    |
+| `openresty.name`                            | Name of the OpenResty instance                                                                                                                                                  | `openresty-app`                            |
+| `openresty.image`                           | OpenResty image with Prometheus support                                                                                                                                         | `gintonic1glass/openresty:with-prometheus` |
+| `openresty.replicas`                        | Number of OpenResty pods                                                                                                                                                        | `1`                                        |
+| `openresty.http.accessLog`                  | Access log output path                                                                                                                                                          | `/dev/stdout`                              |
+| `openresty.http.errorLog`                   | Error log output path                                                                                                                                                           | `/dev/stderr`                              |
+| `openresty.http.gzip`                       | Enable gzip compression                                                                                                                                                         | `true`                                     |
+| `openresty.http.serverRefs`                 | Referenced ServerBlock names                                                                                                                                                    | `[...]`                                    |
+| `openresty.http.upstreamRefs`               | Referenced Upstream names                                                                                                                                                       | `[...]`                                    |
+| `openresty.metrics.enable`                  | Enable Prometheus metrics endpoint                                                                                                                                              | `true`                                     |
+| `openresty.metrics.listen`                  | Metrics listening port                                                                                                                                                          | `"9090"`                                   |
+| `openresty.metrics.path`                    | Metrics endpoint path                                                                                                                                                           | `"/metrics"`                               |
+| `openresty.logVolume.type`                  | Type of volume mounted at /var/log/nginx.  EmptyDir uses ephemeral storage (logs lost after pod deletion); PVC uses a PersistentVolumeClaim for persistent storage.             | EmptyDir \| PVC                            |                          
+| `openresty.logVolume.persistentVolumeClaim` | Name of the PersistentVolumeClaim to use when type is PVC.  Only required if type: PVC.                                                                                         | String (PVC name)                          |
 
 ### 🔗 `upstreams`
 
-| Name                  | Description                                        | Value   |
-|-----------------------|----------------------------------------------------|---------|
-| `upstreams`           | List of upstream definitions                       | `[...]` |
-| `upstreams[].name`    | Name of the upstream (referenced in `proxyPass`)   | `""`    |
-| `upstreams[].servers` | List of backend servers in `host:port` format      | `[]`    |
+| Name                    | Description                                                                                       | Value       |
+|-------------------------|---------------------------------------------------------------------------------------------------|-------------|
+| `upstreams`             | List of upstream definitions                                                                      | `[...]`     |
+| `upstreams[].name`      | Name of the upstream (referenced in `proxyPass`)                                                  | `""`        |
+| `upstreams[].type`      | Upstream resolution strategy: `Address` (host:port list) or `FullURL` (full URL, rendered as Lua) | `"Address"` |
+| `upstreams[].servers`   | List of backend servers in `host:port` format                                                     | `[]`        |
 
 ### 🌐 `servers` (ServerBlock)
 

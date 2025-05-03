@@ -1,3 +1,4 @@
+{{- if .Values.servers }}
 {{- range .Values.servers }}
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: ServerBlock
@@ -24,4 +25,5 @@ spec:
     {{- toYaml .extra | nindent 4 }}
   {{- end }}
 ---
+{{- end }}
 {{- end }}

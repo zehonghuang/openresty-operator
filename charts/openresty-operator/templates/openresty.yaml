@@ -1,22 +1,23 @@
+{{- if .Values.openresty.enabled }}
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: OpenResty
 metadata:
-  name: {{ .Values.openresty.name }}
+  name: {{ default "example" .Values.openresty.name }}
 spec:
-  image: {{ .Values.openresty.image }}
-  replicas: {{ .Values.openresty.replicas }}
+  image: {{ default "gintonic1glass/openresty:alpine-1.1.4" .Values.openresty.image }}
+  replicas: {{ default 1 .Values.openresty.replicas }}
   http:
-    accessLog: {{ .Values.openresty.http.accessLog | quote }}
-    errorLog: {{ .Values.openresty.http.errorLog | quote }}
-    gzip: {{ .Values.openresty.http.gzip }}
+    accessLog: {{ default "/dev/stdout" .Values.openresty.http.accessLog | quote }}
+    errorLog: {{ default "/dev/stderr" .Values.openresty.http.errorLog | quote }}
+    gzip: {{ default false .Values.openresty.http.gzip }}
     serverRefs:
 {{ toYaml .Values.openresty.http.serverRefs | indent 6 }}
     upstreamRefs:
 {{ toYaml .Values.openresty.http.upstreamRefs | indent 6 }}
   metrics:
-    enable: {{ .Values.openresty.metrics.enable }}
-    listen: {{ .Values.openresty.metrics.listen | quote }}
-    path: {{ .Values.openresty.metrics.path | quote }}
+    enable: {{ default true .Values.openresty.metrics.enable }}
+    listen: {{ default "0.0.0.0:9090" .Values.openresty.metrics.listen | quote }}
+    path: {{ default "/metrics" .Values.openresty.metrics.path | quote }}
   serviceMonitor:
     enable: {{ .Values.serviceMonitor.enabled }}
 {{- if .Values.serviceMonitor.labels }}
@@ -25,7 +26,7 @@ spec:
 {{- end }}
   reloadAgentEnv:
     - name: RELOAD_POLICY
-      value: '{{ .Values.reloadAgent.policies | toJson }}'
+      value: '{{ default (dict) .Values.reloadAgent.policies | toJson }}'
   logVolume:
 {{ toYaml .Values.openresty.logVolume | indent 6 }}
-
+{{ end }}}

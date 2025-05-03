@@ -25,94 +25,56 @@ tolerations: []
 affinity: {}
 
 serviceMonitor:
-  enabled: false
+  enabled: true
+  labels: {}
+
 
 openresty:
-  name: openresty-app
-  image: gintonic1glass/openresty:alpine-1.1.3
-  replicas: 1
-  http:
-    accessLog: /dev/stdout
-    errorLog: /dev/stderr
-    gzip: true
-    serverRefs:
-      - api-server
-      - api-server02
-    upstreamRefs:
-      - etherscan-api
-  metrics:
-    enable: true
-    listen: "9090"
-    path: /metrics
-  serviceMonitor:
-    enabled: true
-  logVolume:
-    type: EmptyDir
-    persistentVolumeClaim: ""
+  enabled: false
 
-upstreams:
-  - name: etherscan-api
-    servers:
-      - api.etherscan.io:443
-      - api.bscscan.com:443
-      - api.polygonscan.com:443
-      - api.ftmscan1.com:443
-  - name: etherscan-api02
-    servers:
-      - api.etherscan.io:443
-      - api.polygonscan.com:443
+# --- Example OpenRestyApp CRD ---
+# Uncomment to deploy an OpenRestyApp instance
+# openresty:
+#   name: openresty-app                         # 必填：OpenResty 实例名称
+#   image: gintonic1glass/openresty:alpine-1.1.3
+#   replicas: 1
+#   http:
+#     accessLog: /dev/stdout
+#     errorLog: /dev/stderr
+#     gzip: true
+#     serverRefs:
+#       - api-server
+#     upstreamRefs:
+#       - etherscan-api
+#   metrics:
+#     enable: true
+#     listen: "9090"
+#     path: /metrics
+#   serviceMonitor:
+#     enabled: true
+#   logVolume:
+#     type: EmptyDir
 
-servers:
-  - name: api-server
-    listen: "80"
-    locationRefs:
-      - api-01
-      - api-02
-  - name: api-server02
-    listen: "80"
-    locationRefs:
-      - api-01
+# --- Example Upstream CRD ---
+# upstreams:
+#   - name: etherscan-api                       # 必填：用于 proxy_pass
+#     servers:
+#       - api.etherscan.io:443
 
-locations:
-  - name: api-01
-    entries:
-      - path: /api-1/
-        proxyPass: https://etherscan-api/
-        enableUpstreamMetrics: true
-        accessLog: false
-        extra:
-          - "proxy_redirect off;"
-          - "proxy_ssl_server_name on;"
-      - path: /api-2/
-        proxyPass: https://etherscan-api/
-        enableUpstreamMetrics: true
-        accessLog: false
-        extra:
-          - "proxy_redirect off;"
-          - "proxy_ssl_server_name on;"
-  - name: api-02
-    entries:
-      - path: /api-3/
-        proxyPass: https://etherscan-api/
-        enableUpstreamMetrics: true
-        accessLog: false
-        extra:
-          - "proxy_redirect off;"
-          - "proxy_ssl_server_name on;"
-      - path: /api-4/
-        proxyPass: https://etherscan-api/
-        enableUpstreamMetrics: true
-        accessLog: false
-        extra:
-          - "proxy_redirect off;"
-          - "proxy_ssl_server_name on;"
-      - path: api-5/
-        proxyPass: https://etherscan-api/
-        enableUpstreamMetrics: true
-        accessLog: false
-        extra:
-          - "proxy_redirect off;"
-          - "proxy_ssl_server_name on;"
+# --- Example ServerBlock CRD ---
+# servers:
+#   - name: api-server
+#     listen: "80"
+#     locationRefs:
+#       - api-01
+
+# --- Example Location CRD ---
+# locations:
+#   - name: api-01
+#     entries:
+#       - path: /api/
+#         proxyPass: https://etherscan-api/
+#         enableUpstreamMetrics: true
 
 reloadAgent:
   policies:

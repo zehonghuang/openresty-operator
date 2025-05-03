@@ -1,3 +1,4 @@
+{{- if .Values.locations }}
 {{- range .Values.locations }}
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Location
@@ -7,4 +8,5 @@ spec:
   entries:
 {{ toYaml .entries | indent 4 }}
 ---
+{{- end }}
 {{- end }}

@@ -14,3 +14,10 @@
 {{- include "openresty-operator.fullname" . }}
 {{- end }}
 {{- end }}
+
+{{/* Fail if a required value is missing */}}
+{{- define "crds.required" -}}
+{{- if not (index .Values (index . "field")) }}
+{{- fail (printf "Missing required field: .Values.%s" (index . "field")) }}
+{{- end -}}
+{{- end }}

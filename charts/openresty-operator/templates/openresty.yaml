@@ -22,11 +22,11 @@ spec:
     enable: {{ .Values.serviceMonitor.enabled }}
 {{- if .Values.serviceMonitor.labels }}
     labels:
-{{ toYaml .Values.serviceMonitor.labels | nindent 6 }}
+{{ toYaml .Values.serviceMonitor.labels | indent 6 }}
 {{- end }}
   reloadAgentEnv:
     - name: RELOAD_POLICY
       value: '{{ default (dict) .Values.reloadAgent.policies | toJson }}'
   logVolume:
-{{ toYaml .Values.openresty.logVolume | indent 6 }}
-{{ end }}}
+{{ toYaml .Values.openresty.logVolume | indent 4 }}
+{{- end }}

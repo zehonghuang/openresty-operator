@@ -15,7 +15,7 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   endpoints:
     - port: metrics
-      path: {{ .Values.openresty.metrics.path | default "/metrics" }}
+      path: "/metrics"
       interval: 30s
   namespaceSelector:
     matchNames:

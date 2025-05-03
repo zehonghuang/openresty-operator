@@ -2,16 +2,16 @@
 {{- if .Values.fullnameOverride }}
 {{ .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
-{{- printf " %s" $name | trunc 63 | trimSuffix "-" }}
+{{- $name := default .Release.Name .Values.nameOverride }}
+{{- printf "%s" $name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 
 {{- define "openresty-operator.serviceAccountName" -}}
 {{- if .Values.serviceAccount.name }}
-{{ .Values.serviceAccount.name }}
+{{ .Values.serviceAccount.name | trim }}
 {{- else }}
-{{- include "openresty-operator.fullname" . }}
+{{ include "openresty-operator.fullname" . }}
 {{- end }}
 {{- end }}
 

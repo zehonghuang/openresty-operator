@@ -95,7 +95,7 @@ func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 	}
 
-	conf := handler.GenerateLocationConfig(location.Name, location.Spec.Entries)
+	conf := handler.GenerateLocationConfig(location.Name, location.Namespace, location.Spec.Entries)
 
 	if err := r.createOrUpdateConfigMap(ctx, location, conf, log); err != nil {
 		return ctrl.Result{}, err

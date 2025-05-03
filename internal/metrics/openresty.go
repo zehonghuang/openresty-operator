@@ -12,7 +12,7 @@ var (
 			Name: "openresty_crd_ref_status",
 			Help: "Tracks the readiness of CRDs referenced by OpenRestyApp",
 		},
-		[]string{"namespace", "from", "to", "kind"},
+		[]string{"ns", "from", "to", "kind"},
 	)
 )
 

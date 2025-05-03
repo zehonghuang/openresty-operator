@@ -212,6 +212,7 @@ func BuildVolumesAndMounts(ctx context.Context, c client.Client, app *webv1alpha
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		})
+
 	} else {
 		volumes = append(volumes, corev1.Volume{
 			Name: "nginx-logs",
@@ -222,6 +223,10 @@ func BuildVolumesAndMounts(ctx context.Context, c client.Client, app *webv1alpha
 			},
 		})
 	}
+	mounts = append(mounts, corev1.VolumeMount{
+		Name:      "nginx-logs",
+		MountPath: utils.NginxLogDir,
+	})
 
 	// --- Metrics Port (optional) ---
 	var metricsPort *corev1.ContainerPort

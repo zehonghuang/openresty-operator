@@ -1,0 +1,26 @@
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: Location
+metadata:
+  name: sample-01
+  namespace: openai
+spec:
+  entries:
+    - path: /openai/
+      proxyPass: https://openai-api/
+      enableUpstreamMetrics: true
+      accessLog: true
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+    - path: /eth/
+      proxyPass: https://eth-api/
+      proxyPassIsFullURL: true
+      enableUpstreamMetrics: true
+      accessLog: true
+      headersFromSecret:
+        - headerName: apikey
+          secretName: apikey
+          secretKey: apikey
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"

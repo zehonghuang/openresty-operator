@@ -12,7 +12,7 @@ var (
 		},
 		[]string{
 			"kind",
-			"namespace",
+			"ns",
 			"name",
 			"type",
 			"reason",

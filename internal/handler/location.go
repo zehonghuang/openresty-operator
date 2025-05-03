@@ -38,7 +38,7 @@ func ValidateLocationEntries(entries []v1alpha1.LocationEntry) (bool, []string) 
 	return len(problems) == 0, problems
 }
 
-func GenerateLocationConfig(name string, entries []v1alpha1.LocationEntry) string {
+func GenerateLocationConfig(name, namespace string, entries []v1alpha1.LocationEntry) string {
 	var b strings.Builder
 	for _, e := range entries {
 		b.WriteString(fmt.Sprintf("location %s {\n", e.Path))
@@ -46,14 +46,14 @@ func GenerateLocationConfig(name string, entries []v1alpha1.LocationEntry) strin
 		needRewrite := e.ProxyPassIsFullURL || len(e.HeadersFromSecret) > 0
 		b.WriteString(fmt.Sprintf("    set $location_path \"%s\";\n", e.Path))
 		if needRewrite {
-			if !e.ProxyPassIsFullURL {
+			if e.ProxyPassIsFullURL {
 				b.WriteString("    set $target \"\";\n")
 			}
 			b.WriteString(fmt.Sprintf("    set $location_prefix \"%s\";\n", e.Path))
 			b.WriteString("    rewrite_by_lua_block {\n")
 
 			if len(e.HeadersFromSecret) > 0 {
-				b.WriteString("        local namespace = ngx.var.namespace or \"default\"\n")
+				b.WriteString(fmt.Sprintf("        local namespace = ngx.var.namespace or \"%s\"\n", namespace))
 				b.WriteString(fmt.Sprintf("        local locationName = \"%s\"\n", name))
 				b.WriteString(fmt.Sprintf("        local path = \"%s\"\n", e.Path))
 				b.WriteString("        local headers = {\n")

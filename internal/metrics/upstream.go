@@ -12,7 +12,7 @@ var (
 			Name:      "dns_resolvable",
 			Help:      "Whether the upstream DNS is resolvable (1=yes, 0=no).",
 		},
-		[]string{"namespace", "upstream", "server", "ip"},
+		[]string{"ns", "upstream", "server", "ip"},
 	)
 )
 

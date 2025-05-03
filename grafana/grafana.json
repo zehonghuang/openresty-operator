@@ -139,7 +139,7 @@
         {
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count(count by (openresty) (openresty_crd_ref_status))",
+          "expr": "count(count by (from) (openresty_crd_ref_status{kind=\"ServerBlock\"}))",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -775,6 +775,9 @@
                 "operation": "aggregate"
               },
               "namespace": {
+                "aggregations": []
+              },
+              "ns": {
                 "aggregations": [],
                 "operation": "groupby"
               },
@@ -796,13 +799,14 @@
             "includeByName": {},
             "indexByName": {
               "Value (lastNotNull)": 3,
-              "namespace": 0,
+              "ns": 0,
               "server": 2,
               "upstream": 1
             },
             "renameByName": {
               "Value (lastNotNull)": "Is Ready",
               "namespace": "Namespace",
+              "ns": "Namespace",
               "server": "Server",
               "upstream": "UpStream"
             }
@@ -1039,6 +1043,9 @@
                 "operation": "groupby"
               },
               "namespace": {
+                "aggregations": []
+              },
+              "ns": {
                 "aggregations": [],
                 "operation": "groupby"
               },
@@ -1054,6 +1061,17 @@
           }
         },
         {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "ns"
+              }
+            ]
+          }
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {},
@@ -1062,7 +1080,7 @@
               "Value (lastNotNull)": 4,
               "from": 1,
               "kind": 2,
-              "namespace": 0,
+              "ns": 0,
               "to": 3
             },
             "renameByName": {
@@ -1072,6 +1090,7 @@
               "from": "From",
               "kind": "Kind",
               "namespace": "Namespace",
+              "ns": "Namespace",
               "openresty": "Openresty",
               "to": "To"
             }
@@ -1219,6 +1238,9 @@
                 "operation": "groupby"
               },
               "namespace": {
+                "aggregations": []
+              },
+              "ns": {
                 "aggregations": [],
                 "operation": "groupby"
               },
@@ -1234,11 +1256,17 @@
           "options": {
             "excludeByName": {},
             "includeByName": {},
-            "indexByName": {},
+            "indexByName": {
+              "kind": 1,
+              "name": 2,
+              "ns": 0,
+              "reason": 3
+            },
             "renameByName": {
               "kind": "Kind",
               "name": "Name",
               "namespace": "Namespace",
+              "ns": "Namespace",
               "reason": "Reason"
             }
           }
@@ -1641,13 +1669,13 @@
     "list": [
       {
         "current": {},
-        "definition": "label_values(openresty_crd_ref_status,namespace)",
+        "definition": "label_values(openresty_crd_ref_status,ns)",
         "label": "Namespace",
         "name": "namespace",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(openresty_crd_ref_status,namespace)",
+          "query": "label_values(openresty_crd_ref_status,ns)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -1656,13 +1684,13 @@
       },
       {
         "current": {},
-        "definition": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", namespace=\"$namespace\"},from)",
+        "definition": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", ns=\"$namespace\"},from)",
         "label": "Instance",
         "name": "Instance",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", namespace=\"$namespace\"},from)",
+          "query": "label_values(openresty_crd_ref_status{kind=\"ServerBlock\", ns=\"$namespace\"},from)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -1683,6 +1711,15 @@
         "refresh": 1,
         "regex": "",
         "type": "query"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "aef063snpzytcf"
+        },
+        "filters": [],
+        "name": "Filters",
+        "type": "adhoc"
       }
     ]
   },
@@ -1694,6 +1731,6 @@
   "timezone": "browser",
   "title": "Openresty-Operator",
   "uid": "fejh69eovtog0d",
-  "version": 126,
+  "version": 141,
   "weekStart": ""
 }

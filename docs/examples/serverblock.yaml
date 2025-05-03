@@ -1,0 +1,9 @@
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: ServerBlock
+metadata:
+  name: sample-01
+  namespace: openai
+spec:
+  listen: "80"
+  locationRefs:
+    - sample-01

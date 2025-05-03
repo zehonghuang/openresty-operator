@@ -13,15 +13,29 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/openresty-operator)](https://artifacthub.io/packages/search?repo=openresty-operator)
 
-**OpenResty Operator** 是一个基于 Kubernetes 的轻量级控制器，用于自动管理和部署 OpenResty 实例，通过声明式方式组织 location、upstream、server 配置，实现统一的第三方 API 网关能力。
+## TL;DR
 
-该项目由我个人独立设计与开发，起因是一个在实际工作中经常遇到的问题：
+🚀 **OpenResty Operator** 是一个轻量级的 Kubernetes Operator，用于将 OpenResty（Nginx）作为内部 API 网关进行管理。 
 
-在很多中小型公司或开发团队中，业务对第三方 API 的依赖非常重，但现有的网关方案往往存在以下几个问题：
+- ✅ 特别适用于**代理大量第三方 API 的场景**，具备极简开销与高度可观测性。
 
-- **资源消耗过高**：例如 APISIX 默认依赖 etcd 作为配置中心，虽然功能强大，但对部署环境的资源和稳定性要求较高；
-- **运维与学习成本高**：如 Kong、APISIX 都内置了 Admin API，需要进行接口权限控制、认证管理，有时还需结合具体业务进行二次开发；
-- **定制能力不足或过于封装**：很多方案将核心行为隐藏在插件中，虽然便捷，但不利于对每一层逻辑的细粒度掌控。
+- 🛠️ **通过 CRD 实现声明式管理**：将 Location、ServerBlock 和 Upstream 配置为原生 Kubernetes 资源。
+
+- 🔁 **配置热更新，无需重启容器**：内置 reload agent 可即时应用配置更改。
+
+- 📊 **原生支持 Prometheus 监控**：内建上游健康检查、DNS 解析状态与配置引用状态等指标。
+
+- 🎯 **无需 etcd、无需 Admin API、零额外负担**——只需 OpenResty 和这个 Operator。
+
+## 适用人群
+
+✅ 你需要在内部系统中代理多个第三方 API
+
+✅ 你希望通过 GitOps 和 CRD 实现配置管理，而非依赖图形界面
+
+✅ 你倾向于使用透明、轻量的 Nginx/OpenResty 网关方案
+
+✅ 你认为 APISIX 或 Kong 在你的场景中过于重型
 
 ## 为什么选择 OpenResty + Operator？
 

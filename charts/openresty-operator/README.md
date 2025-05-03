@@ -1,6 +1,14 @@
 # OpenResty Operator
 
-A Kubernetes Operator to declaratively manage OpenResty configurations using CRDs.
+## TL;DR
+
+🚀 **OpenResty Operator** is a lightweight Kubernetes Operator for managing OpenResty (Nginx) as an internal API gateway.
+
+✅ **Designed for teams proxying many third-party APIs** with minimal overhead and maximum transparency.  
+🛠️ **Declarative via CRDs**: Configure `Location`, `ServerBlock`, and `Upstream` as native Kubernetes resources.  
+🔁 **Hot-reload without restart**: Built-in agent applies config changes instantly.  
+📊 **Prometheus-ready**: Metrics like upstream health, DNS resolution, and config status out of the box.  
+🎯 **No etcd, no admin API, no bloat**—just OpenResty + this Operator.
 
 ## Features
 

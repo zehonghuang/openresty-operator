@@ -7,22 +7,29 @@ English | [中文](./README.zh-CN.md)
   <b>A lightweight Kubernetes Operator for managing OpenResty as an internal API gateway.</b>
 </p>
 
-# OpenResty Operator
 
+# OpenResty Operator
 ![GitHub release (latest by tag)](https://img.shields.io/github/v/tag/zehonghuang/openresty-operator?label=release)
 ![Release](https://github.com/zehonghuang/openresty-operator/actions/workflows/release.yaml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/openresty-operator)](https://artifacthub.io/packages/search?repo=openresty-operator)
 
-**OpenResty Operator** is a lightweight Kubernetes controller for managing and deploying OpenResty instances in a declarative way. It organizes configurations like `location`, `upstream`, and `server` through CRDs, enabling unified proxy control for third-party APIs.
+## TL;DR
 
-This project is independently developed and maintained by me, driven by a recurring pain point I’ve encountered in real-world projects:
+🚀 **OpenResty Operator** is a lightweight Kubernetes Operator for managing OpenResty (Nginx) as an internal API gateway.
 
-In many small to mid-sized companies or development teams, businesses rely heavily on external APIs. However, existing gateway solutions tend to have the following downsides:
+✅ **Designed for teams proxying many third-party APIs** with minimal overhead and maximum transparency.  
+🛠️ **Declarative via CRDs**: Configure `Location`, `ServerBlock`, and `Upstream` as native Kubernetes resources.  
+🔁 **Hot-reload without restart**: Built-in agent applies config changes instantly.  
+📊 **Prometheus-ready**: Metrics like upstream health, DNS resolution, and config status out of the box.  
+🎯 **No etcd, no admin API, no bloat**—just OpenResty + this Operator.
 
-- **High resource overhead**: For example, APISIX relies on etcd as a configuration store. While powerful, it increases system complexity and resource consumption.
-- **Complex operations and steep learning curve**: Tools like Kong and APISIX include an Admin API that requires additional authentication setup and, often, custom development to match specific business needs.
-- **Limited customizability or over-abstraction**: These solutions often hide core behaviors behind plugins, which makes fine-grained control harder to achieve.
+## Is This For You?
+
+✅ You're managing many third-party APIs in internal systems  
+✅ You want GitOps-native, CRD-driven configuration over GUI  
+✅ You prefer lightweight Nginx/OpenResty setups with transparency  
+✅ You find APISIX/Kong overkill for internal API proxy scenarios
 
 ## Why OpenResty + Operator?
 
@@ -32,6 +39,8 @@ This project aims to provide an **infrastructure-friendly** alternative by:
 - **Modular abstraction via CRDs**: Resources like `Location`, `ServerBlock`, and `Upstream` are modeled as independent CRDs with clearly defined relationships and version control.
 - **Native Kubernetes ecosystem compatibility**: Designed to work seamlessly with GitOps tools like ArgoCD and Flux.
 - **Minimal dependencies, production ready**: Requires only the OpenResty image and this Operator—no etcd or additional services.
+
+> This Operator is independently developed and maintained based on recurring pain points from real-world API integration projects.
 
 ## Key Features
 

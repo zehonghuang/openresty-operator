@@ -427,8 +427,7 @@
                       "pattern": "2..",
                       "result": {
                         "color": "green",
-                        "index": 0,
-                        "text": "2XX"
+                        "index": 0
                       }
                     },
                     "type": "regex"
@@ -438,8 +437,7 @@
                       "pattern": "4..",
                       "result": {
                         "color": "yellow",
-                        "index": 1,
-                        "text": "4XX"
+                        "index": 1
                       }
                     },
                     "type": "regex"
@@ -449,8 +447,7 @@
                       "pattern": "5..",
                       "result": {
                         "color": "red",
-                        "index": 2,
-                        "text": "5XX"
+                        "index": 2
                       }
                     },
                     "type": "regex"
@@ -1694,6 +1691,6 @@
   "timezone": "browser",
   "title": "Openresty-Operator",
   "uid": "fejh69eovtog0d",
-  "version": 124,
+  "version": 125,
   "weekStart": ""
 }

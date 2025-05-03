@@ -29,13 +29,13 @@
 
 ## 适用人群
 
-✅ 你需要在内部系统中代理多个第三方 API
+- ✅ 你需要在内部系统中代理多个第三方 API
 
-✅ 你希望通过 GitOps 和 CRD 实现配置管理，而非依赖图形界面
+- ✅ 你希望通过 GitOps 和 CRD 实现配置管理，而非依赖图形界面
 
-✅ 你倾向于使用透明、轻量的 Nginx/OpenResty 网关方案
+- ✅ 你倾向于使用透明、轻量的 Nginx/OpenResty 网关方案
 
-✅ 你认为 APISIX 或 Kong 在你的场景中过于重型
+- ✅ 你认为 APISIX 或 Kong 在你的场景中过于重型
 
 ## 为什么选择 OpenResty + Operator？
 

@@ -4,7 +4,7 @@ kind: OpenResty
 metadata:
   name: {{ default "example" .Values.openresty.name }}
 spec:
-  image: {{ default "gintonic1glass/openresty:alpine-1.1.6" .Values.openresty.image }}
+  image: {{ default "gintonic1glass/openresty:alpine-1.1.9" .Values.openresty.image }}
   replicas: {{ default 1 .Values.openresty.replicas }}
   http:
     accessLog: {{ default "/dev/stdout" .Values.openresty.http.accessLog | quote }}

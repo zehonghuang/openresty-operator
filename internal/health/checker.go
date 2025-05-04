@@ -12,6 +12,7 @@ type Checker struct {
 	queue       workqueue.TypedRateLimitingInterface[string]
 	statusMap   map[string]bool
 	failures    map[string]int
+	refCount    map[string]int
 	maxFailures int
 	lock        sync.RWMutex
 	numWorker   int
@@ -29,6 +30,7 @@ func NewChecker(workerCount int, timeout time.Duration) *Checker {
 		maxFailures: 3,
 		numWorker:   workerCount,
 		timeout:     timeout,
+		refCount:    make(map[string]int),
 	}
 	for i := 0; i < c.numWorker; i++ {
 		go c.worker()
@@ -43,6 +45,9 @@ func (c *Checker) Submit(addresses []string) map[string]bool {
 		val, ok := c.statusMap[addr]
 		if !ok {
 			c.lock.RUnlock()
+			c.lock.Lock()
+			c.refCount[addr]++
+			c.lock.Unlock()
 			c.queue.Add(addr)
 			c.lock.RLock()
 			results[addr] = false // unknown yet
@@ -52,6 +57,22 @@ func (c *Checker) Submit(addresses []string) map[string]bool {
 	}
 	c.lock.RUnlock()
 	return results
+}
+
+func (c *Checker) Release(addresses []string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	for _, addr := range addresses {
+		if count, ok := c.refCount[addr]; ok {
+			if count <= 1 {
+				delete(c.refCount, addr)
+				delete(c.statusMap, addr)
+				delete(c.failures, addr)
+			} else {
+				c.refCount[addr]--
+			}
+		}
+	}
 }
 
 func (c *Checker) worker() {
@@ -71,6 +92,11 @@ func (c *Checker) worker() {
 			c.failures[addr]++
 		}
 		shouldRequeue := c.failures[addr] < c.maxFailures
+		if !shouldRequeue {
+			delete(c.statusMap, addr)
+			delete(c.failures, addr)
+			delete(c.refCount, addr)
+		}
 		c.lock.Unlock()
 
 		if shouldRequeue {

@@ -122,8 +122,16 @@ func GenerateUpstreamConfig(upstream *webv1alpha1.Upstream, results []ServerResu
 func buildConfigLines(results []ServerResult) []string {
 	var lines []string
 	for _, r := range results {
+		h, p, _ := utils.SplitHostPort(r.Address)
 		if r.Alive {
-			lines = append(lines, r.Comment)
+			ipList := make([]string, 0, len(r.IPs))
+			for _, ip := range r.IPs {
+				ipList = append(ipList, fmt.Sprintf("\"%s\"", ip))
+			}
+			lines = append(lines, fmt.Sprintf(
+				"{ host = \"%s\", port = %s, weight = 1, ips = { %s } },",
+				h, p, strings.Join(ipList, ", "),
+			))
 		}
 	}
 	return lines
@@ -135,9 +143,15 @@ func renderNginxUpstreamBlock(name string, lines []string) string {
 	}
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("upstream %s {\n", name))
+	b.WriteString("    server 0.0.0.1;\n")
+	b.WriteString("    balancer_by_lua_block {\n")
+	b.WriteString("        local servers = {\n")
 	for _, line := range lines {
-		b.WriteString("    " + line + "\n")
+		b.WriteString("            " + line + "\n")
 	}
+	b.WriteString("        }\n\n")
+	b.WriteString("        require(\"upstreams.balancer\").randomWeightedBalance(servers)\n")
+	b.WriteString("    }\n")
 	b.WriteString("}\n")
 	return b.String()
 }

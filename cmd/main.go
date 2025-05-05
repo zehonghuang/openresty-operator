@@ -20,9 +20,11 @@ import (
 	"crypto/tls"
 	"flag"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"openresty-operator/internal/health"
 	"openresty-operator/internal/httpapi"
 	"openresty-operator/internal/metrics"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -52,6 +54,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(webv1alpha1.AddToScheme(scheme))
+
+	utilruntime.Must(monitoringv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -197,12 +201,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	health.Init(16, 1*time.Second, ctrl.Log)
+
 	_ = metrics.RegisterAll()
 
 	server := httpapi.NewServer(mgr)
 	server.RegisterHandler(&httpapi.MetricsDNSCacheHandler{})
-
-	_ = monitoringv1.AddToScheme(scheme)
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

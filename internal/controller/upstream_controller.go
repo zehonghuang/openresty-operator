@@ -90,26 +90,34 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	var statusList []webv1alpha1.UpstreamServerStatus
 	results := handler.ProbeUpstreamServers(ctx, upstream)
-	for _, res := range results {
-		if !res.Alive {
+	for addr, check := range results {
+		if check == nil {
+			r.Recorder.Eventf(
+				upstream,
+				corev1.EventTypeNormal,
+				"HealthCheckPending",
+				fmt.Sprintf("Address %s is pending health check", addr),
+			)
+		} else if !check.Alive {
 			r.Recorder.Eventf(
 				upstream,
 				corev1.EventTypeWarning,
-				res.Reason,
-				res.Comment,
+				check.Reason,
+				check.Comment,
 			)
+		} else {
+			for _, ip := range check.IPs {
+				metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, check.Address, ip, check.Alive)
+			}
+			metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, check.Address, "ALL", check.Alive)
+			statusList = append(statusList, webv1alpha1.UpstreamServerStatus{
+				Address: check.Address,
+				Alive:   check.Alive,
+			})
 		}
-		for _, ip := range res.IPs {
-			metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, res.Address, ip, res.Alive)
-		}
-		metrics.SetUpstreamDNSResolvable(upstream.Namespace, upstream.Name, res.Address, "ALL", res.Alive)
-		statusList = append(statusList, webv1alpha1.UpstreamServerStatus{
-			Address: res.Address,
-			Alive:   res.Alive,
-		})
 	}
 
-	nginxConfig := handler.GenerateUpstreamConfig(upstream, results)
+	nginxConfig := handler.GenerateUpstreamConfig(upstream, utils.MapValuesNonNil(results))
 
 	// 写入 ConfigMap
 	allDown := false
@@ -130,7 +138,7 @@ func (r *UpstreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		r.updateStatus(ctx, upstream, true, nginxConfig, statusList, "", log)
 	}
 
-	return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+	return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
 }
 
 func (r *UpstreamReconciler) createOrUpdateConfigMap(ctx context.Context, upstream *webv1alpha1.Upstream, config string, log logr.Logger) error {

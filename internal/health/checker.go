@@ -1,36 +1,57 @@
 package health
 
 import (
+	"fmt"
+	"github.com/go-logr/logr"
 	"net"
+	"openresty-operator/internal/utils"
 	"sync"
 	"time"
 
 	"k8s.io/client-go/util/workqueue"
 )
 
-type Checker struct {
+var (
+	Checker *checker
+)
+
+type CheckResult struct {
+	Address string
+	IPs     []string
+	Comment string
+	Alive   bool
+	Reason  string
+}
+
+func Init(workerCount int, timeout time.Duration, log logr.Logger) {
+	Checker = newChecker(workerCount, timeout, log)
+}
+
+type checker struct {
 	queue       workqueue.TypedRateLimitingInterface[string]
-	statusMap   map[string]bool
+	statusMap   map[string]*CheckResult
 	failures    map[string]int
 	refCount    map[string]int
 	maxFailures int
 	lock        sync.RWMutex
 	numWorker   int
 	timeout     time.Duration
+	log         logr.Logger
 }
 
-func NewChecker(workerCount int, timeout time.Duration) *Checker {
-	c := &Checker{
+func newChecker(workerCount int, timeout time.Duration, log logr.Logger) *checker {
+	c := &checker{
 		queue: workqueue.NewTypedRateLimitingQueueWithConfig(workqueue.DefaultTypedControllerRateLimiter[string](),
 			workqueue.TypedRateLimitingQueueConfig[string]{
 				Name: "healthcheck",
 			}),
-		statusMap:   make(map[string]bool),
+		statusMap:   make(map[string]*CheckResult),
 		failures:    make(map[string]int),
-		maxFailures: 3,
+		maxFailures: 10,
 		numWorker:   workerCount,
 		timeout:     timeout,
 		refCount:    make(map[string]int),
+		log:         log.WithName("health-checker"),
 	}
 	for i := 0; i < c.numWorker; i++ {
 		go c.worker()
@@ -38,8 +59,8 @@ func NewChecker(workerCount int, timeout time.Duration) *Checker {
 	return c
 }
 
-func (c *Checker) Submit(addresses []string) map[string]bool {
-	results := make(map[string]bool)
+func (c *checker) Submit(addresses []string) map[string]*CheckResult {
+	results := make(map[string]*CheckResult)
 	c.lock.RLock()
 	for _, addr := range addresses {
 		val, ok := c.statusMap[addr]
@@ -50,7 +71,7 @@ func (c *Checker) Submit(addresses []string) map[string]bool {
 			c.lock.Unlock()
 			c.queue.Add(addr)
 			c.lock.RLock()
-			results[addr] = false // unknown yet
+			results[addr] = nil
 		} else {
 			results[addr] = val
 		}
@@ -59,7 +80,7 @@ func (c *Checker) Submit(addresses []string) map[string]bool {
 	return results
 }
 
-func (c *Checker) Release(addresses []string) {
+func (c *checker) Release(addresses []string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	for _, addr := range addresses {
@@ -75,18 +96,19 @@ func (c *Checker) Release(addresses []string) {
 	}
 }
 
-func (c *Checker) worker() {
+func (c *checker) worker() {
 	for {
 		item, shutdown := c.queue.Get()
 		if shutdown {
 			return
 		}
 		addr := item
-		ready := c.healthCheck(addr)
+		result := c.performHealthCheck(addr)
+		c.log.Info("Health check completed", "address", addr, "alive", result.Alive, "reason", result.Reason, "time", time.Now().Format(time.RFC3339))
 
 		c.lock.Lock()
-		c.statusMap[addr] = ready
-		if ready {
+		c.statusMap[addr] = result
+		if result.Alive {
 			c.failures[addr] = 0
 		} else {
 			c.failures[addr]++
@@ -107,11 +129,53 @@ func (c *Checker) worker() {
 	}
 }
 
-func (c *Checker) healthCheck(address string) bool {
+func (c *checker) performHealthCheck(addr string) *CheckResult {
+	host, port, _ := utils.SplitHostPort(addr)
+	ips := c.lookupHost(host)
+	dnsIsReady := len(ips) > 0
+	tcpIsReady := true
+	if dnsIsReady {
+		tcpIsReady = c.testTCP(net.JoinHostPort(host, port))
+	}
+
+	return &CheckResult{
+		Address: addr,
+		Alive:   tcpIsReady && dnsIsReady,
+		IPs:     ips,
+		Reason: func() string {
+			if !dnsIsReady {
+				return "DNS_ERROR"
+			}
+			if !tcpIsReady {
+				return "TCP_FAIL"
+			}
+			return ""
+		}(),
+		Comment: func() string {
+			if !dnsIsReady {
+				return fmt.Sprintf("# server %s;  // DNS error", addr)
+			}
+			if !tcpIsReady {
+				return fmt.Sprintf("# server %s;  // tcp unreachable", addr)
+			}
+			return ""
+		}(),
+	}
+}
+
+func (c *checker) testTCP(address string) bool {
 	conn, err := net.DialTimeout("tcp", address, c.timeout)
 	if err != nil {
 		return false
 	}
 	_ = conn.Close()
 	return true
+}
+
+func (c *checker) lookupHost(address string) []string {
+	ips, err := net.LookupHost(address)
+	if err != nil {
+		return nil
+	}
+	return ips
 }

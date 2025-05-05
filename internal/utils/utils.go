@@ -164,3 +164,13 @@ func MergeMaps(dst, src map[string]string) map[string]string {
 	}
 	return dst
 }
+
+func MapValuesNonNil[T any](m map[string]*T) []*T {
+	values := make([]*T, 0, len(m))
+	for _, v := range m {
+		if v != nil {
+			values = append(values, v)
+		}
+	}
+	return values
+}

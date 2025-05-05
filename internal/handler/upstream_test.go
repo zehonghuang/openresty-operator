@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"openresty-operator/internal/health"
 	"testing"
 
 	webv1alpha1 "openresty-operator/api/v1alpha1"
@@ -12,7 +13,7 @@ func TestGenerateUpstreamConfig(t *testing.T) {
 	tests := []struct {
 		name     string
 		upstream *webv1alpha1.Upstream
-		results  []ServerResult
+		results  []*health.CheckResult
 		wantPart string // 只验证一部分核心内容
 	}{
 		{
@@ -22,7 +23,7 @@ func TestGenerateUpstreamConfig(t *testing.T) {
 					Type: webv1alpha1.UpstreamTypeAddress,
 				},
 			},
-			results: []ServerResult{
+			results: []*health.CheckResult{
 				{Address: "127.0.0.1:80", Alive: true, Comment: "server 127.0.0.1:80;"},
 				{Address: "127.0.0.2:80", Alive: false, Comment: "# server 127.0.0.2:80;  // tcp unreachable"},
 			},
@@ -35,7 +36,7 @@ func TestGenerateUpstreamConfig(t *testing.T) {
 					Type: webv1alpha1.UpstreamTypeFullURL,
 				},
 			},
-			results: []ServerResult{
+			results: []*health.CheckResult{
 				{Address: "https://foo.com", Alive: true},
 				{Address: "https://bar.com", Alive: false},
 			},
@@ -48,7 +49,7 @@ func TestGenerateUpstreamConfig(t *testing.T) {
 					Type: webv1alpha1.UpstreamTypeAddress,
 				},
 			},
-			results: []ServerResult{
+			results: []*health.CheckResult{
 				{Address: "127.0.0.1:80", Alive: false},
 				{Address: "127.0.0.2:80", Alive: false},
 			},
@@ -61,7 +62,7 @@ func TestGenerateUpstreamConfig(t *testing.T) {
 					Type: webv1alpha1.UpstreamTypeAddress,
 				},
 			},
-			results:  []ServerResult{},
+			results:  []*health.CheckResult{},
 			wantPart: "",
 		},
 		{
@@ -71,7 +72,7 @@ func TestGenerateUpstreamConfig(t *testing.T) {
 					Type: "Unknown",
 				},
 			},
-			results:  []ServerResult{},
+			results:  []*health.CheckResult{},
 			wantPart: "",
 		},
 	}

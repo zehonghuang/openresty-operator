@@ -3,110 +3,17 @@ package handler
 import (
 	"context"
 	"fmt"
-	"net"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/health"
 	"openresty-operator/internal/utils"
-	"sort"
 	"strings"
-	"sync"
-	"time"
 )
 
-type ServerResult struct {
-	Address string
-	IPs     []string
-	Comment string
-	Alive   bool
-	Reason  string
-	Index   int
+func ProbeUpstreamServers(ctx context.Context, upstream *webv1alpha1.Upstream) map[string]*health.CheckResult {
+	return health.Checker.Submit(upstream.Spec.Servers)
 }
 
-func ProbeUpstreamServers(ctx context.Context, upstream *webv1alpha1.Upstream) []ServerResult {
-	const maxConcurrentChecks = 10
-
-	var (
-		wg          sync.WaitGroup
-		sem         = make(chan struct{}, maxConcurrentChecks)
-		resultsChan = make(chan ServerResult, len(upstream.Spec.Servers))
-	)
-
-	for i, addr := range upstream.Spec.Servers {
-		wg.Add(1)
-		sem <- struct{}{}
-
-		go func(addr string, index int) {
-			defer wg.Done()
-			defer func() { <-sem }()
-
-			host, port, err := utils.SplitHostPort(addr)
-			if err != nil {
-				resultsChan <- ServerResult{
-					Index:   index,
-					Address: addr,
-					Alive:   false,
-					Reason:  "INVALID_FORMAT",
-					Comment: fmt.Sprintf("# server %s;  // invalid format", addr),
-				}
-				return
-			}
-
-			ips, err := net.LookupHost(host)
-			if err != nil {
-				resultsChan <- ServerResult{
-					Index:   index,
-					Address: addr,
-					Alive:   false,
-					Reason:  "DNS_ERROR",
-					Comment: fmt.Sprintf("# server %s;  // DNS error", addr),
-				}
-				return
-			}
-
-			alive, _ := testTCP(host, port)
-			if alive {
-				resultsChan <- ServerResult{
-					Index:   index,
-					Address: addr,
-					IPs:     ips,
-					Alive:   true,
-					Comment: fmt.Sprintf("server %s;", addr),
-				}
-			} else {
-				resultsChan <- ServerResult{
-					Index:   index,
-					Address: addr,
-					IPs:     ips,
-					Alive:   false,
-					Reason:  "TCP_FAIL",
-					Comment: fmt.Sprintf("# server %s;  // tcp unreachable", addr),
-				}
-			}
-		}(addr, i)
-	}
-
-	wg.Wait()
-	close(resultsChan)
-
-	results := utils.DrainChan(resultsChan)
-
-	// 保持原始顺序
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].Index < results[j].Index
-	})
-
-	return results
-}
-
-func testTCP(ip, port string) (bool, error) {
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(ip, port), 1*time.Second)
-	if err != nil {
-		return false, err
-	}
-	conn.Close()
-	return true, nil
-}
-
-func GenerateUpstreamConfig(upstream *webv1alpha1.Upstream, results []ServerResult) string {
+func GenerateUpstreamConfig(upstream *webv1alpha1.Upstream, results []*health.CheckResult) string {
 	name := utils.SanitizeName(upstream.Name)
 
 	switch upstream.Spec.Type {
@@ -119,7 +26,7 @@ func GenerateUpstreamConfig(upstream *webv1alpha1.Upstream, results []ServerResu
 	}
 }
 
-func buildConfigLines(results []ServerResult) []string {
+func buildConfigLines(results []*health.CheckResult) []string {
 	var lines []string
 	for _, r := range results {
 		h, p, _ := utils.SplitHostPort(r.Address)
@@ -156,7 +63,7 @@ func renderNginxUpstreamBlock(name string, lines []string) string {
 	return b.String()
 }
 
-func renderNginxUpstreamLua(name string, results []ServerResult) string {
+func renderNginxUpstreamLua(name string, results []*health.CheckResult) string {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("-- upstream-%s.lua\n", name))

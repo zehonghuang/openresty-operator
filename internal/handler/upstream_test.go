@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"openresty-operator/internal/health"
+	"openresty-operator/internal/runtime/health"
 	"testing"
 
 	webv1alpha1 "openresty-operator/api/v1alpha1"

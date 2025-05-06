@@ -20,9 +20,9 @@ import (
 	"crypto/tls"
 	"flag"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"openresty-operator/internal/health"
 	"openresty-operator/internal/httpapi"
-	"openresty-operator/internal/metrics"
+	"openresty-operator/internal/runtime/health"
+	"openresty-operator/internal/runtime/metrics"
 	"os"
 	"time"
 

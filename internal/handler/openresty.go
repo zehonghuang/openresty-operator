@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
-	"openresty-operator/internal/metrics"
+	"openresty-operator/internal/runtime/metrics"
 	"openresty-operator/internal/template"
 	"openresty-operator/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"

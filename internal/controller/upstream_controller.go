@@ -28,7 +28,7 @@ import (
 	webv1alpha1 "openresty-operator/api/v1alpha1"
 	"openresty-operator/internal/constants"
 	"openresty-operator/internal/handler"
-	"openresty-operator/internal/metrics"
+	"openresty-operator/internal/runtime/metrics"
 	"openresty-operator/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"

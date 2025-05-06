@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	webv1alpha1 "openresty-operator/api/v1alpha1"
-	"openresty-operator/internal/health"
+	"openresty-operator/internal/runtime/health"
 	"openresty-operator/internal/utils"
 	"strings"
 )

@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"openresty-operator/internal/constants"
 	"openresty-operator/internal/handler"
-	"openresty-operator/internal/metrics"
+	"openresty-operator/internal/runtime/metrics"
 	"openresty-operator/internal/utils"
 	"strings"
 	"time"

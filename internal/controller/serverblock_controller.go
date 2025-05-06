@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"openresty-operator/internal/constants"
 	"openresty-operator/internal/handler"
-	"openresty-operator/internal/metrics"
+	metrics2 "openresty-operator/internal/runtime/metrics"
 	"openresty-operator/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -82,7 +82,7 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			}
 		} else {
 			allLocations[ref] = &loc
-			metrics.SetCRDRefStatus(server.Namespace, server.Name, loc.Kind, ref, loc.Status.Ready)
+			metrics2.SetCRDRefStatus(server.Namespace, server.Name, loc.Kind, ref, loc.Status.Ready)
 		}
 	}
 
@@ -91,7 +91,7 @@ func (r *ServerBlockReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if !valid {
 		msg := strings.Join(problems, " | ")
 		r.Recorder.Eventf(server, corev1.EventTypeWarning, "InvalidRefs", msg)
-		metrics.Recorder(server.Kind, server.Namespace, server.Name, corev1.EventTypeWarning, msg)
+		metrics2.Recorder(server.Kind, server.Namespace, server.Name, corev1.EventTypeWarning, msg)
 		_ = r.updateServerStatus(ctx, server, false, msg, log)
 		return ctrl.Result{RequeueAfter: DefaultRequeue}, nil
 	}

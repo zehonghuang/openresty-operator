@@ -34,6 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	webv1alpha1 "openresty-operator/api/v1alpha1"
+
+	openrestyv1alpha1 "github.com/zehonghuang/openresty-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -78,6 +80,9 @@ var _ = BeforeSuite(func() {
 	Expect(cfg).NotTo(BeNil())
 
 	err = webv1alpha1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = openrestyv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme

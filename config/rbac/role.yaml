@@ -8,6 +8,7 @@ rules:
   - openresty.huangzehong.me
   resources:
   - locations
+  - normalizerules
   - openresties
   - ratelimitpolicies
   - serverblocks
@@ -24,6 +25,7 @@ rules:
   - openresty.huangzehong.me
   resources:
   - locations/finalizers
+  - normalizerules/finalizers
   - openresties/finalizers
   - ratelimitpolicies/finalizers
   - serverblocks/finalizers
@@ -34,6 +36,7 @@ rules:
   - openresty.huangzehong.me
   resources:
   - locations/status
+  - normalizerules/status
   - openresties/status
   - ratelimitpolicies/status
   - serverblocks/status

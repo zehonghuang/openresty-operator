@@ -5,4 +5,5 @@ resources:
 - web_v1alpha1_location.yaml
 - web_v1alpha1_serverblock.yaml
 - web_v1alpha1_ratelimitpolicy.yaml
+- openresty_v1alpha1_normalizerule.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

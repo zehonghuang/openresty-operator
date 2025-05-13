@@ -22,6 +22,8 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the Project itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- normalizerule_editor_role.yaml
+- normalizerule_viewer_role.yaml
 - ratelimitpolicy_editor_role.yaml
 - ratelimitpolicy_viewer_role.yaml
 - serverblock_editor_role.yaml

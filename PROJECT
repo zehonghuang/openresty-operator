@@ -56,4 +56,13 @@ resources:
   kind: RateLimitPolicy
   path: github.com/zehonghuang/openresty-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: huangzehong.me
+  group: openresty
+  kind: NormalizeRule
+  path: github.com/zehonghuang/openresty-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

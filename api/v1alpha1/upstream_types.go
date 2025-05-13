@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,14 +36,29 @@ const (
 	UpstreamTypeFullURL UpstreamType = "FullURL"
 )
 
+// UpstreamServer defines a backend server with optional normalization logic.
+type UpstreamServer struct {
+	Address string `json:"address"`
+
+	// NormalizeRequestRef refers to a reusable NormalizeRequest CRD
+	NormalizeRequestRef *corev1.LocalObjectReference `json:"normalizeRequestRef,omitempty"`
+
+	// NormalizeRequest defines inline request normalization logic (JSONPath or Lua)
+	//+kubebuilder:pruning:PreserveUnknownFields
+	NormalizeRequest map[string]apiextensionsv1.JSON `json:"normalizeRequest,omitempty"`
+
+	// NormalizeResponse defines inline response normalization logic (JSONPath or Lua)
+	NormalizeResponse map[string]apiextensionsv1.JSON `json:"normalizeResponse,omitempty"`
+}
+
 // UpstreamSpec defines the desired state of Upstream
 type UpstreamSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Servers is a list of backend server addresses (can be IP:Port or domain names)
+	// Servers is a list of backend servers
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Servers"
-	Servers []string `json:"servers"`
+	Servers []UpstreamServer `json:"servers"`
 
 	// +kubebuilder:default=Address
 	Type UpstreamType `json:"type"`

@@ -235,8 +235,11 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		WithEventFilter(predicate.Funcs{
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				if obj, ok := e.Object.(*webv1alpha1.Upstream); ok {
-					health.Checker.Release(obj.Spec.Servers)
-					for _, server := range obj.Spec.Servers {
+					addresses := utils.MapList(obj.Spec.Servers, func(server webv1alpha1.UpstreamServer) string {
+						return server.Address
+					})
+					health.Checker.Release(addresses)
+					for _, server := range addresses {
 						host, _, _ := utils.SplitHostPort(server)
 						metrics.UpstreamDNSResolvable.DeleteLabelValues(obj.Namespace, obj.Name, host)
 					}
@@ -250,8 +253,12 @@ func (r *UpstreamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 					return true
 				}
 
-				oldSet := utils.SetFrom(oldObj.Spec.Servers)
-				newSet := utils.SetFrom(newObj.Spec.Servers)
+				oldSet := utils.SetFrom(utils.MapList(oldObj.Spec.Servers, func(server webv1alpha1.UpstreamServer) string {
+					return server.Address
+				}))
+				newSet := utils.SetFrom(utils.MapList(newObj.Spec.Servers, func(server webv1alpha1.UpstreamServer) string {
+					return server.Address
+				}))
 
 				for server := range oldSet {
 					if _, stillPresent := newSet[server]; !stillPresent {

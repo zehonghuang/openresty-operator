@@ -40,10 +40,44 @@ spec:
             description: UpstreamSpec defines the desired state of Upstream
             properties:
               servers:
-                description: Servers is a list of backend server addresses (can be
-                  IP:Port or domain names)
+                description: Servers is a list of backend servers
                 items:
-                  type: string
+                  description: UpstreamServer defines a backend server with optional
+                    normalization logic.
+                  properties:
+                    address:
+                      type: string
+                    normalizeRequest:
+                      additionalProperties:
+                        x-kubernetes-preserve-unknown-fields: true
+                      description: NormalizeRequest defines inline request normalization
+                        logic (JSONPath or Lua)
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    normalizeRequestRef:
+                      description: NormalizeRequestRef refers to a reusable NormalizeRequest
+                        CRD
+                      properties:
+                        name:
+                          default: ""
+                          description: |-
+                            Name of the referent.
+                            This field is effectively required, but due to backwards compatibility is
+                            allowed to be empty. Instances of this type with an empty value here are
+                            almost certainly wrong.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          type: string
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    normalizeResponse:
+                      additionalProperties:
+                        x-kubernetes-preserve-unknown-fields: true
+                      description: NormalizeResponse defines inline response normalization
+                        logic (JSONPath or Lua)
+                      type: object
+                  required:
+                  - address
+                  type: object
                 type: array
               type:
                 default: Address

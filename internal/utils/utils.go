@@ -174,3 +174,11 @@ func MapValuesNonNil[T any](m map[string]*T) []*T {
 	}
 	return values
 }
+
+func MapList[T any, R any](list []T, f func(T) R) []R {
+	out := make([]R, 0, len(list))
+	for _, item := range list {
+		out = append(out, f(item))
+	}
+	return out
+}

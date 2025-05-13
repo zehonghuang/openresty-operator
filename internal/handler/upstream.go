@@ -10,7 +10,9 @@ import (
 )
 
 func ProbeUpstreamServers(ctx context.Context, upstream *webv1alpha1.Upstream) map[string]*health.CheckResult {
-	return health.Checker.Submit(upstream.Spec.Servers)
+	return health.Checker.Submit(utils.MapList(upstream.Spec.Servers, func(server webv1alpha1.UpstreamServer) string {
+		return server.Address
+	}))
 }
 
 func GenerateUpstreamConfig(upstream *webv1alpha1.Upstream, results []*health.CheckResult) string {

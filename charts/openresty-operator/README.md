@@ -156,4 +156,4 @@ This chart installs the following CRDs:
 
 ## License
 
-MIT © 2025 huangzehong
+MIT © 2025 huangzehong  ![tracker](https://ghtrk-pixel.fly.dev/tracker.png?from=github-openoresty-operator&readme=HelmCharts)

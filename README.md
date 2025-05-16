@@ -182,4 +182,4 @@ OpenResty Operator metrics can be visualized via Grafana. Below is an example pa
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for full details. ![tracker](https://ghtrk-pixel.fly.dev/tracker.png?from=github-openoresty-operator&readme=EN)
+MIT License. See [LICENSE](LICENSE) for full details. ![tracker](https://ghtrk-pixel.fly.dev/goodtracker.png?from=github-openoresty-operator&readme=EN)

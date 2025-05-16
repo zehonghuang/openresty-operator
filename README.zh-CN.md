@@ -184,4 +184,4 @@ OpenResty Operator 导出的指标可以通过 Grafana 进行可视化。以下�
 
 ## 许可证
 
-MIT License. 详见 [LICENSE](LICENSE)。![tracker](https://ghtrk-pixel.fly.dev/tracker.png?from=github-openoresty-operator&readme=CN)
+MIT License. 详见 [LICENSE](LICENSE)。![tracker](https://ghtrk-pixel.fly.dev/goodtracker.png?from=github-openoresty-operator&readme=CN)

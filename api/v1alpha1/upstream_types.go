@@ -43,11 +43,18 @@ type UpstreamServer struct {
 	// NormalizeRequestRef refers to a reusable NormalizeRequest CRD
 	NormalizeRequestRef *corev1.LocalObjectReference `json:"normalizeRequestRef,omitempty"`
 
-	// NormalizeRequest defines inline request normalization logic (JSONPath or Lua)
+	// NormalizeRequest defines rules for normalizing the request payload before proxying.
+	// Each entry maps a target field name to either:
+	// - a JSONPath string (e.g., "$.input.prompt") to extract from the original request object
+	// - or a Lua script block { lua: "..." } that returns the desired value
 	//+kubebuilder:pruning:PreserveUnknownFields
 	NormalizeRequest map[string]apiextensionsv1.JSON `json:"normalizeRequest,omitempty"`
 
-	// NormalizeResponse defines inline response normalization logic (JSONPath or Lua)
+	// NormalizeResponse defines rules for normalizing the response payload before returning to the client.
+	// Each entry maps a target field name to either:
+	// - a JSONPath string (e.g., "$.data.content") to extract from the original response object
+	// - or a Lua script block { lua: "..." } that returns the transformed value
+	//+kubebuilder:pruning:PreserveUnknownFields
 	NormalizeResponse map[string]apiextensionsv1.JSON `json:"normalizeResponse,omitempty"`
 }
 

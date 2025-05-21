@@ -6,9 +6,9 @@ metadata:
 spec:
   type: Address
   servers:
-    - api.openai-hub.com:443
-    - api.openai-proxy.org:443
-    - openai.wndbac.cn:443
+    - address: api.openai-hub.com:443
+    - address: api.openai-proxy.org:443
+    - address: openai.wndbac.cn:443
 ---
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: Upstream
@@ -18,6 +18,6 @@ metadata:
 spec:
   type: FullURL
   servers:
-    - https://polished-light-patina.quiknode.pro/apikey/
-    - https://polished-light-patina.quiknode.pro/apikey/
-    - https://skilled-serene-emerald.quiknode.pro/apikey/
+    - address: https://polished-light-patina.quiknode.pro/apikey/
+    - address: https://polished-light-patina.quiknode.pro/apikey/
+    - address: https://skilled-serene-emerald.quiknode.pro/apikey/

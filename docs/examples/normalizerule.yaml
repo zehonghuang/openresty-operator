@@ -1,0 +1,32 @@
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: NormalizeRule
+metadata:
+  name: normalize-alipay
+  namespace: openai
+spec:
+  request:
+    out_trade_no: "$.orderNo"
+    total_amount:
+      lua: |
+        return string.format("%.2f", requestObj.amount)
+    subject: "$.title"
+    goods_detail:
+      lua: |
+        local goods = {}
+        for _, item in ipairs(requestObj.products or {}) do
+          table.insert(goods, {
+            goods_name = item.name,
+            price = tostring(item.price),
+            quantity = item.quantity,
+            goods_id = item.id,
+          })
+        end
+        return goods
+    ext_user_info:
+      lua: |
+        return {
+          name = requestObj.user.name,
+          cert_no = requestObj.user.idCard,
+          mobile = requestObj.user.mobile,
+          cert_type = "IDENTITY_CARD"
+        }

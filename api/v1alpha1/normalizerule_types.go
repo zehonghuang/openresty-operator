@@ -29,14 +29,18 @@ type NormalizeRuleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Request normalization rules
-	// Defines inline request normalization logic (JSONPath or Lua)
+	// Request defines rules for normalizing the request payload before proxying.
+	// Each entry maps a target field name to either:
+	// - a JSONPath string (e.g., "$.input.prompt") to extract from the original request object
+	// - or a Lua script block { lua: "..." } that returns the desired value
 	//+kubebuilder:pruning:PreserveUnknownFields
 	Request map[string]apiextensionsv1.JSON `json:"request,omitempty"`
 
-	// Response normalization rules
+	// Response defines rules for normalizing the response payload before returning to the client.
+	// Each entry maps a target field name to either:
+	// - a JSONPath string (e.g., "$.data.content") to extract from the original response object
+	// - or a Lua script block { lua: "..." } that returns the transformed value
 	//+kubebuilder:pruning:PreserveUnknownFields
-	// Defines inline response normalization logic (JSONPath or Lua)
 	Response map[string]apiextensionsv1.JSON `json:"response,omitempty"`
 }
 
@@ -49,7 +53,10 @@ type NormalizeRuleStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// NormalizeRule is the Schema for the normalizerules API
+// NormalizeRule is the Schema for the normalizerules API.
+//
+// This rule is only applied when the corresponding Upstream is of type `FullURL`.
+// It defines how request/response payloads should be transformed before proxying.
 type NormalizeRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

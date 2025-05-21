@@ -17,7 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: NormalizeRule is the Schema for the normalizerules API
+        description: |-
+          NormalizeRule is the Schema for the normalizerules API.
+
+          This rule is only applied when the corresponding Upstream is of type `FullURL`.
+          It defines how request/response payloads should be transformed before proxying.
         properties:
           apiVersion:
             description: |-
@@ -43,16 +47,20 @@ spec:
                 additionalProperties:
                   x-kubernetes-preserve-unknown-fields: true
                 description: |-
-                  Request normalization rules
-                  Defines inline request normalization logic (JSONPath or Lua)
+                  Request defines rules for normalizing the request payload before proxying.
+                  Each entry maps a target field name to either:
+                  - a JSONPath string (e.g., "$.input.prompt") to extract from the original request object
+                  - or a Lua script block { lua: "..." } that returns the desired value
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               response:
                 additionalProperties:
                   x-kubernetes-preserve-unknown-fields: true
                 description: |-
-                  Response normalization rules
-                  Defines inline response normalization logic (JSONPath or Lua)
+                  Response defines rules for normalizing the response payload before returning to the client.
+                  Each entry maps a target field name to either:
+                  - a JSONPath string (e.g., "$.data.content") to extract from the original response object
+                  - or a Lua script block { lua: "..." } that returns the transformed value
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
             type: object

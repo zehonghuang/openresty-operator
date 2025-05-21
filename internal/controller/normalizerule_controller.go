@@ -18,7 +18,9 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/tools/record"
 	"openresty-operator/api/v1alpha1"
 
@@ -58,24 +60,31 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	validateField := func(field interface{}, fieldName string) {
-		switch v := field.(type) {
-		case string:
-			if len(v) == 0 || v[0] != '$' {
+	validateField := func(field apiextensionsv1.JSON, fieldName string) {
+		// 尝试解析成 string（即 JSONPath）
+		var str string
+		if err := json.Unmarshal(field.Raw, &str); err == nil {
+			if len(str) == 0 || str[0] != '$' {
 				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s string value does not start with '$'", fieldName)
 			}
-		case map[string]interface{}:
-			luaVal, ok := v["lua"]
+			return
+		}
+
+		// 尝试解析为 map[string]interface{} 并检测是否包含 lua
+		var obj map[string]interface{}
+		if err := json.Unmarshal(field.Raw, &obj); err == nil {
+			luaVal, ok := obj["lua"]
 			if !ok {
 				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s object missing 'lua' key", fieldName)
-			} else {
-				if _, ok := luaVal.(string); !ok {
-					r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s 'lua' value is not a string", fieldName)
-				}
+				return
 			}
-		default:
-			r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s has unsupported type", fieldName)
+			if _, ok := luaVal.(string); !ok {
+				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s 'lua' value is not a string", fieldName)
+			}
+			return
 		}
+
+		r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s has unsupported JSON type", fieldName)
 	}
 
 	for i, item := range normalizeRule.Spec.Request {

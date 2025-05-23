@@ -20,9 +20,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/go-logr/logr"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/pointer"
 	"openresty-operator/api/v1alpha1"
+	"openresty-operator/internal/constants"
+	"openresty-operator/internal/handler"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -60,14 +67,15 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	validateField := func(field apiextensionsv1.JSON, fieldName string) {
+	validateField := func(field apiextensionsv1.JSON, fieldName string) bool {
 		// 尝试解析成 string（即 JSONPath）
 		var str string
 		if err := json.Unmarshal(field.Raw, &str); err == nil {
 			if len(str) == 0 || str[0] != '$' {
 				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s string value does not start with '$'", fieldName)
+				return false
 			}
-			return
+			return true
 		}
 
 		// 尝试解析为 map[string]interface{} 并检测是否包含 lua
@@ -76,28 +84,92 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			luaVal, ok := obj["lua"]
 			if !ok {
 				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s object missing 'lua' key", fieldName)
-				return
+				return false
 			}
 			if _, ok := luaVal.(string); !ok {
 				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s 'lua' value is not a string", fieldName)
+				return false
 			}
-			return
+			return true
 		}
 
 		r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s has unsupported JSON type", fieldName)
+		return false
 	}
 
+	valid := true
 	for i, item := range normalizeRule.Spec.Request {
 		fieldName := fmt.Sprintf("spec.request[%s]", i)
-		validateField(item, fieldName)
+		valid = valid && validateField(item, fieldName)
 	}
 
 	for i, item := range normalizeRule.Spec.Response {
 		fieldName := fmt.Sprintf("spec.response[%s]", i)
-		validateField(item, fieldName)
+		valid = valid && validateField(item, fieldName)
 	}
 
+	if !controllerutil.ContainsFinalizer(&normalizeRule, constants.NormalizeRuleFinalizer) {
+		controllerutil.AddFinalizer(&normalizeRule, constants.NormalizeRuleFinalizer)
+		_ = r.Update(ctx, &normalizeRule)
+	}
+
+	if !normalizeRule.ObjectMeta.DeletionTimestamp.IsZero() {
+		if controllerutil.ContainsFinalizer(&normalizeRule, constants.NormalizeRuleFinalizer) {
+			handler.CreateOrUpdateConfigMap(ctx, r.Client, r.Scheme, &normalizeRule, normalizeRule.Namespace+"-normalize",
+				normalizeRule.Namespace, nil, nil, logger, func(reference *metav1.OwnerReference) {
+					reference.Controller = pointer.Bool(false)
+					reference.BlockOwnerDeletion = pointer.Bool(true)
+				}, []string{normalizeRule.Name + UpstreamRenderTypeLua})
+			controllerutil.RemoveFinalizer(&normalizeRule, constants.NormalizeRuleFinalizer)
+			if err := r.Update(ctx, &normalizeRule); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if valid {
+		lua := handler.RenderNormalizeRuleLua(&normalizeRule)
+		handler.CreateOrUpdateConfigMap(ctx, r.Client, r.Scheme, &normalizeRule, normalizeRule.Namespace+"-normalize",
+			normalizeRule.Namespace, nil, map[string]string{
+				normalizeRule.Name + UpstreamRenderTypeLua: lua,
+			}, logger, func(reference *metav1.OwnerReference) {
+				reference.Controller = pointer.Bool(false)
+				reference.BlockOwnerDeletion = pointer.Bool(true)
+			}, nil)
+	}
+
+	r.updateNormalizeRuleStatus(ctx, &normalizeRule, valid, "", logger)
+
 	return ctrl.Result{}, nil
+}
+
+func (r *NormalizeRuleReconciler) fetchNormalizeRule(ctx context.Context, req ctrl.Request) (*v1alpha1.NormalizeRule, error) {
+	var rule v1alpha1.NormalizeRule
+	if err := r.Get(ctx, req.NamespacedName, &rule); err != nil {
+		return nil, err
+	}
+	return &rule, nil
+}
+
+func (r *NormalizeRuleReconciler) updateNormalizeRuleStatus(
+	ctx context.Context,
+	current *v1alpha1.NormalizeRule,
+	ready bool,
+	reason string,
+	log logr.Logger,
+) {
+	current.Status.Ready = ready
+	current.Status.Version = fmt.Sprintf("%d", current.Generation)
+	current.Status.Reason = reason
+
+	if err := r.Status().Update(ctx, current); err != nil {
+		if errors.IsConflict(err) {
+			log.Info("Location status conflict, skipping update")
+		} else {
+			log.Error(err, "Failed to update Location status")
+		}
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

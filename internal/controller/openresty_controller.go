@@ -86,7 +86,7 @@ func (r *OpenRestyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		app.Namespace,
 		constants.BuildCommonLabels(app, "configmap"),
 		map[string]string{"nginx.conf": nginxConf},
-		log); err != nil {
+		log, nil, nil); err != nil {
 		return ctrl.Result{}, err
 	}
 

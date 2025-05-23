@@ -47,16 +47,6 @@ spec:
                   properties:
                     address:
                       type: string
-                    normalizeRequest:
-                      additionalProperties:
-                        x-kubernetes-preserve-unknown-fields: true
-                      description: |-
-                        NormalizeRequest defines rules for normalizing the request payload before proxying.
-                        Each entry maps a target field name to either:
-                        - a JSONPath string (e.g., "$.input.prompt") to extract from the original request object
-                        - or a Lua script block { lua: "..." } that returns the desired value
-                      type: object
-                      x-kubernetes-preserve-unknown-fields: true
                     normalizeRequestRef:
                       description: NormalizeRequestRef refers to a reusable NormalizeRequest
                         CRD
@@ -72,16 +62,6 @@ spec:
                           type: string
                       type: object
                       x-kubernetes-map-type: atomic
-                    normalizeResponse:
-                      additionalProperties:
-                        x-kubernetes-preserve-unknown-fields: true
-                      description: |-
-                        NormalizeResponse defines rules for normalizing the response payload before returning to the client.
-                        Each entry maps a target field name to either:
-                        - a JSONPath string (e.g., "$.data.content") to extract from the original response object
-                        - or a Lua script block { lua: "..." } that returns the transformed value
-                      type: object
-                      x-kubernetes-preserve-unknown-fields: true
                   required:
                   - address
                   type: object

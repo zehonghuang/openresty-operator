@@ -66,6 +66,17 @@ spec:
             type: object
           status:
             description: NormalizeRuleStatus defines the observed state of NormalizeRule
+            properties:
+              ready:
+                description: INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster
+                type: boolean
+              reason:
+                type: string
+              version:
+                type: string
+            required:
+            - ready
             type: object
         type: object
     served: true

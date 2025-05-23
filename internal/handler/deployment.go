@@ -289,7 +289,7 @@ func BuildDeploymentSpec(app *webv1alpha1.OpenResty, defaulted *appsv1.Deploymen
 
 	// 注入 containers
 	if len(app.Spec.Image) == 0 {
-		app.Spec.Image = "gintonic1glass/openresty:alpine-1.1.9"
+		app.Spec.Image = "gintonic1glass/openresty:alpine-1.1.10"
 	}
 	openrestyContainer := corev1.Container{
 		Name:      "openresty",

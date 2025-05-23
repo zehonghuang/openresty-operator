@@ -75,7 +75,7 @@ func renderNginxUpstreamLua(name string, results []*health.CheckResult) string {
 	b.WriteString("local servers = {\n")
 	for _, s := range results {
 		if s.Alive {
-			b.WriteString(fmt.Sprintf("    { address = \"%s\", weight = 1 },\n", s.Address))
+			b.WriteString(fmt.Sprintf("    { address = \"%s\", weight = 1, normalize_request = nil, normalize_response = nil },\n", s.Address))
 			alives++
 		} else {
 			b.WriteString(fmt.Sprintf("--    { address = \"%s\", weight = 1 },\n", s.Address))

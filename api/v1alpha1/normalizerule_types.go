@@ -47,7 +47,9 @@ type NormalizeRuleSpec struct {
 // NormalizeRuleStatus defines the observed state of NormalizeRule
 type NormalizeRuleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Ready   bool   `json:"ready"`
+	Version string `json:"version,omitempty"` // 对应 generation
+	Reason  string `json:"reason,omitempty"`
 }
 
 // +kubebuilder:object:root=true

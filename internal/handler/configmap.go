@@ -5,6 +5,7 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"openresty-operator/internal/utils"
@@ -22,6 +23,8 @@ func CreateOrUpdateConfigMap(
 	labels map[string]string,
 	data map[string]string,
 	log logr.Logger,
+	opts func(*metav1.OwnerReference),
+	keysToDelete []string,
 ) error {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: ctrl.ObjectMeta{
@@ -31,8 +34,10 @@ func CreateOrUpdateConfigMap(
 		},
 		Data: data,
 	}
-
-	if err := ctrl.SetControllerReference(owner, cm, scheme); err != nil {
+	if opts == nil {
+		opts = func(reference *metav1.OwnerReference) {}
+	}
+	if err := ctrl.SetControllerReference(owner, cm, scheme, opts); err != nil {
 		return err
 	}
 
@@ -46,9 +51,17 @@ func CreateOrUpdateConfigMap(
 		return err
 	}
 
+	for _, key := range keysToDelete {
+		delete(existing.Data, key)
+		log.Info("Deleting key from ConfigMap", "key", key)
+	}
+
+	for k, v := range cm.Data {
+		existing.Data[k] = v
+	}
+
 	if !utils.DeepEqual(existing.Data, cm.Data) {
 		log.Info("Updating ConfigMap", "name", name)
-		existing.Data = cm.Data
 		return c.Update(ctx, &existing)
 	}
 

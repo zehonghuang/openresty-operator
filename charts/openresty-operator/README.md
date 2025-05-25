@@ -98,7 +98,7 @@ helm install openresty-operator openresty-operator/openresty-operator
 | `upstreams`             | List of upstream definitions                                                                      | `[...]`     |
 | `upstreams[].name`      | Name of the upstream (referenced in `proxyPass`)                                                  | `""`        |
 | `upstreams[].type`      | Upstream resolution strategy: `Address` (host:port list) or `FullURL` (full URL, rendered as Lua) | `"Address"` |
-| `upstreams[].servers`   | List of backend servers in `host:port` format                                                     | `[]`        |
+| `upstreams[].servers`   | List of backend servers. Each entry includes an `address`, and optionally a `normalizeRequestRef`. Format depends on `type`:<br>– `Address`: `host:port`<br>– `FullURL`: full URL + optional normalization | `[]`        |
 
 ### 🌐 `servers` (ServerBlock)
 

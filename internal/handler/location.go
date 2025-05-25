@@ -78,6 +78,10 @@ func GenerateLocationConfig(name, namespace string, entries []v1alpha1.LocationE
 			b.WriteString("    }\n")
 		}
 		if e.ProxyPassIsFullURL {
+			b.WriteString("    header_filter_by_lua_block\n {\n")
+			b.WriteString("      ngx.header[\"Content-Length\"] = nil")
+			b.WriteString("    }\n")
+
 			b.WriteString("    body_filter_by_lua_block {\n")
 			b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\").normalizeResponse()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
 			b.WriteString("    }\n")

@@ -66,67 +66,47 @@ spec:
 ---
 
 ###
-### 这是原始请求
+### 这是原始的响应报文
 ###{
-#  "out_trade_no": "ORD123456",
-#  "total_amount": "168.88",
-#  "currency": "CNY",
-#  "subject": "年货大礼包",
-#  "ext_user_info": {
-#    "name": "张三",
-#    "cert_no": "310101199001012345",
-#    "mobile": "13800138000",
-#    "cert_type": "IDENTITY_CARD"
-#  },
-#  "goods_detail": [
-#    {
-#      "goods_id": "SKU001",
-#      "goods_name": "坚果礼包",
-#      "price": "88.88",
-#      "quantity": 1
+#    "code": 0,
+#    "data": {
+#        "goods": [
+#            {
+#                "goodsId": "SKU001",
+#                "name": "坚果礼包",
+#                "price": "88.88",
+#                "quantity": 1
+#            },
+#            {
+#                "goodsId": "SKU002",
+#                "name": "干果礼盒",
+#                "price": "80.00",
+#                "quantity": 1
+#            }
+#        ],
+#        "payExpire": "2025-05-25T07:52:56Z",
+#        "payUrl": "https://pay.example.com/tx/TXN99887766",
+#        "payer": {
+#            "realName": "张三",
+#            "userId": "U9988"
+#        },
+#        "status": "PENDING",
+#        "transactionId": "TXN99887766"
 #    },
-#    {
-#      "goods_id": "SKU002",
-#      "goods_name": "干果礼盒",
-#      "price": "80.00",
-#      "quantity": 1
-#    }
-#  ],
-#  "channel": "wechat",
-#  "campaign": "newyear"
+#    "message": "success"
 #}
 ###
-### 这是第三方接口的请求参数
-###{
-#  "orderNo": "ORD123456",
-#  "amount": 168.88,
-#  "currency": "CNY",
-#  "title": "年货大礼包",
-#  "user": {
-#    "id": "U9988",
-#    "name": "张三",
-#    "idCard": "310101199001012345",
-#    "mobile": "13800138000"
-#  },
-#  "products": [
-#    {
-#      "id": "SKU001",
-#      "name": "坚果礼包",
-#      "price": 88.88,
-#      "quantity": 1
-#    },
-#    {
-#      "id": "SKU002",
-#      "name": "干果礼盒",
-#      "price": 80.00,
-#      "quantity": 1
-#    }
-#  ],
-#  "extraInfo": {
-#    "channel": "wechat",
-#    "campaign": "newyear"
-#  }
-#}
+###
+###
+### 我现在只需要以下这部分，帮我组织一个 json，并写一个NormalizeRule
+##"payExpire": "2025-05-25T07:52:56Z",
+##        "payUrl": "https://pay.example.com/tx/TXN99887766",
+##        "payer": {
+##            "realName": "张三",
+##            "userId": "U9988"
+##        },
+##        "status": "PENDING",
+##        "transactionId": "TXN99887766"
 ###
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: NormalizeRule
@@ -167,6 +147,17 @@ spec:
           channel = requestObj.channel,
           campaign = requestObj.campaign
         }
+  response:
+    payExpire: "data.payExpire"
+    payUrl: "data.payUrl"
+    payer:
+      lua: |
+        return {
+          name = responseObj.data.payer.realName,
+          id = responseObj.data.payer.userId
+        }
+    status: "data.status"
+    transactionId: "data.transactionId"
 ---
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: NormalizeRule
@@ -207,4 +198,15 @@ spec:
           source = requestObj.channel,
           ad_tag = requestObj.campaign
         }
+  response:
+    payExpire: "data.payExpire"
+    payUrl: "data.payUrl"
+    payer:
+      lua: |
+        return {
+          name = responseObj.data.payer.realName,
+          id = responseObj.data.payer.userId
+        }
+    status: "data.status"
+    transactionId: "data.transactionId"
 ---

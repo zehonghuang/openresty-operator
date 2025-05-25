@@ -10,13 +10,14 @@ import (
 func RenderNormalizeRuleLua(rule *v1alpha1.NormalizeRule) string {
 	var builder strings.Builder
 
+	builder.WriteString("local cjson = require(\"cjson\")\n")
+	builder.WriteString("cjson.encode_escape_forward_slash(false)\n")
+	builder.WriteString("local utils = require(\"normalize.utils\")\n")
 	builder.WriteString("return {\n")
 
 	if len(rule.Spec.Request) > 0 {
 		builder.WriteString("  request = function()\n")
 		builder.WriteString("    ngx.req.read_body()\n")
-		builder.WriteString("    local cjson = require(\"cjson.safe\")\n")
-		builder.WriteString("    local utils = require(\"normalize.utils\")\n")
 		builder.WriteString("    local requestObj = cjson.decode(ngx.req.get_body_data()) or {}\n")
 		builder.WriteString("    local output = {}\n\n")
 
@@ -63,8 +64,6 @@ func RenderNormalizeRuleLua(rule *v1alpha1.NormalizeRule) string {
 		builder.WriteString("      return\n")
 		builder.WriteString("    end\n\n")
 		builder.WriteString("    local full_body = table.concat(ngx.ctx.body_buffer)\n")
-		builder.WriteString("    local cjson = require(\"cjson.safe\")\n")
-		builder.WriteString("    local utils = require(\"normalize.utils\")\n")
 		builder.WriteString("    local responseObj = cjson.decode(full_body) or {}\n")
 		builder.WriteString("    local output = {}\n\n")
 
@@ -91,7 +90,9 @@ func RenderNormalizeRuleLua(rule *v1alpha1.NormalizeRule) string {
 			builder.WriteString(fmt.Sprintf("    -- could not render normalize field %q\n", key))
 		}
 
-		builder.WriteString("\n    ngx.arg[1] = cjson.encode(output)\n")
+		builder.WriteString("\n    local final_body = cjson.encode(output)\n")
+		builder.WriteString("\n    ngx.arg[1] = final_body\n")
+		builder.WriteString("\n    ngx.arg[2] = true\n")
 		builder.WriteString("  end\n")
 	}
 

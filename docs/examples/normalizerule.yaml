@@ -38,11 +38,11 @@ metadata:
   namespace: openai
 spec:
   request:
-    out_trade_no: "$.orderNo"
+    out_trade_no: "orderNo"
     total_amount:
       lua: |
         return string.format("%.2f", requestObj.amount)
-    subject: "$.title"
+    subject: "title"
     goods_detail:
       lua: |
         local goods = {}
@@ -63,3 +63,148 @@ spec:
           mobile = requestObj.user.mobile,
           cert_type = "IDENTITY_CARD"
         }
+---
+
+###
+### 这是原始请求
+###{
+#  "out_trade_no": "ORD123456",
+#  "total_amount": "168.88",
+#  "currency": "CNY",
+#  "subject": "年货大礼包",
+#  "ext_user_info": {
+#    "name": "张三",
+#    "cert_no": "310101199001012345",
+#    "mobile": "13800138000",
+#    "cert_type": "IDENTITY_CARD"
+#  },
+#  "goods_detail": [
+#    {
+#      "goods_id": "SKU001",
+#      "goods_name": "坚果礼包",
+#      "price": "88.88",
+#      "quantity": 1
+#    },
+#    {
+#      "goods_id": "SKU002",
+#      "goods_name": "干果礼盒",
+#      "price": "80.00",
+#      "quantity": 1
+#    }
+#  ],
+#  "channel": "wechat",
+#  "campaign": "newyear"
+#}
+###
+### 这是第三方接口的请求参数
+###{
+#  "orderNo": "ORD123456",
+#  "amount": 168.88,
+#  "currency": "CNY",
+#  "title": "年货大礼包",
+#  "user": {
+#    "id": "U9988",
+#    "name": "张三",
+#    "idCard": "310101199001012345",
+#    "mobile": "13800138000"
+#  },
+#  "products": [
+#    {
+#      "id": "SKU001",
+#      "name": "坚果礼包",
+#      "price": 88.88,
+#      "quantity": 1
+#    },
+#    {
+#      "id": "SKU002",
+#      "name": "干果礼盒",
+#      "price": 80.00,
+#      "quantity": 1
+#    }
+#  ],
+#  "extraInfo": {
+#    "channel": "wechat",
+#    "campaign": "newyear"
+#  }
+#}
+###
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: NormalizeRule
+metadata:
+  name: normalize-request-standard-a
+  namespace: openai
+spec:
+  request:
+    orderNo: "out_trade_no"
+    amount:
+      lua: |
+        return tonumber(requestObj.total_amount) or 0
+    currency: "currency"
+    title: "subject"
+    user:
+      lua: |
+        return {
+          id = "U9988",
+          name = requestObj.ext_user_info.name,
+          idCard = requestObj.ext_user_info.cert_no,
+          mobile = requestObj.ext_user_info.mobile
+        }
+    products:
+      lua: |
+        local products = {}
+        for _, item in ipairs(requestObj.goods_detail or {}) do
+          table.insert(products, {
+            id = item.goods_id,
+            name = item.goods_name,
+            price = tonumber(item.price) or 0,
+            quantity = item.quantity
+          })
+        end
+        return products
+    extraInfo:
+      lua: |
+        return {
+          channel = requestObj.channel,
+          campaign = requestObj.campaign
+        }
+---
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: NormalizeRule
+metadata:
+  name: normalize-request-standard-b
+  namespace: openai
+spec:
+  request:
+    order_id: "out_trade_no"
+    total_price:
+      lua: |
+        return tonumber(requestObj.total_amount) or 0
+    currency_type: "currency"
+    product_title: "subject"
+    customer:
+      lua: |
+        return {
+          real_name = requestObj.ext_user_info.name,
+          id_number = requestObj.ext_user_info.cert_no,
+          phone = requestObj.ext_user_info.mobile,
+          user_id = "U9988"
+        }
+    items:
+      lua: |
+        local goods = {}
+        for _, item in ipairs(requestObj.goods_detail or {}) do
+          table.insert(goods, {
+            item_id = item.goods_id,
+            desc = item.goods_name,
+            unit_price = tonumber(item.price) or 0,
+            count = item.quantity,
+          })
+        end
+        return goods
+    meta:
+      lua: |
+        return {
+          source = requestObj.channel,
+          ad_tag = requestObj.campaign
+        }
+---

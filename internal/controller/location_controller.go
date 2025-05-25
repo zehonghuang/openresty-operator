@@ -73,7 +73,6 @@ func (r *LocationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	valid, problems := handler.ValidateLocationEntries(location.Spec.Entries)
 	if !valid {
 		msg := strings.Join(problems, " | ")
-		log.Error(nil, "Path validation failed", "details", msg)
 		r.Recorder.Eventf(location, corev1.EventTypeWarning, "InvalidPath", msg)
 		metrics.Recorder(location.Kind, location.Namespace, location.Name, corev1.EventTypeWarning, msg)
 

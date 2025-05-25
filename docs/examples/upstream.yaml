@@ -21,3 +21,18 @@ spec:
     - address: https://polished-light-patina.quiknode.pro/apikey/
     - address: https://polished-light-patina.quiknode.pro/apikey/
     - address: https://skilled-serene-emerald.quiknode.pro/apikey/
+---
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: Upstream
+metadata:
+  name: pay-api
+  namespace: openai
+spec:
+  type: FullURL
+  servers:
+    - address: https://ghtrk-pixel.fly.dev/pay
+      normalizeRequestRef:
+        name: "normalize-request-standard-a"
+    - address: https://ghtrk-pixel.fly.dev/pay2
+      normalizeRequestRef:
+        name: "normalize-request-standard-b"

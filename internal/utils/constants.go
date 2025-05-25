@@ -1,18 +1,19 @@
 package utils
 
 const (
-	NginxConfPath          = "/usr/local/openresty/nginx/conf/nginx.conf"
-	NginxMimeTypesPath     = "/usr/local/openresty/nginx/conf/mime.types"
-	NginxMainConfigMapName = "main-config"
-	NginxConfDir           = "/etc/nginx/conf.d"
-	NginxServerConfigDir   = NginxConfDir + "/servers"
-	NginxLocationConfigDir = NginxConfDir + "/locations"
-	NginxUpstreamConfigDir = NginxConfDir + "/upstreams"
-	NginxLuaLibDir         = "/usr/local/openresty/lualib"
-	NginxLuaLibUpstreamDir = NginxLuaLibDir + "/upstreams"
-	NginxLuaLibSecretDir   = NginxLuaLibDir + "/secrets"
-	NginxLogDir            = "/var/log/nginx"
-	NginxTemplate          = `
+	NginxConfPath               = "/usr/local/openresty/nginx/conf/nginx.conf"
+	NginxMimeTypesPath          = "/usr/local/openresty/nginx/conf/mime.types"
+	NginxMainConfigMapName      = "main-config"
+	NginxConfDir                = "/etc/nginx/conf.d"
+	NginxServerConfigDir        = NginxConfDir + "/servers"
+	NginxLocationConfigDir      = NginxConfDir + "/locations"
+	NginxUpstreamConfigDir      = NginxConfDir + "/upstreams"
+	NginxLuaLibDir              = "/usr/local/openresty/lualib"
+	NginxLuaLibUpstreamDir      = NginxLuaLibDir + "/upstreams"
+	NginxLuaLibNormalizeRuleDir = NginxLuaLibDir + "/normalizerules"
+	NginxLuaLibSecretDir        = NginxLuaLibDir + "/secrets"
+	NginxLogDir                 = "/var/log/nginx"
+	NginxTemplate               = `
 worker_processes auto;
 events { worker_connections 1024; }
 http {

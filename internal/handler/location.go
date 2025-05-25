@@ -72,9 +72,14 @@ func GenerateLocationConfig(name, namespace string, entries []v1alpha1.LocationE
 
 			// FullURL upstream动态分流
 			if e.ProxyPassIsFullURL {
-				b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\")()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
+				b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\").default()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
 			}
 
+			b.WriteString("    }\n")
+		}
+		if e.ProxyPassIsFullURL {
+			b.WriteString("    body_filter_by_lua_block {\n")
+			b.WriteString(fmt.Sprintf("        require(\"upstreams.%s.%s\").normalizeResponse()\n", safeName(e.ProxyPass), safeName(e.ProxyPass)))
 			b.WriteString("    }\n")
 		}
 

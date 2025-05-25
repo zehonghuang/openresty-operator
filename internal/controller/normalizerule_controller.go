@@ -68,17 +68,15 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	validateField := func(field apiextensionsv1.JSON, fieldName string) bool {
-		// 尝试解析成 string（即 JSONPath）
 		var str string
 		if err := json.Unmarshal(field.Raw, &str); err == nil {
-			if len(str) == 0 || str[0] != '$' {
-				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s string value does not start with '$'", fieldName)
+			if len(str) == 0 {
+				r.Recorder.Eventf(&normalizeRule, "Warning", "ValidationFailed", "Validation warning: field %s string value is empty", fieldName)
 				return false
 			}
 			return true
 		}
 
-		// 尝试解析为 map[string]interface{} 并检测是否包含 lua
 		var obj map[string]interface{}
 		if err := json.Unmarshal(field.Raw, &obj); err == nil {
 			luaVal, ok := obj["lua"]
@@ -116,7 +114,7 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if !normalizeRule.ObjectMeta.DeletionTimestamp.IsZero() {
 		if controllerutil.ContainsFinalizer(&normalizeRule, constants.NormalizeRuleFinalizer) {
 			handler.CreateOrUpdateConfigMap(ctx, r.Client, r.Scheme, &normalizeRule, normalizeRule.Namespace+"-normalize",
-				normalizeRule.Namespace, nil, nil, logger, func(reference *metav1.OwnerReference) {
+				normalizeRule.Namespace, constants.BuildCommonLabels(&normalizeRule, "configmap"), nil, logger, func(reference *metav1.OwnerReference) {
 					reference.Controller = pointer.Bool(false)
 					reference.BlockOwnerDeletion = pointer.Bool(true)
 				}, []string{normalizeRule.Name + UpstreamRenderTypeLua})
@@ -131,7 +129,7 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if valid {
 		lua := handler.RenderNormalizeRuleLua(&normalizeRule)
 		handler.CreateOrUpdateConfigMap(ctx, r.Client, r.Scheme, &normalizeRule, normalizeRule.Namespace+"-normalize",
-			normalizeRule.Namespace, nil, map[string]string{
+			normalizeRule.Namespace, constants.BuildCommonLabels(&normalizeRule, "configmap"), map[string]string{
 				normalizeRule.Name + UpstreamRenderTypeLua: lua,
 			}, logger, func(reference *metav1.OwnerReference) {
 				reference.Controller = pointer.Bool(false)

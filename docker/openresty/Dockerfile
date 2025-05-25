@@ -13,6 +13,7 @@ COPY lua/upstreams/ /usr/local/openresty/lualib/upstreams/
 COPY lua/secrets/ /usr/local/openresty/lualib/secrets/
 COPY lua/utils/ /usr/local/openresty/lualib/utils/
 COPY lua/metrics/ /usr/local/openresty/lualib/
+COPY lua/normalize/ /usr/local/openresty/lualib/normalize/
 
 # 可选：设置工作目录
 WORKDIR /usr/local/openresty/nginx

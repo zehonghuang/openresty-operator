@@ -228,6 +228,21 @@ func BuildVolumesAndMounts(ctx context.Context, c client.Client, app *webv1alpha
 		MountPath: utils.NginxLogDir,
 	})
 
+	volumes = append(volumes, corev1.Volume{
+		Name: "normalizerules",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: app.Namespace + "-normalize",
+				},
+			},
+		},
+	})
+	mounts = append(mounts, corev1.VolumeMount{
+		Name:      "normalizerules",
+		MountPath: utils.NginxLuaLibNormalizeRuleDir,
+	})
+
 	// --- Metrics Port (optional) ---
 	var metricsPort *corev1.ContainerPort
 	if app.Spec.MetricsServer != nil && app.Spec.MetricsServer.Enable {
@@ -289,7 +304,7 @@ func BuildDeploymentSpec(app *webv1alpha1.OpenResty, defaulted *appsv1.Deploymen
 
 	// 注入 containers
 	if len(app.Spec.Image) == 0 {
-		app.Spec.Image = "gintonic1glass/openresty:alpine-1.1.10"
+		app.Spec.Image = "gintonic1glass/openresty:alpine-1.1.11"
 	}
 	openrestyContainer := corev1.Container{
 		Name:      "openresty",

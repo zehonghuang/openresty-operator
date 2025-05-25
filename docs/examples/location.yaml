@@ -24,3 +24,11 @@ spec:
       extra:
         - "proxy_redirect off;"
         - "proxy_ssl_server_name on;"
+    - path: /pay
+      proxyPass: https://pay-api/
+      proxyPassIsFullURL: true
+      enableUpstreamMetrics: true
+      accessLog: true
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"

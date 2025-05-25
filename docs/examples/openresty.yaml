@@ -5,6 +5,7 @@ metadata:
   namespace: openai
 spec:
   replicas: 1
+  image: gintonic1glass/openresty:alpine-1.1.11
   http:
     include:
       - mime.types
@@ -20,6 +21,7 @@ spec:
     upstreamRefs:
       - openai-api
       - eth-api
+      - pay-api
   metrics:
     enable: true
     listen: "9090"

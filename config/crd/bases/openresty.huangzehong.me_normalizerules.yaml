@@ -41,25 +41,90 @@ spec:
           metadata:
             type: object
           spec:
-            description: NormalizeRuleSpec defines the desired state of NormalizeRule
+            description: NormalizeRuleSpec defines the desired transformation rules
+              for requests and responses.
             properties:
               request:
-                additionalProperties:
-                  x-kubernetes-preserve-unknown-fields: true
                 description: |-
-                  Request defines rules for normalizing the request payload before proxying.
-                  Each entry maps a target field name to either:
-                  - a JSONPath string (e.g., "$.input.prompt") to extract from the original request object
-                  - or a Lua script block { lua: "..." } that returns the desired value
+                  Request defines how to normalize the incoming request before proxying.
+                  Includes field mapping, static headers, and secrets-based headers.
+                properties:
+                  body:
+                    additionalProperties:
+                      x-kubernetes-preserve-unknown-fields: true
+                    description: |-
+                      Body rewrites the request body using field mappings or Lua logic.
+                      Each entry maps a target field name to a JSONPath string or a Lua script block.
+                    type: object
+                  headers:
+                    description: Headers injects static HTTP headers into the outbound
+                      request.
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        value:
+                          type: string
+                      required:
+                      - key
+                      - value
+                      type: object
+                    type: array
+                  headersFromSecret:
+                    description: HeadersFromSecret injects sensitive HTTP headers
+                      whose values are loaded from Kubernetes Secrets.
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        secretKey:
+                          type: string
+                        secretName:
+                          type: string
+                      required:
+                      - name
+                      - secretKey
+                      - secretName
+                      type: object
+                    type: array
+                  query:
+                    additionalProperties:
+                      x-kubernetes-preserve-unknown-fields: true
+                    description: |-
+                      Query appends or overrides query parameters in the upstream request URL.
+                      Each entry maps a query key to either:
+                      - a JSONPath string extracted from the request body
+                      - a Lua script block { lua: "..." } returning the query value
+                      - or a static string { value: "..." } representing a constant value
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                  queryFromSecret:
+                    description: |-
+                      QueryFromSecret injects query parameters whose values are loaded from Kubernetes Secrets.
+                      Each entry defines the query key, target secret name, and key inside the secret.
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        secretKey:
+                          type: string
+                        secretName:
+                          type: string
+                      required:
+                      - name
+                      - secretKey
+                      - secretName
+                      type: object
+                    type: array
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               response:
                 additionalProperties:
                   x-kubernetes-preserve-unknown-fields: true
                 description: |-
-                  Response defines rules for normalizing the response payload before returning to the client.
+                  Response defines how to normalize the upstream response before returning to the client.
                   Each entry maps a target field name to either:
-                  - a JSONPath string (e.g., "$.data.content") to extract from the original response object
+                  - a JSONPath string to extract from the response
                   - or a Lua script block { lua: "..." } that returns the transformed value
                 type: object
                 x-kubernetes-preserve-unknown-fields: true

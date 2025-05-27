@@ -52,7 +52,7 @@ type LocationEntry struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Headers"
 	Headers []NginxKV `json:"headers,omitempty"`
 
-	HeadersFromSecret []NginxHeaderFromSecret `json:"headersFromSecret,omitempty"`
+	HeadersFromSecret []ValueFromSecret `json:"headersFromSecret,omitempty"`
 
 	// Timeout configures upstream timeout values (connect/send/read)
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Timeout"
@@ -92,8 +92,8 @@ type NginxKV struct {
 	Value string `json:"value"`
 }
 
-type NginxHeaderFromSecret struct {
-	HeaderName string `json:"headerName"`
+type ValueFromSecret struct {
+	Name       string `json:"name"`
 	SecretName string `json:"secretName"`
 	SecretKey  string `json:"secretKey"`
 }

@@ -21,9 +21,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/pointer"
 	"openresty-operator/api/v1alpha1"
@@ -96,9 +98,11 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	valid := true
-	for i, item := range normalizeRule.Spec.Request {
-		fieldName := fmt.Sprintf("spec.request[%s]", i)
-		valid = valid && validateField(item, fieldName)
+	if normalizeRule.Spec.Request != nil {
+		for i, item := range normalizeRule.Spec.Request.Body {
+			fieldName := fmt.Sprintf("spec.request[%s]", i)
+			valid = valid && validateField(item, fieldName)
+		}
 	}
 
 	for i, item := range normalizeRule.Spec.Response {
@@ -127,7 +131,13 @@ func (r *NormalizeRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	if valid {
-		lua := handler.RenderNormalizeRuleLua(&normalizeRule)
+		lua := handler.RenderNormalizeRuleLua(&normalizeRule, func(ns, name string) (*corev1.Secret, error) {
+			s := corev1.Secret{}
+			if err := r.Get(ctx, types.NamespacedName{Namespace: ns, Name: name}, &s); err != nil {
+				return nil, err
+			}
+			return &s, nil
+		})
 		handler.CreateOrUpdateConfigMap(ctx, r.Client, r.Scheme, &normalizeRule, normalizeRule.Namespace+"-normalize",
 			normalizeRule.Namespace, constants.BuildCommonLabels(&normalizeRule, "configmap"), map[string]string{
 				normalizeRule.Name + UpstreamRenderTypeLua: lua,

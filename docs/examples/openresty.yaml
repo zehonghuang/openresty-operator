@@ -22,6 +22,7 @@ spec:
       - openai-api
       - eth-api
       - pay-api
+      - weather-api
   metrics:
     enable: true
     listen: "9090"

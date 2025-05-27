@@ -58,7 +58,7 @@ func GenerateLocationConfig(name, namespace string, entries []v1alpha1.LocationE
 				b.WriteString(fmt.Sprintf("        local path = \"%s\"\n", e.Path))
 				b.WriteString("        local headers = {\n")
 				for _, h := range e.HeadersFromSecret {
-					b.WriteString(fmt.Sprintf("            \"%s\",\n", h.HeaderName))
+					b.WriteString(fmt.Sprintf("            \"%s\",\n", h.Name))
 				}
 				b.WriteString("        }\n")
 				b.WriteString("        for _, headerName in ipairs(headers) do\n")
@@ -179,7 +179,7 @@ func GenerateSecretFromLocations(ctx context.Context, location *v1alpha1.Locatio
 				return nil, fmt.Errorf("key %s not found in secret %s/%s", h.SecretKey, location.Namespace, h.SecretName)
 			}
 
-			key := fmt.Sprintf("%s/%s/%s/%s", location.Namespace, location.Name, entry.Path, h.HeaderName)
+			key := fmt.Sprintf("%s/%s/%s/%s", location.Namespace, location.Name, entry.Path, h.Name)
 			data[key] = string(val)
 		}
 	}

@@ -5,31 +5,32 @@ metadata:
   namespace: openai
 spec:
   request:
-    out_trade_no: "$.orderNo"
-    total_amount:
-      lua: |
-        return string.format("%.2f", requestObj.amount)
-    subject: "$.title"
-    goods_detail:
-      lua: |
-        local goods = {}
-        for _, item in ipairs(requestObj.products or {}) do
-          table.insert(goods, {
-            goods_name = item.name,
-            price = tostring(item.price),
-            quantity = item.quantity,
-            goods_id = item.id,
-          })
-        end
-        return goods
-    ext_user_info:
-      lua: |
-        return {
-          name = requestObj.user.name,
-          cert_no = requestObj.user.idCard,
-          mobile = requestObj.user.mobile,
-          cert_type = "IDENTITY_CARD"
-        }
+    body:
+      out_trade_no: "$.orderNo"
+      total_amount:
+        lua: |
+          return string.format("%.2f", requestObj.amount)
+      subject: "$.title"
+      goods_detail:
+        lua: |
+          local goods = {}
+          for _, item in ipairs(requestObj.products or {}) do
+            table.insert(goods, {
+              goods_name = item.name,
+              price = tostring(item.price),
+              quantity = item.quantity,
+              goods_id = item.id,
+            })
+          end
+          return goods
+      ext_user_info:
+        lua: |
+          return {
+            name = requestObj.user.name,
+            cert_no = requestObj.user.idCard,
+            mobile = requestObj.user.mobile,
+            cert_type = "IDENTITY_CARD"
+          }
 ---
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: NormalizeRule
@@ -38,76 +39,34 @@ metadata:
   namespace: openai
 spec:
   request:
-    out_trade_no: "orderNo"
-    total_amount:
-      lua: |
-        return string.format("%.2f", requestObj.amount)
-    subject: "title"
-    goods_detail:
-      lua: |
-        local goods = {}
-        for _, item in ipairs(requestObj.products or {}) do
-          table.insert(goods, {
-            goods_name = item.name,
-            price = tostring(item.price),
-            quantity = item.quantity,
-            goods_id = item.id,
-          })
-        end
-        return goods
-    ext_user_info:
-      lua: |
-        return {
-          name = requestObj.user.name,
-          cert_no = requestObj.user.idCard,
-          mobile = requestObj.user.mobile,
-          cert_type = "IDENTITY_CARD"
-        }
+    body:
+      out_trade_no: "orderNo"
+      total_amount:
+        lua: |
+          return string.format("%.2f", requestObj.amount)
+      subject: "title"
+      goods_detail:
+        lua: |
+          local goods = {}
+          for _, item in ipairs(requestObj.products or {}) do
+            table.insert(goods, {
+              goods_name = item.name,
+              price = tostring(item.price),
+              quantity = item.quantity,
+              goods_id = item.id,
+            })
+          end
+          return goods
+      ext_user_info:
+        lua: |
+          return {
+            name = requestObj.user.name,
+            cert_no = requestObj.user.idCard,
+            mobile = requestObj.user.mobile,
+            cert_type = "IDENTITY_CARD"
+          }
 ---
 
-###
-### 这是原始的响应报文
-###{
-#    "code": 0,
-#    "data": {
-#        "goods": [
-#            {
-#                "goodsId": "SKU001",
-#                "name": "坚果礼包",
-#                "price": "88.88",
-#                "quantity": 1
-#            },
-#            {
-#                "goodsId": "SKU002",
-#                "name": "干果礼盒",
-#                "price": "80.00",
-#                "quantity": 1
-#            }
-#        ],
-#        "payExpire": "2025-05-25T07:52:56Z",
-#        "payUrl": "https://pay.example.com/tx/TXN99887766",
-#        "payer": {
-#            "realName": "张三",
-#            "userId": "U9988"
-#        },
-#        "status": "PENDING",
-#        "transactionId": "TXN99887766"
-#    },
-#    "message": "success"
-#}
-###
-###
-###
-### 我现在只需要以下这部分，帮我组织一个 json，并写一个NormalizeRule
-##"payExpire": "2025-05-25T07:52:56Z",
-##        "payUrl": "https://pay.example.com/tx/TXN99887766",
-##        "payer": {
-##            "realName": "张三",
-##            "userId": "U9988"
-##        },
-##        "status": "PENDING",
-##        "transactionId": "TXN99887766"
-###
 apiVersion: openresty.huangzehong.me/v1alpha1
 kind: NormalizeRule
 metadata:
@@ -115,38 +74,39 @@ metadata:
   namespace: openai
 spec:
   request:
-    orderNo: "out_trade_no"
-    amount:
-      lua: |
-        return tonumber(requestObj.total_amount) or 0
-    currency: "currency"
-    title: "subject"
-    user:
-      lua: |
-        return {
-          id = "U9988",
-          name = requestObj.ext_user_info.name,
-          idCard = requestObj.ext_user_info.cert_no,
-          mobile = requestObj.ext_user_info.mobile
-        }
-    products:
-      lua: |
-        local products = {}
-        for _, item in ipairs(requestObj.goods_detail or {}) do
-          table.insert(products, {
-            id = item.goods_id,
-            name = item.goods_name,
-            price = tonumber(item.price) or 0,
-            quantity = item.quantity
-          })
-        end
-        return products
-    extraInfo:
-      lua: |
-        return {
-          channel = requestObj.channel,
-          campaign = requestObj.campaign
-        }
+    body:
+      orderNo: "out_trade_no"
+      amount:
+        lua: |
+          return tonumber(requestObj.total_amount) or 0
+      currency: "currency"
+      title: "subject"
+      user:
+        lua: |
+          return {
+            id = "U9988",
+            name = requestObj.ext_user_info.name,
+            idCard = requestObj.ext_user_info.cert_no,
+            mobile = requestObj.ext_user_info.mobile
+          }
+      products:
+        lua: |
+          local products = {}
+          for _, item in ipairs(requestObj.goods_detail or {}) do
+            table.insert(products, {
+              id = item.goods_id,
+              name = item.goods_name,
+              price = tonumber(item.price) or 0,
+              quantity = item.quantity
+            })
+          end
+          return products
+      extraInfo:
+        lua: |
+          return {
+            channel = requestObj.channel,
+            campaign = requestObj.campaign
+          }
   response:
     payExpire: "data.payExpire"
     payUrl: "data.payUrl"
@@ -166,38 +126,39 @@ metadata:
   namespace: openai
 spec:
   request:
-    order_id: "out_trade_no"
-    total_price:
-      lua: |
-        return tonumber(requestObj.total_amount) or 0
-    currency_type: "currency"
-    product_title: "subject"
-    customer:
-      lua: |
-        return {
-          real_name = requestObj.ext_user_info.name,
-          id_number = requestObj.ext_user_info.cert_no,
-          phone = requestObj.ext_user_info.mobile,
-          user_id = "U9988"
-        }
-    items:
-      lua: |
-        local goods = {}
-        for _, item in ipairs(requestObj.goods_detail or {}) do
-          table.insert(goods, {
-            item_id = item.goods_id,
-            desc = item.goods_name,
-            unit_price = tonumber(item.price) or 0,
-            count = item.quantity,
-          })
-        end
-        return goods
-    meta:
-      lua: |
-        return {
-          source = requestObj.channel,
-          ad_tag = requestObj.campaign
-        }
+    body:
+      order_id: "out_trade_no"
+      total_price:
+        lua: |
+          return tonumber(requestObj.total_amount) or 0
+      currency_type: "currency"
+      product_title: "subject"
+      customer:
+        lua: |
+          return {
+            real_name = requestObj.ext_user_info.name,
+            id_number = requestObj.ext_user_info.cert_no,
+            phone = requestObj.ext_user_info.mobile,
+            user_id = "U9988"
+          }
+      items:
+        lua: |
+          local goods = {}
+          for _, item in ipairs(requestObj.goods_detail or {}) do
+            table.insert(goods, {
+              item_id = item.goods_id,
+              desc = item.goods_name,
+              unit_price = tonumber(item.price) or 0,
+              count = item.quantity,
+            })
+          end
+          return goods
+      meta:
+        lua: |
+          return {
+            source = requestObj.channel,
+            ad_tag = requestObj.campaign
+          }
   response:
     payExpire: "data.payExpire"
     payUrl: "data.payUrl"
@@ -210,3 +171,38 @@ spec:
     status: "data.status"
     transactionId: "data.transactionId"
 ---
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: NormalizeRule
+metadata:
+  name: normalize-weather-query
+  namespace: openai
+spec:
+  request:
+    query:
+      q: "city"
+      units:
+        value: "metric"
+    queryFromSecret:
+      - name: appid
+        secretName: openweathermap-apikey
+        secretKey: apikey
+---
+apiVersion: openresty.huangzehong.me/v1alpha1
+kind: NormalizeRule
+metadata:
+  name: normalize-weatherapi-query
+  namespace: openai
+spec:
+  request:
+    query:
+      q: "city"
+      days:
+        value: "1"
+      lang:
+        value: "zh"
+      aqi:
+        value: "no"
+    queryFromSecret:
+      - name: key
+        secretName: weatherapi-apikey
+        secretKey: apikey

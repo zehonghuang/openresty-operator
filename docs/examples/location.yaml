@@ -18,7 +18,7 @@ spec:
       enableUpstreamMetrics: true
       accessLog: true
       headersFromSecret:
-        - headerName: apikey
+        - name: apikey
           secretName: apikey
           secretKey: apikey
       extra:
@@ -26,6 +26,14 @@ spec:
         - "proxy_ssl_server_name on;"
     - path: /pay
       proxyPass: https://pay-api/
+      proxyPassIsFullURL: true
+      enableUpstreamMetrics: true
+      accessLog: true
+      extra:
+        - "proxy_redirect off;"
+        - "proxy_ssl_server_name on;"
+    - path: /weather
+      proxyPass: https://weather-api/
       proxyPassIsFullURL: true
       enableUpstreamMetrics: true
       accessLog: true

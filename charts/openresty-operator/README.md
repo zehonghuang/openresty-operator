@@ -128,6 +128,19 @@ helm install openresty-operator openresty-operator/openresty-operator
 | `reloadAgent.policies.window`    | Time window for evaluating reload trigger (seconds ) | `90`   |
 | `reloadAgent.policies.maxEvents` | Max file changes within window to trigger reload     | `12`   |
 
+### 🧩 NormalizeRule
+
+| Name                                      | Description                                                                                             | Value   |
+|-------------------------------------------|---------------------------------------------------------------------------------------------------------|---------|
+| `normalizerules`                          | List of NormalizeRule definitions                                                                       | `[...]` |
+| `normalizerules[].name`                   | Unique name of the NormalizeRule                                                                        | `""`    |
+| `normalizerules[].spec.request.body`      | Object mapping output fields to input JSON field paths, static values, or Lua expressions              | `{}`    |
+| `normalizerules[].spec.request.query`     | Map of query parameters to set in the final request (support path, value, and lua)                      | `{}`    |
+| `normalizerules[].spec.request.headers`   | Map of headers to inject into the outgoing request                                                      | `{}`    |
+| `normalizerules[].spec.request.queryFromSecret`  | Key-value mapping from query parameter name to a referenced Kubernetes SecretKeySelector                | `{}`    |
+| `normalizerules[].spec.request.headersFromSecret`| Key-value mapping from header name to a referenced Kubernetes SecretKeySelector                         | `{}`    |
+| `normalizerules[].spec.response`          | Object mapping output fields to transformed fields from backend responses (via path or Lua logic)       | `{}`    |
+
 ## Example Usage
 
 After installing the operator, you can apply custom resources:
@@ -153,6 +166,7 @@ This chart installs the following CRDs:
 - `locations.openresty.huangzehong.me`
 - `upstreams.openresty.huangzehong.me`
 - `ratelimitpolicies.openresty.huangzehong.me`
+- `normalizerules.openresty.huangzehong.me`
 
 ## License
 

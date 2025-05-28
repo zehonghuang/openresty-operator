@@ -1,0 +1,36 @@
+{{- range .Values.normalizerules }}
+apiVersion: gateway.openresty.org/v1alpha1
+kind: NormalizeRule
+metadata:
+  name: {{ .name }}
+spec:
+  {{- if .spec.request }}
+  request:
+    {{- if .spec.request.body }}
+    body:
+      {{- toYaml .spec.request.body | nindent 6 }}
+    {{- end }}
+    {{- if .spec.request.query }}
+    query:
+      {{- toYaml .spec.request.query | nindent 6 }}
+    {{- end }}
+    {{- if .spec.request.headers }}
+    headers:
+      {{- toYaml .spec.request.headers | nindent 6 }}
+    {{- end }}
+    {{- if .spec.request.queryFromSecret }}
+    queryFromSecret:
+      {{- toYaml .spec.request.queryFromSecret | nindent 6 }}
+    {{- end }}
+    {{- if .spec.request.headersFromSecret }}
+    headersFromSecret:
+      {{- toYaml .spec.request.headersFromSecret | nindent 6 }}
+    {{- end }}
+  {{- end }}
+
+  {{- if .spec.response }}
+  response:
+    {{- toYaml .spec.response | nindent 4 }}
+  {{- end }}
+---
+{{- end }}

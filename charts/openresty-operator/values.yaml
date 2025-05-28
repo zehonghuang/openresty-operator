@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: gintonic1glass/openresty-operator
-  tag: "v1.1.0-rc1"
+  tag: "v1.1.1-rc1"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

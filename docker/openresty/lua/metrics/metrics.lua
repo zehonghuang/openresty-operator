@@ -29,7 +29,7 @@ end
 
 function _M.record()
     local server_name = ngx.var.server_name or "unknown"
-    local addr = (ngx.var.upstream_addr or "unknown"):match("^[^,]+") or "none"
+    local addr = (ngx.ctx.server_host or "unknown"):match("^[^,]+") or "none"
     local path = ngx.var.location_path or "/"
     local status = ngx.status
     local latency = tonumber(ngx.var.upstream_response_time) or 0

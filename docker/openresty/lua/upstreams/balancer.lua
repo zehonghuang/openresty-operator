@@ -10,6 +10,8 @@ function _M.randomWeightedBalance(servers)
         return ngx.exit(502)
     end
 
+    ngx.ctx.server_host = server.host
+
     local ip = server.host
     if server.ips and #server.ips > 0 then
         ip = server.ips[math.random(#server.ips)]

@@ -109,6 +109,7 @@ func renderNginxUpstreamLua(name string, results []*health.CheckResult, servers 
 	b.WriteString("return {\n")
 	b.WriteString("  default = function()\n")
 	b.WriteString("    local picked = random.pick()\n")
+	b.WriteString("    ngx.ctx.server_host = picked\n")
 	b.WriteString("    local uri = ngx.var.uri or \"/\"\n")
 	b.WriteString("    local prefix = ngx.var.location_prefix or \"/\"\n\n")
 	b.WriteString("    if prefix:sub(1,1) == \"^\" then\n")
